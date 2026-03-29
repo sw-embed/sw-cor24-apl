@@ -20,9 +20,20 @@ identifiers.
 - [Implementation Plan](docs/plan.md)
 - [APL Research Notes](docs/research.txt)
 
+## Building
+
+Requires `tc24r` (C compiler) and `cor24-run` (emulator) on PATH.
+
+```bash
+./build.sh          # compile only
+./build.sh run      # compile and run on emulator
+./build.sh clean    # remove build artifacts
+```
+
 ## Status
 
-Planning phase. Implementation tracked via agentrail saga
+Phase 0 in progress. Build system operational, toolchain validated.
+Implementation tracked via agentrail saga
 (`cor24-apl-interpreter`, 26 steps across 6 phases).
 
 ## Example (target syntax)
