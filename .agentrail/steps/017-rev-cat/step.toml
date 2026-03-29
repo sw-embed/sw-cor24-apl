@@ -1,0 +1,7 @@
+number = 17
+slug = "rev-cat"
+status = "pending"
+description = "Implement monadic rev (reverse), monadic cat (ravel), dyadic cat (catenate). (Phase 3, Step 3.5)"
+role = "legacy"
+context_files = []
+created_at = "2026-03-29T16:25:16"

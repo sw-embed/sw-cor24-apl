@@ -1,0 +1,7 @@
+number = 7
+slug = "scalar-repl"
+status = "pending"
+description = "Wire up REPL loop: read line, tokenize, parse, eval, print. Error recovery. (Phase 1, Step 1.4)"
+role = "legacy"
+context_files = []
+created_at = "2026-03-29T16:25:16"

@@ -1,0 +1,7 @@
+number = 21
+slug = "matrix-take-drop"
+status = "pending"
+description = "take/drop on matrices operating on rows. (Phase 4, Step 4.4)"
+role = "legacy"
+context_files = []
+created_at = "2026-03-29T16:25:16"

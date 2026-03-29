@@ -1,0 +1,7 @@
+number = 24
+slug = "edge-cases"
+status = "pending"
+description = "Empty vectors, single-element arrays, large arrays, nested parens, long lines. (Phase 5, Step 5.3)"
+role = "legacy"
+context_files = []
+created_at = "2026-03-29T16:25:16"

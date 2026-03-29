@@ -1,0 +1,7 @@
+number = 4
+slug = "tokenizer"
+status = "pending"
+description = "Implement lexer with token types NUM, IDENT, RESERVED, operators, ASSIGN, parens. Reserved word lookup. (Phase 1, Step 1.1)"
+role = "legacy"
+context_files = []
+created_at = "2026-03-29T16:25:16"
