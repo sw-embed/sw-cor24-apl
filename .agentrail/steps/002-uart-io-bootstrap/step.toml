@@ -1,6 +1,6 @@
 number = 2
 slug = "uart-io-bootstrap"
-status = "pending"
+status = "in-progress"
 description = "Write uart_putchar, uart_getchar, uart_puts, uart_getline with backspace support. Test echo and startup banner. (Phase 0, Step 0.2)"
 role = "legacy"
 context_files = []

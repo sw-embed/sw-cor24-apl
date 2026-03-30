@@ -1,0 +1,1359 @@
+
+
+
+
+I have a custom assembler for the COR24 ISA and I've implemted a C compiler and a Forth interpreter. I want to implement an APL interpreter.  How was the original APL interpreter written?  Was it in assembler?  What was the first machine APL was run on?  Did APL run on the IBM 1130, IBM S\360?  There was a version that did not use greek and math symbols, U of Maryland APL?   I believe there was a version of APL (maybe a subset) that ran on the TRS-80 and/or on the original IBM-PC.  There was a version on the IBM 5100, 5110, and 5120 (that may have been running on an emulated 360 card).  I'm aware of modern APLs and gnu-apl. Are there other open-source versions?  How hard would it be to write from scratch, possibly using the U of Maryland approach to make it work with regular keyboards.
+
+You want to understand how APL was historically implemented, what platforms it ran on, and—most importantly—how feasible it is to build a clean-room APL interpreter for your COR24 ISA, possibly using an ASCII-based variant.
+
+I’ll walk this in layers: history → implementation architecture → keyboard/syntax variants → open-source references → then a concrete plan for your system.
+
+1) Historical Reality: How APL Was Originally Implemented
+Origins (1960–1966)
+APL was created by Kenneth E. Iverson
+
+First implementations were tied to IBM systems.
+
+First working APL systems
+APL\360 (1966) → ran on IBM System/360
+
+Developed at IBM Research (Yorktown Heights)
+
+Implementation language
+Early APL interpreters were written in assembly language
+
+Reason: extreme performance needs (array ops, memory layout)
+
+Also: no suitable high-level language existed to express APL itself
+
+👉 So yes:
+
+Original APL = hand-written assembler interpreter
+
+2) Machines APL Ran On
+IBM Mainframes
+IBM System/360 → primary target
+
+Later: System/370
+
+IBM 1130
+Yes, there was APL\1130
+
+But:
+
+Much more limited
+
+Smaller memory footprint
+
+Often educational use
+
+IBM 5100 / 5110 / 5120 (very interesting case)
+
+https://upload.wikimedia.org/wikipedia/commons/2/2d/IBM_5100_-_MfK_Bern.jpg
+
+https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/IBM_5110_computer_-_Ridai_Museum_of_Modern_Science%2C_Tokyo_-_DSC07664.JPG/1280px-IBM_5110_computer_-_Ridai_Museum_of_Modern_Science%2C_Tokyo_-_DSC07664.JPG
+
+https://oldcomputers.net/pics/ibm5120.jpg
+4
+IBM 5100 (1975)
+
+Could run APL and BASIC
+
+Key detail:
+
+It emulated System/360 microcode
+
+The APL interpreter was essentially a port of APL\360 running on an emulator
+
+👉 This is very relevant to your project:
+
+Shows that APL interpreter portability via emulation is viable
+
+Confirms interpreter core is separable from hardware
+
+TRS-80 / IBM PC
+There were later APLs:
+
+APL*Plus (STSC)
+
+APL2 (IBM)
+
+MicroAPL
+
+Yes:
+
+TRS-80 versions existed (subset)
+
+IBM PC had multiple APL implementations in the 1980s
+
+👉 These were:
+
+Still interpreters
+
+Often rewritten in C (later), assembly (earlier)
+
+3) The “ASCII APL” Problem (Your Key Concern)
+APL originally used a custom character set:
+
+Greek letters
+
+Special operators (⍴ ⍳ ⌈ ⌊ ⊂ ⊃ …)
+
+University of Maryland APL
+You’re remembering correctly.
+
+Often referred to as “ASCII APL” or teaching APL
+
+Replaced symbols with ASCII digraphs or keywords
+
+Examples:
+
+APL	ASCII
+⍴	RHO
+⍳	IOTA
+←	<-
+⌈	MAX
+⌊	MIN
+👉 This is exactly the right approach for COR24
+
+4) Open Source APL Implementations
+Modern (reference-grade)
+GNU APL
+
+GPL (probably not what you want)
+
+Very complete
+
+Unicode-based
+
+Others
+Dyalog APL (commercial, very advanced)
+
+NARS2000 (Windows, open but complex)
+
+APL\11 (historical)
+
+MicroAPL (commercial)
+
+Minimal / educational
+“Tiny APL” interpreters exist (various languages)
+
+Some in:
+
+C
+
+JavaScript
+
+Python
+
+👉 These are better references than GNU APL for your case
+
+5) How Hard Is It to Implement APL?
+Honest assessment
+APL is much harder than Forth, but simpler than full Lisp + macros + GC
+
+Why it’s hard
+Array-first semantics
+
+Everything is a vector/matrix
+
+Scalars are degenerate arrays
+
+Rank polymorphism
+
+Same operator works on:
+
+scalars
+
+vectors
+
+matrices
+
+higher tensors
+
+Operator overloading
+
++ means:
+
+scalar add
+
+vector add
+
+reduce
+
+scan
+
+Implicit iteration
+
+No loops — everything is vectorized
+
+Why it’s manageable for your system
+Because you can:
+
+Limit scope
+
+Avoid full APL spec
+
+Use ASCII syntax
+
+Avoid floating point initially
+
+6) Minimal APL Subset (Recommended for COR24)
+Data model
+Value =
+  scalar (int32 or int24)
+  vector (1D array)
+  matrix (2D array)
+Core operations
+Start with:
+
+− × ÷ (integer only initially)
+
+reshape (RHO)
+
+iota (range)
+
+reduce (e.g. +/)
+
+indexing
+
+Example (ASCII APL)
+A <- IOTA 10        ; 0 1 2 3 4 5 6 7 8 9
+B <- A + A          ; vector add
+C <- +/ A           ; sum
+7) Implementation Architecture for COR24
+High-level design
+REPL
+  ↓
+Tokenizer (ASCII APL)
+  ↓
+Parser (right-to-left!)
+  ↓
+Evaluator
+  ↓
+Array engine
+  ↓
+Memory manager
+Key APL quirk: Right-to-left evaluation
+APL evaluates:
+
+2 + 3 × 4
+as:
+
+2 + (3 × 4)
+(no precedence rules!)
+
+👉 This simplifies parsing significantly
+
+Core runtime
+Array structure
+struct Array {
+  int rank;
+  int shape[4];     // limit to 4D initially
+  int size;
+  int *data;
+};
+Memory strategy
+Given your system:
+
+No GC initially
+
+Use:
+
+bump allocator
+
+or region-based allocation per expression
+
+Later:
+
+Add simple mark/sweep GC
+
+8) Floating Point Question
+Historically:
+
+Early APL did use floating point
+
+But:
+
+👉 You can absolutely start with integer-only APL
+
+Options:
+
+Option	Tradeoff
+24-bit int only	simplest
+32-bit software float	moderate complexity
+48-bit float	closer to real APL
+IEEE emulation	overkill
+👉 Recommendation:
+Start integer-only → add float later
+
+9) Suggested Development Plan (Aligned with Your Style)
+Phase 1 — Tiny APL Core
+Scalars only
+
+− × ÷
+
+ASCII syntax
+
+Phase 2 — 1D arrays
+vector representation
+
+element-wise ops
+
+Phase 3 — core APL ops
+IOTA
+
+RHO (reshape)
+
+REDUCE
+
+Phase 4 — REPL + persistence
+Phase 5 — optional
+matrices
+
+GC
+
+float
+
+10) Key Insight for Your System
+APL fits your environment surprisingly well:
+
+Feature	COR24 fit
+interpreter-based	✅
+no OS required	✅
+memory-heavy but controllable	⚠️
+vector ops	interesting for FPGA
+ASCII variant possible	✅
+11) Comparison to What You Already Built
+Language	Difficulty
+Forth	easiest
+Lisp	medium
+APL	medium-hard
+👉 But:
+
+You already solved:
+
+interpreter design (Forth)
+
+parsing + evaluation (C / Lisp)
+
+So APL is mostly:
+
+array semantics + unusual evaluation rules
+
+12) Final Recommendation
+For your COR24:
+
+YES — build APL, but:
+Use ASCII APL (Maryland-style)
+
+Start integer-only
+
+Limit to:
+
+rank ≤ 2
+
+small arrays
+
+Focus on:
+
+elegance of interpreter
+
+correctness of array ops
+
+If you want next step
+I can give you:
+
+A minimal APL grammar (ASCII form)
+
+A tiny interpreter in C-style pseudocode
+
+A test suite like your C validation approach
+
+Or a “micro-APL” spec tailored to COR24
+
+Just tell me 👍
+
+
+I would like to add a concept like reader macros in Clojure and the support some IDEs have for ligatures, and I customized Emacs to change lambda to the greek symbol on the fly, so that when I type rho it changes to the greek character and when I backspace/delete the character it does the right thing (not change to "rh").    You spelled IOTA and RHO in all caps but since all identifiers (FNS, VARS) are all caps, that collides.  I'd prefer to use lower-case to replace greek/math-symbols and keep upper-case for symbols.
+
+That makes sense. You want an ASCII-surface syntax that preserves the feel of APL without colliding with your existing naming conventions, and you already have a proven precedent from Emacs display substitution and Clojure-style reader behavior.
+
+Restating the requirement
+You want:
+
+upper-case reserved for normal identifiers, functions, and variables
+
+lower-case tokens used as symbolic spellings for APL glyphs and math operators
+
+optionally, an editor layer or reader layer that can:
+
+display rho as ⍴
+
+display iota as ⍳
+
+reverse cleanly on delete/backspace
+
+ideally, the parser should accept the lower-case forms directly, whether or not the IDE renders ligatures
+
+That is a good design.
+
+High-level architecture
+There are really three separable layers here:
+
+1. Concrete source syntax
+What the file actually contains.
+
+Example:
+
+A <- iota 10
+B <- 2 5 rho A
+C <- +/ B
+This is what your assembler-era machine actually reads.
+
+2. Reader / tokenizer normalization
+The lexer or reader recognizes lower-case reserved words like rho, iota, take, drop, compress, etc., and maps them to internal token kinds.
+
+Example:
+
+"rho"  -> TOK_RHO
+"iota" -> TOK_IOTA
+This is analogous to a Lisp reader or Clojure reader macro layer, except simpler.
+
+3. Editor presentation layer
+Emacs or another IDE may display:
+
+rho as ⍴
+
+iota as ⍳
+
+lam or lambda as λ
+
+without changing the underlying file contents.
+
+This is the safest approach because it keeps the source portable and keyboard-friendly.
+
+Recommended approach
+I would not make the parser depend on actual Unicode glyphs first. I would do this instead:
+
+Core rule
+Source files contain ASCII spellings
+
+Lower-case reserved words stand in for APL glyphs
+
+The interpreter internally maps them to operator/function tokens
+
+The editor may visually prettify them
+
+So the implementation order is:
+
+ASCII-only parser
+
+Reserved lower-case token vocabulary
+
+Optional Emacs prettification / ligature support
+
+Later, optional Unicode input/output if desired
+
+That gives you a stable implementation path.
+
+Why lower-case reserved words are better here
+Your concern about IOTA and RHO colliding with user identifiers is exactly right.
+
+If all user identifiers are upper-case, then this split is clean:
+
+Category	Syntax
+Variables / functions	A, FOO, MATRIX1
+APL symbolic aliases	rho, iota, take, drop
+Assignment	<-
+Operators	+ - * / , etc.
+This buys you:
+
+no namespace collision
+
+easier tokenization
+
+clearer readability
+
+easier future editor prettification
+
+It also creates a nice visual distinction between:
+
+language forms
+
+user-defined names
+
+That is often better than trying to mimic original APL too literally.
+
+Reader-macro style vs ligature style
+These are related, but different.
+
+Option A: Reader keyword substitution
+The source contains rho, and the lexer recognizes it as reshape.
+
+Pros:
+
+simple
+
+robust
+
+works everywhere
+
+no editor dependence
+
+easy to test
+
+Cons:
+
+source is not visually “pure APL”
+
+Option B: Editor prettification only
+The source contains rho, but Emacs displays ⍴.
+
+Pros:
+
+nice user experience
+
+keeps ASCII source files
+
+reversible
+
+good for pedagogy
+
+Cons:
+
+only in supporting editors
+
+copy/paste/debugging can sometimes be confusing if not done carefully
+
+Option C: Real Unicode source too
+Let parser accept both rho and ⍴.
+
+Pros:
+
+pleasant for advanced users
+
+easier compatibility with modern APL documentation
+
+Cons:
+
+more lexer complexity
+
+input methods and fonts matter
+
+harder on constrained systems
+
+Best path
+For your system, I would use:
+
+ASCII lower-case canonical source
+
+optional editor prettification
+
+optionally later: dual acceptance of Unicode glyphs
+
+Concrete lexical policy
+I would define a language rule like this:
+
+Identifiers
+user identifiers: [A-Z][A-Z0-9_]*
+
+reserved symbolic aliases: [a-z][a-z0-9_]*
+
+That gives you a very clean split.
+
+Example:
+
+A <- iota 10
+B <- 3 4 rho A
+SUM <- +/ B
+Where:
+
+A, B, SUM are identifiers
+
+iota, rho are reserved words
+
+You could even reject lower-case user identifiers entirely in the early versions. That would make parsing and error messages cleaner.
+
+Suggested initial reserved-word vocabulary
+I would keep it small and mnemonic.
+
+Essential array words
+ASCII	Meaning	Traditional APL
+iota	index generator	⍳
+rho	shape / reshape	⍴
+take	take	↑
+drop	drop	↓
+cat	catenate	, or catenate usage
+mix	mix / laminate later if needed	various
+rev	reverse	⌽ subset meaning
+rot	rotate	⌽ / ⊖ depending axis
+gradeup	grade up	⍋
+gradedown	grade down	⍒
+Structural / utility
+ASCII	Meaning
+shape	monadic form of shape if you want clarity
+rank	rank query
+reshape	explicit long form synonym for rho
+indx	optional synonym for iota if you want shorter ASCII
+You do not need all of these at first.
+
+I would begin with only:
+
+iota
+
+rho
+
+take
+
+drop
+
+Then add more later.
+
+Monadic vs dyadic behavior
+APL gets a lot of power by overloading symbols by arity. You can still keep that model.
+
+Example:
+
+rho A
+means shape-of A
+
+while
+
+2 3 rho A
+means reshape A into shape 2 3
+
+Similarly:
+
+iota 5
+means 0 1 2 3 4 or 1 2 3 4 5, depending your chosen convention.
+
+This is a strong reason to keep rho and iota as reserved operator tokens rather than regular functions.
+
+Reader design
+A good internal design is:
+
+Token kinds
+enum TokenKind {
+    TOK_IDENT,
+    TOK_NUMBER,
+    TOK_ASSIGN,      // <-
+    TOK_PLUS,
+    TOK_MINUS,
+    TOK_SLASH,
+    TOK_RHO,
+    TOK_IOTA,
+    TOK_TAKE,
+    TOK_DROP,
+    TOK_LPAREN,
+    TOK_RPAREN,
+    TOK_EOL,
+    TOK_EOF
+};
+When the lexer sees:
+
+rho -> TOK_RHO
+
+iota -> TOK_IOTA
+
+take -> TOK_TAKE
+
+drop -> TOK_DROP
+
+and when it sees upper-case sequences, it emits TOK_IDENT.
+
+That keeps later parsing simple.
+
+Emacs / IDE strategy
+What you described for lambda is exactly the right mental model.
+
+Safer editor behavior
+I would prefer display composition / prettification over literal replacement in the buffer.
+
+Meaning:
+
+the buffer still contains rho
+
+Emacs displays ⍴
+
+That avoids weird source corruption and makes deletion logic easier.
+
+Good options in Emacs
+prettify-symbols-mode
+
+font-lock composition
+
+custom syntax highlighting rules
+
+For example, rho can display as ⍴, iota as ⍳, and so on.
+
+This is better than actual mutation of source text unless you really want a structural input method.
+
+Important parsing consequence
+Because you want lower-case symbolic words and upper-case identifiers, you should decide one of these two policies:
+
+Policy 1: strict split
+lower-case words are reserved syntax only
+
+upper-case words are user identifiers only
+
+This is my recommendation.
+
+Policy 2: mixed identifiers with reserved-word exclusion
+identifiers can be mixed case
+
+reserved words like rho, iota are banned as identifiers
+
+This is more flexible but more complex and less visually distinctive.
+
+For a clean educational interpreter, Policy 1 is better.
+
+Example source style
+Here is a style that feels coherent:
+
+A <- iota 10
+B <- 2 5 rho A
+C <- +/ B
+D <- 3 take A
+E <- 2 drop A
+That reads quite nicely, even without Unicode.
+
+If Emacs prettifies it, you get something visually closer to APL while keeping ASCII storage.
+
+Pros and cons of your idea
+Benefits
+avoids collisions with all-caps identifiers
+
+keeps source keyboard-friendly
+
+works on ASCII-only systems
+
+pairs naturally with Emacs prettification
+
+easier to parse than true APL glyph input
+
+clean stepping stone toward later Unicode support
+
+Risks
+some APL users may find the syntax less idiomatic
+
+long keywords can make dense APL expressions less compact
+
+you need a disciplined reserved vocabulary early, or synonyms may proliferate
+
+Mitigation
+define a canonical vocabulary early
+
+allow maybe one synonym at most during experimentation
+
+keep internal token names independent from surface spellings
+
+Best concrete design choice
+I would define your language in three levels:
+
+Surface syntax
+ASCII lower-case symbolic spellings:
+
+rho iota take drop
+Internal canonical operator tags
+Implementation constants:
+
+OP_RHO OP_IOTA OP_TAKE OP_DROP
+Optional display aliases
+Editor prettification only:
+
+rho  -> ⍴
+iota -> ⍳
+take -> ↑
+drop -> ↓
+That separation gives you flexibility without destabilizing the interpreter.
+
+Recommendation for your COR24 APL
+I would adopt this rule set:
+
+Lexical rules
+A-Z0-9_ names are identifiers
+
+lower-case words are reserved symbolic aliases
+
+ASCII only in stored source files
+
+Early vocabulary
+iota
+
+rho
+
+take
+
+drop
+
+Editor support
+Emacs prettification for rho, iota, etc.
+
+do not require Unicode input yet
+
+Parser
+treat these lower-case words as first-class tokens, not library functions
+
+That is a very strong design for a small educational APL.
+
+One refinement I would suggest
+Because rho and iota are common and elegant, but some others can be ambiguous, you might want this convention:
+
+short classic names for the very core operators: rho, iota
+
+longer descriptive names for less common ones: gradeup, gradedown, compress, expand
+
+That balances readability and authenticity.
+
+Example tiny language snippet
+A <- iota 12
+B <- 3 4 rho A
+ROWS <- rho B
+HEAD <- 5 take A
+TAIL <- 5 drop A
+TOTAL <- +/ A
+This looks good in plain ASCII, and in Emacs could display almost like APL.
+
+Bottom line
+Yes — your proposed split is better than my earlier all-caps examples.
+
+I recommend:
+lower-case reserved spellings for APL glyphs and symbolic forms
+
+upper-case identifiers for user names
+
+ASCII source as canonical
+
+IDE prettification as an optional presentation layer
+
+That gives you the benefits of reader macros and ligatures without forcing Unicode or introducing name collisions.
+
+I can next give you a draft token vocabulary and grammar for a “micro-APL” using this lower-case symbolic convention.
+
+
+could there be editor support to allow the user to type shape-of or reshape and have that converted to rho on-the-fly?  Could code that uses rho be displayed in 3 modes: representation mode "rho",  shorthand mode <greek rho symbol>, or "literate-mode" shape-of or rho depending on context?
+
+Yes. That is a very workable design, and it fits nicely into a three-layer model:
+
+Restating the goal
+You want source code to have a compact canonical form like rho, while the editor can support richer input and multiple displays:
+
+user types shape-of or reshape
+
+editor normalizes that to canonical rho
+
+same underlying code can be shown as:
+
+representation mode: rho
+
+shorthand mode: ⍴
+
+literate mode: shape-of or reshape, depending on usage context
+
+That is absolutely possible.
+
+High-level design
+The clean way to do this is to separate:
+
+1. Canonical storage form
+What is actually saved in the file.
+
+Example:
+
+A <- rho B
+C <- 2 3 rho A
+This should be stable, simple, and parser-friendly.
+
+I would strongly recommend that the canonical stored form be:
+
+ASCII
+
+compact
+
+one token per operator
+
+So rho is a good canonical form.
+
+2. Input normalization
+What the user is allowed to type interactively.
+
+Examples:
+
+typing shape-of inserts or transforms into rho
+
+typing reshape inserts or transforms into rho
+
+typing iota-of or indices could normalize to iota
+
+This is editor behavior, not language semantics.
+
+3. Presentation mode
+How the editor renders existing code.
+
+Same source:
+
+A <- rho B
+C <- 2 3 rho A
+could display as:
+
+Representation mode
+A <- rho B
+C <- 2 3 rho A
+Shorthand mode
+A <- ⍴ B
+C <- 2 3 ⍴ A
+Literate mode
+A <- shape-of B
+C <- 2 3 reshape A
+This is also editor behavior.
+
+The important architectural choice
+The key question is:
+
+Should the file contain rho, or should it contain a richer semantic token that the editor interprets?
+For your system, the simplest and strongest answer is:
+
+file contains rho
+
+parser sees rho
+
+editor may display it however it wants
+
+That keeps:
+
+interpreter simple
+
+files portable
+
+diffs stable
+
+tooling easy
+
+The subtle issue: context-sensitive display
+Your literate mode idea introduces something valuable:
+
+monadic rho X means shape-of
+
+dyadic A rho B means reshape
+
+So a single token has two English renderings depending on context.
+
+That means the editor display layer can be:
+
+Option A: lexical only
+Always render rho as ⍴ or always as rho.
+
+Easy.
+
+Option B: syntactic/context-aware
+Render rho as:
+
+shape-of in monadic position
+
+reshape in dyadic position
+
+This is possible, but it requires the editor to know at least a little syntax.
+
+That is the interesting part.
+
+Feasibility by mode
+Mode 1: representation mode
+Display exactly what's in the file.
+
+Stored text:
+
+rho
+Displayed text:
+
+rho
+This is trivial.
+
+Mode 2: shorthand mode
+Display rho as ⍴.
+
+Stored text:
+
+rho
+Displayed text:
+
+⍴
+This is also easy in Emacs with prettification or composition.
+
+Mode 3: literate mode
+Display rho as:
+
+shape-of if monadic
+
+reshape if dyadic
+
+This is possible, but harder.
+
+Because Emacs would need to know whether the occurrence is:
+
+rho A
+or
+
+2 3 rho A
+and that requires at least lightweight parsing.
+
+Recommended implementation strategy
+I would build this in stages.
+
+Stage 1 — canonical token and simple aliases
+Language stores only rho.
+
+Editor input aliases:
+
+shape-of → rho
+
+reshape → rho
+
+Display modes:
+
+rho
+
+⍴
+
+This is easy and robust.
+
+Stage 2 — syntax-aware literate display
+Add an editor parser that classifies token use as monadic or dyadic.
+
+Then render:
+
+monadic rho → shape-of
+
+dyadic rho → reshape
+
+This is more ambitious, but very reasonable if you already have or plan:
+
+a parser in Rust
+
+tree-sitter grammar
+
+or an Emacs mode with parse support
+
+Best place to do the transformation
+There are three ways to support typing shape-of or reshape.
+
+Approach 1: immediate textual replacement
+User types shape-of, editor replaces it with rho.
+
+Pros:
+
+simple
+
+file stays canonical
+
+Cons:
+
+user loses the original typed phrase immediately
+
+can feel abrupt
+
+This is probably fine for a custom major mode.
+
+Approach 2: abbreviation expansion / smart input method
+Editor recognizes shape-of at a word boundary and inserts rho.
+
+Pros:
+
+feels natural
+
+easy to implement with abbrev or post-self-insert hooks
+
+Cons:
+
+still just textual replacement
+
+Approach 3: structured editing layer
+Editor keeps an internal semantic token and displays it differently depending on mode.
+
+Pros:
+
+most powerful
+
+ideal for literate rendering
+
+Cons:
+
+much more complex
+
+almost certainly overkill initially
+
+For your project, I would start with Approach 2.
+
+A practical model: canonical token + alias table
+You can think of it like this:
+
+Canonical operator table
+Canonical	Monadic gloss	Dyadic gloss	Shorthand
+rho	shape-of	reshape	⍴
+iota	indices	maybe none or special	⍳
+take	take	take	↑
+drop	drop	drop	↓
+Then the editor has:
+
+input aliases
+
+display aliases
+
+optionally contextual glosses
+
+That gives you a very clean architecture.
+
+Language design implication
+This also suggests a useful internal representation in the parser.
+
+Instead of treating rho as merely text, treat it as an operator with arity-sensitive semantics:
+
+OP_RHO
+  monadic meaning: shape-of
+  dyadic meaning: reshape
+Then the editor, formatter, pretty-printer, REPL help system, and docs can all refer to that metadata.
+
+That is much cleaner than hard-coding separate names everywhere.
+
+Example workflow
+Suppose the user types this in the editor:
+
+A <- shape-of B
+C <- 2 3 reshape A
+Input normalization
+Editor rewrites buffer to canonical form:
+
+A <- rho B
+C <- 2 3 rho A
+Parser sees
+TOK_IDENT A
+TOK_ASSIGN
+TOK_RHO
+TOK_IDENT B
+...
+Display modes
+Representation
+A <- rho B
+C <- 2 3 rho A
+Shorthand
+A <- ⍴ B
+C <- 2 3 ⍴ A
+Literate
+A <- shape-of B
+C <- 2 3 reshape A
+This is exactly the kind of pipeline you are imagining.
+
+How hard is literate mode really?
+Easy version
+Only do direct textual mapping:
+
+every rho shown as shape-or-reshape
+
+or always rho
+
+Not ideal, but easy.
+
+Medium version
+Use heuristics:
+
+if rho is at start of expression or follows assignment/open paren, show shape-of
+
+if it follows a value/expression, show reshape
+
+This may be good enough for a small APL subset.
+
+Strong version
+Use real parser information from your mode.
+
+parse AST
+
+annotate each operator node with arity
+
+render accordingly
+
+This is the best long-term solution.
+
+Good editor architecture
+If you are building custom Emacs support, I would divide it like this:
+
+Input aliases
+A table such as:
+
+("shape-of" . "rho")
+("reshape"  . "rho")
+("indices"  . "iota")
+Display modes
+A variable like:
+
+cor24-apl-display-style
+  'canonical
+  'glyph
+  'literate
+Operator metadata
+A central table:
+
+rho:
+  canonical: "rho"
+  glyph: "⍴"
+  monadic-label: "shape-of"
+  dyadic-label: "reshape"
+Then your mode uses that for input, highlighting, help, and display.
+
+One caution: avoid lossy round-tripping
+You probably do not want this:
+
+source saved as shape-of in one place and reshape in another
+
+then re-canonicalized differently later
+
+That makes diffs noisier and parser/tooling harder.
+
+So I would keep:
+
+Canonical persisted form
+Always:
+
+rho
+Then treat all other renderings as views.
+
+That is the cleanest model.
+
+Another option: reader aliases in the interpreter itself
+You could also allow the parser to accept both:
+
+rho
+
+shape-of
+
+reshape
+
+and map all three to TOK_RHO.
+
+That would make the language more forgiving.
+
+Pros
+source files can be more human-readable
+
+useful for teaching
+
+Cons
+less canonical
+
+harder for tooling and formatting
+
+ambiguous style across codebases
+
+My recommendation:
+
+editor may accept these as input aliases
+
+parser may optionally accept them in “literate compatibility mode”
+
+formatter should write back canonical rho
+
+Best overall design
+I would recommend this exact policy:
+
+Stored syntax
+canonical ASCII token: rho
+
+Accepted editor input aliases
+rho
+
+shape-of
+
+reshape
+
+All normalize to rho in the buffer or before save.
+
+Display styles
+canonical: rho
+
+glyph: ⍴
+
+literate:
+
+monadic use → shape-of
+
+dyadic use → reshape
+
+That is elegant and practical.
+
+Pros and cons
+Benefits
+stable source files
+
+easy parser
+
+nice ergonomics
+
+teachable syntax
+
+flexible presentation
+
+future path toward Unicode APL-like feel
+
+Risks
+context-sensitive literate display needs parsing
+
+editor and parser can drift if they do not share operator metadata
+
+replacement-on-type can surprise users if too aggressive
+
+Mitigations
+keep canonical storage simple
+
+centralize operator metadata
+
+start with canonical + glyph modes
+
+add literate mode only after parser support exists
+
+My recommendation for your project
+Phase 1
+Implement:
+
+canonical token rho
+
+input aliases shape-of and reshape
+
+display modes:
+
+canonical
+
+glyph
+
+Phase 2
+Add syntax-aware literate mode:
+
+rho X displays as shape-of X
+
+A rho B displays as A reshape B
+
+Phase 3
+Optionally make the interpreter accept literate forms in source too, but normalize on formatting/output.
+
+Bottom line
+Yes, this can work well.
+
+The best model is:
+
+rho is the canonical stored form
+
+the editor may let users type shape-of or reshape and convert that to rho
+
+the same code can be rendered in:
+
+representation mode: rho
+
+shorthand mode: ⍴
+
+literate mode: shape-of or reshape based on arity/context
+
+That is a strong design, and it gives you both an educational surface and a compact implementation core.
+
+I can sketch a metadata table plus Emacs-mode design for 10–20 core APL operators next.
+
+
+
+

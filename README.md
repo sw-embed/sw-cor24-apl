@@ -25,14 +25,15 @@ identifiers.
 Requires `tc24r` (C compiler) and `cor24-run` (emulator) on PATH.
 
 ```bash
-./build.sh          # compile only
-./build.sh run      # compile and run on emulator
-./build.sh clean    # remove build artifacts
+./build.sh              # compile only
+./build.sh run          # compile and run on emulator
+./build.sh run --terminal --echo   # interactive REPL mode
+./build.sh clean        # remove build artifacts
 ```
 
 ## Status
 
-Phase 0 in progress. Build system operational, toolchain validated.
+Phase 0 in progress. UART I/O bootstrap complete with line editing.
 Implementation tracked via agentrail saga
 (`cor24-apl-interpreter`, 26 steps across 6 phases).
 
