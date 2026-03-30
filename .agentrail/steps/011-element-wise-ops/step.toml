@@ -1,6 +1,6 @@
 number = 11
 slug = "element-wise-ops"
-status = "pending"
+status = "in-progress"
 description = "Extend evaluator for vector+vector, scalar extension, conformability checks. (Phase 2, Step 2.3)"
 role = "legacy"
 context_files = []

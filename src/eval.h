@@ -1,10 +1,25 @@
 // COR24 APL Interpreter -- Evaluator
 // Tree-walking evaluator returning array heap indices.
 // Every result is an array (scalars wrapped via arr_scalar).
+// Supports element-wise ops on vectors with scalar extension.
 
 #pragma once
 
+// Error codes: 0=none, 1=DOMAIN, 2=VALUE, 3=LENGTH
 int eval_err;
+
+// Apply a binary op to two scalars
+int eval_binop_scalar(int op, int a, int b) {
+    if (op == TOK_PLUS)       return a + b;
+    if (op == TOK_MINUS)      return a - b;
+    if (op == TOK_STAR)       return a * b;
+    if (op == TOK_SLASH) {
+        if (b == 0) { eval_err = 1; return 0; }
+        return a / b;
+    }
+    eval_err = 1;
+    return 0;
+}
 
 // Evaluate AST node, return heap index of result array.
 // On error, sets eval_err and returns -1.
@@ -48,12 +63,21 @@ int eval(int n) {
     if (ty == NODE_NEG) {
         int v = eval(node_right[n]);
         if (eval_err) return -1;
-        if (arr_rank(v) != 0) {
-            eval_err = 1;
-            return -1;
+        int rk = arr_rank(v);
+        if (rk == 0) {
+            int r = arr_scalar(0 - arr_get(v, 0));
+            if (r < 0) { eval_err = 1; return -1; }
+            return r;
         }
-        int r = arr_scalar(0 - arr_get(v, 0));
+        // Negate each element of vector
+        int sz = arr_size(v);
+        int r = arr_vector(sz);
         if (r < 0) { eval_err = 1; return -1; }
+        int i = 0;
+        while (i < sz) {
+            arr_set(r, i, 0 - arr_get(v, i));
+            i++;
+        }
         return r;
     }
 
@@ -63,31 +87,71 @@ int eval(int n) {
         int rv = eval(node_right[n]);
         if (eval_err) return -1;
 
-        if (arr_rank(lv) != 0 || arr_rank(rv) != 0) {
-            eval_err = 1;
-            return -1;
+        int lrk = arr_rank(lv);
+        int rrk = arr_rank(rv);
+        int op = node_val[n];
+
+        // Scalar op scalar
+        if (lrk == 0 && rrk == 0) {
+            int result = eval_binop_scalar(op, arr_get(lv, 0), arr_get(rv, 0));
+            if (eval_err) return -1;
+            int r = arr_scalar(result);
+            if (r < 0) { eval_err = 1; return -1; }
+            return r;
         }
 
-        int la = arr_get(lv, 0);
-        int ra = arr_get(rv, 0);
-        int op = node_val[n];
-        int result;
-        if (op == TOK_PLUS)       result = la + ra;
-        else if (op == TOK_MINUS) result = la - ra;
-        else if (op == TOK_STAR)  result = la * ra;
-        else if (op == TOK_SLASH) {
-            if (ra == 0) {
-                eval_err = 1;
-                return -1;
+        // Vector op vector: must match length
+        if (lrk == 1 && rrk == 1) {
+            int lsz = arr_size(lv);
+            int rsz = arr_size(rv);
+            if (lsz != rsz) { eval_err = 3; return -1; }
+            int r = arr_vector(lsz);
+            if (r < 0) { eval_err = 1; return -1; }
+            int i = 0;
+            while (i < lsz) {
+                int val = eval_binop_scalar(op, arr_get(lv, i), arr_get(rv, i));
+                if (eval_err) return -1;
+                arr_set(r, i, val);
+                i++;
             }
-            result = la / ra;
-        } else {
-            eval_err = 1;
-            return -1;
+            return r;
         }
-        int r = arr_scalar(result);
-        if (r < 0) { eval_err = 1; return -1; }
-        return r;
+
+        // Scalar op vector
+        if (lrk == 0 && rrk == 1) {
+            int la = arr_get(lv, 0);
+            int rsz = arr_size(rv);
+            int r = arr_vector(rsz);
+            if (r < 0) { eval_err = 1; return -1; }
+            int i = 0;
+            while (i < rsz) {
+                int val = eval_binop_scalar(op, la, arr_get(rv, i));
+                if (eval_err) return -1;
+                arr_set(r, i, val);
+                i++;
+            }
+            return r;
+        }
+
+        // Vector op scalar
+        if (lrk == 1 && rrk == 0) {
+            int ra = arr_get(rv, 0);
+            int lsz = arr_size(lv);
+            int r = arr_vector(lsz);
+            if (r < 0) { eval_err = 1; return -1; }
+            int i = 0;
+            while (i < lsz) {
+                int val = eval_binop_scalar(op, arr_get(lv, i), ra);
+                if (eval_err) return -1;
+                arr_set(r, i, val);
+                i++;
+            }
+            return r;
+        }
+
+        // Unsupported rank combination
+        eval_err = 1;
+        return -1;
     }
 
     eval_err = 1;

@@ -1,5 +1,5 @@
 // COR24 APL Interpreter -- main entry point
-// Phase 2.2: Vector literals
+// Phase 2.3: Element-wise vector operations
 
 #include <stdio.h>
 #include "io.h"
@@ -41,6 +41,10 @@ int main() {
                     if (eval_err == 2) {
                         heap_top = heap_save;
                         io_print("  VALUE ERROR");
+                        putchar(10);
+                    } else if (eval_err == 3) {
+                        heap_top = heap_save;
+                        io_print("  LENGTH ERROR");
                         putchar(10);
                     } else if (eval_err) {
                         heap_top = heap_save;
