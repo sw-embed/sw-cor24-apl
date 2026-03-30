@@ -38,15 +38,18 @@ Phase 3 in progress. Phase 1 (scalar REPL) includes tokenizer, parser
 table. Phase 2 adds vector support: vector literals (stranding),
 element-wise operations with scalar extension, conformability checks
 (LENGTH ERROR), and right-justified vector output with consistent
-column widths. Phase 3 adds core APL primitives, starting with monadic
-`iota N` (generates vector 0..N-1). Bump-allocated heap (4096 words)
-with per-iteration reclamation for temporaries. Supports +, -, *, /
-(software divide), parentheses, monadic negate (scalar and vector),
-integer literals with APL underscore-negative convention, and variable
-assignment/reference via `<-`. Errors: SYNTAX ERROR, DOMAIN ERROR
-(div by zero), VALUE ERROR (undefined variable), LENGTH ERROR (vector
-size mismatch). Implementation tracked via agentrail saga
-(`cor24-apl-interpreter`).
+column widths. Phase 3 adds core APL primitives: monadic `iota N`
+(generates vector 0..N-1), monadic `rho` (shape-of: returns array
+dimensions), and dyadic `rho` (reshape with cyclic fill, supports
+vector and matrix results). Parser extended with `NODE_DYAD` AST type
+for dyadic primitive functions (rho, take, drop, cat). Bump-allocated
+heap (4096 words) with per-iteration reclamation for temporaries.
+Supports +, -, *, / (software divide), parentheses, monadic negate
+(scalar and vector), integer literals with APL underscore-negative
+convention, and variable assignment/reference via `<-`. Errors:
+SYNTAX ERROR, DOMAIN ERROR (div by zero), VALUE ERROR (undefined
+variable), LENGTH ERROR (vector size mismatch). Implementation tracked
+via agentrail saga (`cor24-apl-interpreter`).
 
 ## Example (target syntax)
 

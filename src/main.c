@@ -1,5 +1,5 @@
 // COR24 APL Interpreter -- main entry point
-// Phase 3.1: Monadic iota
+// Phase 3.2: Monadic rho (shape) and dyadic rho (reshape)
 
 #include <stdio.h>
 #include "io.h"

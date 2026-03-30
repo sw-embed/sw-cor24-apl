@@ -14,6 +14,7 @@
 #define NODE_ASSIGN 4   // assignment (val = symbol index, right = expr)
 #define NODE_VEC    5   // vector literal (val = heap array index)
 #define NODE_MONAD  6   // monadic primitive (val = RES_xxx, right = operand)
+#define NODE_DYAD   7   // dyadic primitive (val = RES_xxx, left/right = args)
 
 #define AST_MAX 64
 
@@ -95,6 +96,20 @@ int ast_monad(int res_id, int operand) {
     return n;
 }
 
+int ast_dyad(int res_id, int left, int right) {
+    int n = ast_new();
+    node_type[n] = NODE_DYAD;
+    node_val[n] = res_id;
+    node_left[n] = left;
+    node_right[n] = right;
+    return n;
+}
+
+// Check if a reserved word can be used dyadically
+int is_dyadic_res(int res_id) {
+    return res_id == RES_RHO || res_id == RES_TAKE || res_id == RES_DROP || res_id == RES_CAT;
+}
+
 // Temporary buffer for collecting strand elements
 int strand_buf[64];
 
@@ -168,7 +183,7 @@ int parse_node(int mode) {
         return 0;
     }
 
-    // -- If mode 0 (expr) and next is binop, parse right side --
+    // -- If mode 0 (expr) and next is binop or dyadic reserved, parse right --
 
     if (mode == 0 && is_binop(tok_type[parse_pos])) {
         int op = tok_type[parse_pos];
@@ -176,6 +191,14 @@ int parse_node(int mode) {
         int right = parse_node(0);
         if (parse_err) return 0;
         return ast_binop(op, left, right);
+    }
+
+    if (mode == 0 && tok_type[parse_pos] == TOK_RES && is_dyadic_res(tok_val[parse_pos])) {
+        int res_id = tok_val[parse_pos];
+        parse_pos++;
+        int right = parse_node(0);
+        if (parse_err) return 0;
+        return ast_dyad(res_id, left, right);
     }
 
     return left;

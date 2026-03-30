@@ -101,7 +101,98 @@ int eval(int n) {
             return r;
         }
 
+        if (res_id == RES_RHO) {
+            // rho A: return shape of A
+            int rk = arr_rank(v);
+            if (rk == 0) {
+                // Scalar: shape is empty vector
+                int r = arr_vector(0);
+                if (r < 0) { eval_err = 1; return -1; }
+                return r;
+            }
+            if (rk == 1) {
+                // Vector: shape is 1-element vector with length
+                int r = arr_scalar(arr_dim0(v));
+                if (r < 0) { eval_err = 1; return -1; }
+                return r;
+            }
+            if (rk == 2) {
+                // Matrix: shape is 2-element vector (rows cols)
+                int r = arr_vector(2);
+                if (r < 0) { eval_err = 1; return -1; }
+                arr_set(r, 0, arr_dim0(v));
+                arr_set(r, 1, arr_dim1(v));
+                return r;
+            }
+            eval_err = 1;
+            return -1;
+        }
+
         // Unknown monadic function
+        eval_err = 1;
+        return -1;
+    }
+
+    if (ty == NODE_DYAD) {
+        int lv = eval(node_left[n]);
+        if (eval_err) return -1;
+        int rv = eval(node_right[n]);
+        if (eval_err) return -1;
+        int res_id = node_val[n];
+
+        if (res_id == RES_RHO) {
+            // S rho A: reshape A to shape S with cyclic fill
+            // S is scalar -> result is vector of that length
+            // S is 2-element vector -> result is matrix
+            int lrk = arr_rank(lv);
+            int new_rank;
+            int d0;
+            int d1;
+
+            if (lrk == 0) {
+                // Scalar shape -> vector
+                new_rank = 1;
+                d0 = arr_get(lv, 0);
+                d1 = 0;
+                if (d0 < 0) { eval_err = 1; return -1; }
+            } else if (lrk == 1) {
+                int lsz = arr_size(lv);
+                if (lsz == 1) {
+                    new_rank = 1;
+                    d0 = arr_get(lv, 0);
+                    d1 = 0;
+                    if (d0 < 0) { eval_err = 1; return -1; }
+                } else if (lsz == 2) {
+                    new_rank = 2;
+                    d0 = arr_get(lv, 0);
+                    d1 = arr_get(lv, 1);
+                    if (d0 < 0 || d1 < 0) { eval_err = 1; return -1; }
+                } else {
+                    // Only rank 1 and 2 supported
+                    eval_err = 1;
+                    return -1;
+                }
+            } else {
+                eval_err = 1;
+                return -1;
+            }
+
+            int r = arr_new(new_rank, d0, d1);
+            if (r < 0) { eval_err = 1; return -1; }
+
+            int total = arr_size(r);
+            int src_sz = arr_size(rv);
+            if (src_sz == 0) { eval_err = 1; return -1; }
+
+            int i = 0;
+            while (i < total) {
+                arr_set(r, i, arr_get(rv, i % src_sz));
+                i++;
+            }
+            return r;
+        }
+
+        // Unknown dyadic function
         eval_err = 1;
         return -1;
     }
