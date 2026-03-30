@@ -1,5 +1,5 @@
 // COR24 APL Interpreter -- main entry point
-// Phase 4.4: matrix take/drop on rows
+// Phase 5.1: system commands )CLEAR )VARS )OFF
 
 #include <stdio.h>
 #include "io.h"
@@ -21,6 +21,35 @@ int main() {
         int n = io_getline(line, IO_LINE_MAX);
         if (n == 0) {
             // Empty line -- just re-prompt
+        } else if (line[0] == 41) {
+            // System command: starts with ')'
+            if (str_match(line, 1, "CLEAR") == 5 && (line[6] == 0 || line[6] == 32)) {
+                arr_reset();
+                sym_reset();
+                io_print("  CLEAR WS");
+                putchar(10);
+            } else if (str_match(line, 1, "VARS") == 4 && (line[5] == 0 || line[5] == 32)) {
+                int i = 0;
+                int any = 0;
+                while (i < sym_count) {
+                    if (sym_set_flag[i]) {
+                        if (any) io_print("  ");
+                        int off = sym_name_off[i];
+                        while (sym_name_buf[off]) {
+                            putchar(sym_name_buf[off]);
+                            off++;
+                        }
+                        any = 1;
+                    }
+                    i++;
+                }
+                if (any) putchar(10);
+            } else if (str_match(line, 1, "OFF") == 3 && (line[4] == 0 || line[4] == 32)) {
+                return 0;
+            } else {
+                io_print("  SYNTAX ERROR");
+                putchar(10);
+            }
         } else {
             int ntok = tokenize(line);
             if (ntok < 0) {

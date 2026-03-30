@@ -1,0 +1,1 @@
+Implemented monadic rev (reverse vector, scalar passthrough), monadic cat (ravel: scalar->1-elem vector, vector identity, matrix->flat vector), and dyadic cat (catenate two arrays into single vector). All tests pass on COR24 emulator. Phase 3 core primitives complete.

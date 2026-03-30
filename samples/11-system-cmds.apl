@@ -1,0 +1,8 @@
+⍝ System commands
+A ← 5
+B ← 10
+)VARS
+A + B
+)CLEAR
+)VARS
+)OFF

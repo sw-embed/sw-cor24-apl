@@ -56,7 +56,9 @@ Monadic `rho` on matrices returns 2-element shape vector. Monadic `cat`
 operations on matrices (matrix+matrix, scalar+matrix, matrix*scalar),
 matrix negate, and conformability checks for mismatched matrix shapes.
 Phase 4.4 adds `take` and `drop` on matrices operating on rows
-(`1 take M` = first row, `_1 drop M` = all but last row). Quad output (`[] <- expr`)
+(`1 take M` = first row, `_1 drop M` = all but last row). Phase 5.1
+adds system commands: `)CLEAR` (reset workspace), `)VARS` (list
+defined variables), `)OFF` (exit interpreter). Quad output (`[] <- expr`)
 provides explicit I/O following IBM 5100 conventions. Supports +, -, *,
 / (software
 divide), parentheses, monadic negate (scalar and vector), integer

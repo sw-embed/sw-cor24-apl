@@ -1,6 +1,6 @@
 number = 22
 slug = "system-commands"
-status = "pending"
+status = "in-progress"
 description = "Implement )CLEAR, )VARS, )OFF system commands. (Phase 5, Step 5.1)"
 role = "legacy"
 context_files = []

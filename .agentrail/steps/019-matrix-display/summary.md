@@ -1,0 +1,1 @@
+Matrix display was already implemented during step 018-matrix-creation. Verified the implementation in main.c: rank-2 arrays print with one row per line, right-justified columns using pre-scanned max width. Previously validated on COR24 emulator via UART input.
