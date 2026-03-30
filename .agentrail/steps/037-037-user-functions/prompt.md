@@ -1,0 +1,1 @@
+Implement user-defined functions. del R<-FN X ... del (ASCII for ∇). Monadic and dyadic. Local variables. Recursive calls. Test: define DOUBLE, call DOUBLE 21 returns 42. (Phase 8, Step 8.3)

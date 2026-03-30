@@ -44,9 +44,12 @@ dimensions), and dyadic `rho` (reshape with cyclic fill, supports
 vector and matrix results). Parser extended with `NODE_DYAD` AST type
 for dyadic primitive functions (rho, take, drop, cat). Bump-allocated
 heap (4096 words) with per-iteration reclamation for temporaries.
-Supports +, -, *, / (software divide), parentheses, monadic negate
-(scalar and vector), integer literals with APL underscore-negative
-convention, and variable assignment/reference via `<-`. Errors:
+Phase 3.3 adds reduce operators (`+/`, `-/`, `*/`) with right-to-left
+reduction over vectors (e.g., `-/ 1 2 3` = `1-(2-3)` = 2). Scalar
+passthrough for reduce on scalars. Supports +, -, *, / (software
+divide), parentheses, monadic negate (scalar and vector), integer
+literals with APL underscore-negative convention, and variable
+assignment/reference via `<-`. Errors:
 SYNTAX ERROR, DOMAIN ERROR (div by zero), VALUE ERROR (undefined
 variable), LENGTH ERROR (vector size mismatch). Implementation tracked
 via agentrail saga (`cor24-apl-interpreter`).

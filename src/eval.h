@@ -133,6 +133,38 @@ int eval(int n) {
         return -1;
     }
 
+    if (ty == NODE_REDUCE) {
+        int v = eval(node_right[n]);
+        if (eval_err) return -1;
+        int op = node_val[n];
+        int rk = arr_rank(v);
+
+        // Scalar reduce: just return the scalar
+        if (rk == 0) {
+            return v;
+        }
+
+        // Vector reduce: right-to-left fold
+        if (rk == 1) {
+            int sz = arr_size(v);
+            if (sz == 0) { eval_err = 1; return -1; }
+            int acc = arr_get(v, sz - 1);
+            int i = sz - 2;
+            while (i >= 0) {
+                acc = eval_binop_scalar(op, arr_get(v, i), acc);
+                if (eval_err) return -1;
+                i--;
+            }
+            int r = arr_scalar(acc);
+            if (r < 0) { eval_err = 1; return -1; }
+            return r;
+        }
+
+        // Unsupported rank
+        eval_err = 1;
+        return -1;
+    }
+
     if (ty == NODE_DYAD) {
         int lv = eval(node_left[n]);
         if (eval_err) return -1;

@@ -15,6 +15,7 @@
 #define NODE_VEC    5   // vector literal (val = heap array index)
 #define NODE_MONAD  6   // monadic primitive (val = RES_xxx, right = operand)
 #define NODE_DYAD   7   // dyadic primitive (val = RES_xxx, left/right = args)
+#define NODE_REDUCE 8   // reduce operator (val = op tok type, right = operand)
 
 #define AST_MAX 64
 
@@ -105,6 +106,14 @@ int ast_dyad(int res_id, int left, int right) {
     return n;
 }
 
+int ast_reduce(int op, int operand) {
+    int n = ast_new();
+    node_type[n] = NODE_REDUCE;
+    node_val[n] = op;
+    node_right[n] = operand;
+    return n;
+}
+
 // Check if a reserved word can be used dyadically
 int is_dyadic_res(int res_id) {
     return res_id == RES_RHO || res_id == RES_TAKE || res_id == RES_DROP || res_id == RES_CAT;
@@ -165,6 +174,13 @@ int parse_node(int mode) {
         if (sym_idx < 0) { parse_err = 1; return 0; }
         left = ast_ident(sym_idx);
         parse_pos++;
+    } else if (is_binop(ty) && tok_type[parse_pos + 1] == TOK_SLASH) {
+        // Reduce operator: +/ -/ */ (op followed by slash)
+        int op = ty;
+        parse_pos = parse_pos + 2;
+        int operand = parse_node(0);
+        if (parse_err) return 0;
+        left = ast_reduce(op, operand);
     } else if (ty == TOK_RES) {
         // Monadic primitive function (e.g. iota expr)
         int res_id = tok_val[parse_pos];

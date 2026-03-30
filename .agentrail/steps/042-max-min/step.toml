@@ -1,0 +1,7 @@
+number = 42
+slug = "042-max-min"
+status = "pending"
+description = "Dyadic ceil (max) and floor (min) primitives. Add as reserved words. Extend reduce to support ceil/ and floor/ for max-reduce and min-reduce. Test: 3 ceil 5 -> 5, ceil/ 4 1 7 2 -> 7. (Horse race prerequisite)"
+role = "production"
+context_files = []
+created_at = "2026-03-30T11:10:00"

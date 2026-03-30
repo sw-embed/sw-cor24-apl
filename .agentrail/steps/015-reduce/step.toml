@@ -1,6 +1,6 @@
 number = 15
 slug = "reduce"
-status = "pending"
+status = "in-progress"
 description = "Implement +/ -/ */ reduce operators over vectors, right-to-left. (Phase 3, Step 3.3)"
 role = "legacy"
 context_files = []

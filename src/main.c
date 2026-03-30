@@ -1,5 +1,5 @@
 // COR24 APL Interpreter -- main entry point
-// Phase 3.2: Monadic rho (shape) and dyadic rho (reshape)
+// Phase 3.3: Reduce operators (+/ -/ */ over vectors)
 
 #include <stdio.h>
 #include "io.h"

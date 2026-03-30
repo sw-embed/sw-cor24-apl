@@ -1,0 +1,1 @@
+Implement branch (→) and labels. →N branches to line N, →LABEL to labeled line, →(COND)/LABEL conditional branch, →0 exits. LABEL: at start of line defines target. Test: loop counting to 10. (Phase 8, Step 8.1)
