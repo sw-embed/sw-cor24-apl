@@ -1,5 +1,5 @@
 // COR24 APL Interpreter -- main entry point
-// Phase 2.4: Right-justified vector output
+// Phase 3.1: Monadic iota
 
 #include <stdio.h>
 #include "io.h"

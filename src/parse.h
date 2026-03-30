@@ -13,6 +13,7 @@
 #define NODE_IDENT  3   // variable reference (val = symbol index)
 #define NODE_ASSIGN 4   // assignment (val = symbol index, right = expr)
 #define NODE_VEC    5   // vector literal (val = heap array index)
+#define NODE_MONAD  6   // monadic primitive (val = RES_xxx, right = operand)
 
 #define AST_MAX 64
 
@@ -86,6 +87,14 @@ int ast_vec(int heap_idx) {
     return n;
 }
 
+int ast_monad(int res_id, int operand) {
+    int n = ast_new();
+    node_type[n] = NODE_MONAD;
+    node_val[n] = res_id;
+    node_right[n] = operand;
+    return n;
+}
+
 // Temporary buffer for collecting strand elements
 int strand_buf[64];
 
@@ -141,6 +150,13 @@ int parse_node(int mode) {
         if (sym_idx < 0) { parse_err = 1; return 0; }
         left = ast_ident(sym_idx);
         parse_pos++;
+    } else if (ty == TOK_RES) {
+        // Monadic primitive function (e.g. iota expr)
+        int res_id = tok_val[parse_pos];
+        parse_pos++;
+        int operand = parse_node(0);
+        if (parse_err) return 0;
+        left = ast_monad(res_id, operand);
     } else if (ty == TOK_MINUS) {
         // Monadic negate: applies to entire right expression (APL rule)
         parse_pos++;

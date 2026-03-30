@@ -81,6 +81,31 @@ int eval(int n) {
         return r;
     }
 
+    if (ty == NODE_MONAD) {
+        int v = eval(node_right[n]);
+        if (eval_err) return -1;
+        int res_id = node_val[n];
+
+        if (res_id == RES_IOTA) {
+            // iota N: generate vector 0 1 2 ... N-1
+            if (arr_rank(v) != 0) { eval_err = 3; return -1; }
+            int count = arr_get(v, 0);
+            if (count < 0) { eval_err = 1; return -1; }
+            int r = arr_vector(count);
+            if (r < 0) { eval_err = 1; return -1; }
+            int i = 0;
+            while (i < count) {
+                arr_set(r, i, i);
+                i++;
+            }
+            return r;
+        }
+
+        // Unknown monadic function
+        eval_err = 1;
+        return -1;
+    }
+
     if (ty == NODE_BINOP) {
         int lv = eval(node_left[n]);
         if (eval_err) return -1;
