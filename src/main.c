@@ -1,5 +1,5 @@
 // COR24 APL Interpreter -- main entry point
-// Phase 3.4+: Quad output ([] <- expr) for explicit I/O
+// Phase 3.5: rev (reverse), cat (ravel/catenate)
 
 #include <stdio.h>
 #include "io.h"

@@ -134,6 +134,58 @@ int eval(int n) {
             return -1;
         }
 
+        if (res_id == RES_REV) {
+            // rev A: reverse a vector
+            int rk = arr_rank(v);
+            if (rk == 0) {
+                // Scalar: reverse is identity
+                return v;
+            }
+            if (rk == 1) {
+                int sz = arr_size(v);
+                int r = arr_vector(sz);
+                if (r < 0) { eval_err = 1; return -1; }
+                int i = 0;
+                while (i < sz) {
+                    arr_set(r, i, arr_get(v, sz - 1 - i));
+                    i++;
+                }
+                return r;
+            }
+            eval_err = 1;
+            return -1;
+        }
+
+        if (res_id == RES_CAT) {
+            // Monadic cat: ravel (flatten to 1D vector)
+            int rk = arr_rank(v);
+            if (rk == 0) {
+                // Scalar -> 1-element vector
+                int r = arr_vector(1);
+                if (r < 0) { eval_err = 1; return -1; }
+                arr_set(r, 0, arr_get(v, 0));
+                return r;
+            }
+            if (rk == 1) {
+                // Vector: already 1D, return as-is
+                return v;
+            }
+            if (rk == 2) {
+                // Matrix -> vector of all elements
+                int sz = arr_size(v);
+                int r = arr_vector(sz);
+                if (r < 0) { eval_err = 1; return -1; }
+                int i = 0;
+                while (i < sz) {
+                    arr_set(r, i, arr_get(v, i));
+                    i++;
+                }
+                return r;
+            }
+            eval_err = 1;
+            return -1;
+        }
+
         // Unknown monadic function
         eval_err = 1;
         return -1;
@@ -268,6 +320,28 @@ int eval(int n) {
             int i = 0;
             while (i < new_sz) {
                 arr_set(r, i, arr_get(rv, start + i));
+                i++;
+            }
+            return r;
+        }
+
+        if (res_id == RES_CAT) {
+            // Dyadic cat: catenate two arrays
+            int lrk = arr_rank(lv);
+            int rrk = arr_rank(rv);
+            int lsz = arr_size(lv);
+            int rsz = arr_size(rv);
+            int total = lsz + rsz;
+            int r = arr_vector(total);
+            if (r < 0) { eval_err = 1; return -1; }
+            int i = 0;
+            while (i < lsz) {
+                arr_set(r, i, arr_get(lv, i));
+                i++;
+            }
+            i = 0;
+            while (i < rsz) {
+                arr_set(r, lsz + i, arr_get(rv, i));
                 i++;
             }
             return r;
