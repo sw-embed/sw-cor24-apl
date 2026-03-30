@@ -335,6 +335,62 @@ rev iota 5                4 3 2 1 0
 | Parser complexity for monadic/dyadic detection | Medium | Build test suite for edge cases early; keep grammar minimal |
 | UART speed limits interactive feel | Low | COR24 emulator runs fast; real FPGA UART is 115200 baud |
 
+### D9: Hardware I/O via `□SVO` Shared Variables
+
+**Decision:** Use standard APL shared variable protocol (`□SVO`)
+with COR24-specific auxiliary processor (AP) numbers for hardware
+I/O. AP numbers in IBM's 200+ user-defined range.
+
+**Rationale:**
+- IBM 5100/5110/5120 and VS APL used `□SVO`/`□SVC` for device I/O
+- `□SVO` is a recognized APL concept -- any APL programmer sees
+  "shared variable" and understands device I/O intent
+- Portable graceful degradation: `□SVO` returns coupling degree;
+  code can branch around hardware access on non-COR24 systems
+- AP 240-249 = byte access, AP 250-259 = word access, mapped to
+  COR24 memory regions (SRAM, EBR, MMIO)
+- User picks variable names (`'MMIO' □SVO 242`), not hardcoded
+
+**AP scheme:**
+- AP 240 = SRAM bytes, AP 241 = EBR bytes, AP 242 = MMIO bytes
+- AP 250 = SRAM words, AP 251 = EBR words
+- AP 243-249, 252-259 reserved for future (I2C, SPI, GPIO)
+
+**Trade-off:** More complex than custom quad names (`qled`/`qsw`),
+but portable, extensible, and APL-idiomatic. Considered and rejected
+simpler alternatives: custom quad variables (non-portable, GNU APL
+gives unhelpful errors), `□ARBIN`/`□ARBOUT` (less well-known),
+PEEK/POKE (not APL-idiomatic at all).
+
+**Skipped:** `□SVC` (access control -- no peer to sync with) and
+`□SVQ` (query state -- user already has return code from `□SVO`).
+
+### D10: Batch Mode (Headless APL Execution)
+
+**Decision:** Two execution modes -- interactive (UART REPL) and
+batch (APL image pre-loaded in SRAM). Batch mode frees UART for
+the APL program's own use.
+
+**Rationale:**
+- Interactive mode uses UART for console I/O -- APL programs can't
+  also use UART without conflict
+- Batch mode: interpreter reads from SRAM, UART available to program
+  via `□SVO` shared variables
+- Mode selected by a memory flag set via `cor24-run --patch`
+- Enables real embedded applications (UART echo, device control)
+
+### D11: Control Flow (`→` Branch and Labels)
+
+**Decision:** Standard APL branch (`→`) with line labels, plus
+user-defined functions via `del` (ASCII `∇`).
+
+**Rationale:**
+- Required for any non-trivial APL program (loops, conditionals)
+- Standard APL: `→(COND)/LABEL` conditional branch
+- `del R <- FN X` ... `del` for function definition
+- Without these, APL is limited to single-expression calculator
+- Needed for the UART echo target use case
+
 ## Future Extensions (not in scope)
 
 - User-defined functions (`del` / `nabla` editing)

@@ -224,6 +224,49 @@ int eval(int n) {
             return r;
         }
 
+        if (res_id == RES_TAKE) {
+            // N take A: take first N elements (negative N = from end)
+            if (arr_rank(lv) != 0) { eval_err = 1; return -1; }
+            int count = arr_get(lv, 0);
+            int sz = arr_size(rv);
+            int abs_n = count;
+            if (abs_n < 0) abs_n = 0 - abs_n;
+            if (abs_n > sz) { eval_err = 3; return -1; }
+
+            int r = arr_vector(abs_n);
+            if (r < 0) { eval_err = 1; return -1; }
+            int start = 0;
+            if (count < 0) start = sz - abs_n;
+            int i = 0;
+            while (i < abs_n) {
+                arr_set(r, i, arr_get(rv, start + i));
+                i++;
+            }
+            return r;
+        }
+
+        if (res_id == RES_DROP) {
+            // N drop A: drop first N elements (negative N = from end)
+            if (arr_rank(lv) != 0) { eval_err = 1; return -1; }
+            int count = arr_get(lv, 0);
+            int sz = arr_size(rv);
+            int abs_n = count;
+            if (abs_n < 0) abs_n = 0 - abs_n;
+            if (abs_n > sz) abs_n = sz;
+
+            int new_sz = sz - abs_n;
+            int r = arr_vector(new_sz);
+            if (r < 0) { eval_err = 1; return -1; }
+            int start = abs_n;
+            if (count < 0) start = 0;
+            int i = 0;
+            while (i < new_sz) {
+                arr_set(r, i, arr_get(rv, start + i));
+                i++;
+            }
+            return r;
+        }
+
         // Unknown dyadic function
         eval_err = 1;
         return -1;

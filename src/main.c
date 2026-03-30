@@ -1,5 +1,5 @@
 // COR24 APL Interpreter -- main entry point
-// Phase 3.3: Reduce operators (+/ -/ */ over vectors)
+// Phase 3.4: Dyadic take and drop with negative-N support
 
 #include <stdio.h>
 #include "io.h"

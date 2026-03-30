@@ -1,6 +1,6 @@
 number = 16
 slug = "take-drop"
-status = "pending"
+status = "in-progress"
 description = "Implement dyadic take and drop with negative-N support. (Phase 3, Step 3.4)"
 role = "legacy"
 context_files = []

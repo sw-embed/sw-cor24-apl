@@ -1,0 +1,1 @@
+Implemented +/ -/ */ reduce operators with right-to-left fold semantics. Added NODE_REDUCE AST type, parser recognition of op/ pattern (binop+slash), and evaluator with R-to-L fold. Validated: +/1 2 3 4 5->15, -/1 2 3->2, */1 2 3 4->24, +/iota 10->45, scalar passthrough, composition with arithmetic.

@@ -10,6 +10,10 @@
 | 3     | Core APL primitives           | iota, rho, reduce, take, drop     |
 | 4     | Matrix support                | 2D arrays, formatted output       |
 | 5     | Polish and testing            | Error handling, edge cases, docs  |
+| 6     | Shared variable I/O           | □SVO, AP 242, MMIO indexing       |
+| 7     | Bracket indexing & bitwise    | V[N], and/or/not                  |
+| 8     | Control flow & functions      | →, labels, ∇ user functions       |
+| 9     | Batch mode                    | APL image loading, headless exec  |
 
 ---
 
@@ -198,3 +202,131 @@
 - Document supported operations and syntax
 - Example session transcript
 - Known limitations
+
+---
+
+## Phase 6: Shared Variable I/O
+
+Hardware I/O via standard APL shared variable protocol (`□SVO`).
+See `docs/apl-echo-example-plan.md` for full design rationale,
+AP number scheme, and the target UART echo use case.
+
+### Background
+
+IBM 5100/5110/5120 and VS APL used `□SVO` (Shared Variable Offer)
+to connect APL variables to auxiliary processors (APs) for device
+I/O. We adopt this protocol with COR24-specific AP numbers in the
+200+ user-defined range.
+
+### AP Number Scheme
+
+| AP  | Width       | Region | Address Range       |
+|-----|-------------|--------|---------------------|
+| 240 | byte        | SRAM   | `000000-0FFFFF`     |
+| 241 | byte        | EBR    | `FEE000-FEFFFF`     |
+| 242 | byte        | MMIO   | `FF0000-FFFFFF`     |
+| 243-249 | byte    | —      | reserved future     |
+| 250 | 24-bit word | SRAM   | `000000-0FFFFF`     |
+| 251 | 24-bit word | EBR    | `FEE000-FEFFFF`     |
+| 252-259 | word    | —      | reserved future     |
+
+ASCII syntax: `□` maps to `q` prefix. `'MMIO' qSVO 242` in source.
+
+### Step 6.1: `□SVO` system function
+- Tokenizer recognizes `qSVO` as `TOK_QSVO`
+- Dyadic: `'NAME' qSVO AP` -- returns coupling degree (0/1/2)
+- Shared variable table: maps offered names to AP + region
+- AP 242 handler: byte read/write to MMIO region (`FF0000+offset`)
+- Active-low inversion on offset 0 (LED/switch convenience)
+- Return 2 (coupled) for supported APs, 0 for unknown APs
+- Test: `MMIORC <- 'MMIO' qSVO 242` returns `2`
+- Test: `MMIORC <- 'X' qSVO 999` returns `0`
+
+### Step 6.2: Shared variable indexed read/write
+- `MMIO[N]` reads byte at `FF0000 + N`
+- `MMIO[N] <- expr` writes byte at `FF0000 + N`
+- 0-origin offsets regardless of `□IO` setting
+- Test: `MMIO[0] <- 1` (LED on), `MMIO[0]` (read switch)
+- Test: `MMIO[256]` (UART data), `MMIO[257]` (UART status)
+
+### Step 6.3: Graceful degradation
+- `→(MMIORC<2)/NODEV` pattern for portable code
+- Programs skip hardware access on non-COR24 systems
+- Test: verify branch-around works when AP returns 0
+
+### Example Session
+```
+      MMIORC <- 'MMIO' qSVO 242
+      MMIORC
+  2
+      MMIO[0] <- 1
+      MMIO[0]
+  1
+      MMIO[257]
+  2
+```
+
+---
+
+## Phase 7: Bracket Indexing and Bitwise Operations
+
+### Step 7.1: Bracket indexing on vectors
+- `V[N]` reads element N from vector V
+- `V[N] <- expr` writes element N
+- 0-origin (matches our `iota` convention)
+- Test: `A <- 10 20 30` then `A[1]` -> `20`
+
+### Step 7.2: Bitwise operations
+- `and` (bitwise AND): needed for UART status bit testing
+- `or` (bitwise OR): general use
+- `not` (bitwise NOT / complement): general use
+- These are reserved words, same as `rho`, `iota`
+- Test: `128 and 130` -> `128`
+- Test: `3 or 4` -> `7`
+
+---
+
+## Phase 8: Control Flow and Functions
+
+### Step 8.1: Branch and labels
+- `→N` branches to line N
+- `→LABEL` branches to labeled line
+- `→(COND)/LABEL` conditional branch (standard APL idiom)
+- `→0` exits current function or program
+- `LABEL:` at start of line defines a branch target
+- Test: loop that counts to 10
+
+### Step 8.2: Multi-line program storage
+- Line array stored in heap
+- Direct entry: `[N] expr` syntax to define/edit lines
+- `)LIST` system command to display program
+- `)RUN` or `→1` to execute from line 1
+- Test: enter and run a multi-line program
+
+### Step 8.3: User-defined functions
+- `del R <- FN X` ... `del` (ASCII for `∇`)
+- Monadic and dyadic user functions
+- Local variables
+- Recursive calls
+- Test: `del R <- DOUBLE X` / `R <- X + X` / `del`
+
+---
+
+## Phase 9: Batch Mode
+
+### Step 9.1: APL image format
+- Newline-separated lines, null-terminated in memory
+- Loaded via `cor24-run --load-binary program.apl@0x080000`
+- Image pointer set via `--patch`
+
+### Step 9.2: Mode detection and batch reader
+- Interpreter checks known address for non-zero image pointer
+- Batch mode: read lines from SRAM, not UART
+- UART is free for the APL program to use via `□SVO`
+- Interactive mode: unchanged REPL behavior
+- Test: load simple APL program, verify execution
+
+### Step 9.3: UART echo demo
+- Full target use case: UART echo with LED/switch
+- See `docs/apl-echo-example-plan.md` for the program listing
+- Test via `cor24-run --terminal` with piped input

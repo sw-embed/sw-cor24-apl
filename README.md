@@ -46,7 +46,9 @@ for dyadic primitive functions (rho, take, drop, cat). Bump-allocated
 heap (4096 words) with per-iteration reclamation for temporaries.
 Phase 3.3 adds reduce operators (`+/`, `-/`, `*/`) with right-to-left
 reduction over vectors (e.g., `-/ 1 2 3` = `1-(2-3)` = 2). Scalar
-passthrough for reduce on scalars. Supports +, -, *, / (software
+passthrough for reduce on scalars. Phase 3.4 adds dyadic `take` and
+`drop` with negative-N support (`_2 take iota 5` -> `3 4`,
+`2 drop iota 5` -> `2 3 4`). Supports +, -, *, / (software
 divide), parentheses, monadic negate (scalar and vector), integer
 literals with APL underscore-negative convention, and variable
 assignment/reference via `<-`. Errors:
