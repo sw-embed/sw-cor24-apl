@@ -1,0 +1,6 @@
+2 3 rho iota 6
+(2 3 rho iota 6) + (2 3 rho 10 20 30 40 50 60)
+10 + 2 3 rho iota 6
+(2 3 rho iota 6) * 2
+rho (2 3 rho iota 6) + 10
+cat (2 3 rho iota 6) + 10
