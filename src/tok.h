@@ -4,17 +4,17 @@
 #pragma once
 
 // Token types
-#define TOK_EOL     0
-#define TOK_NUM     1
-#define TOK_IDENT   2
-#define TOK_PLUS    3
-#define TOK_MINUS   4
-#define TOK_STAR    5
-#define TOK_SLASH   6
-#define TOK_LPAREN  7
-#define TOK_RPAREN  8
-#define TOK_ASSIGN  9
-#define TOK_RES    10
+#define TOK_EOL     0   // end of line
+#define TOK_NUM     1   // integer literal (value in tok_val)
+#define TOK_IDENT   2   // user identifier (uppercase, pos in tok_val)
+#define TOK_PLUS    3   // +
+#define TOK_MINUS   4   // - (parser decides monadic vs dyadic)
+#define TOK_STAR    5   // *
+#define TOK_SLASH   6   // /
+#define TOK_LPAREN  7   // (
+#define TOK_RPAREN  8   // )
+#define TOK_ASSIGN  9   // <-
+#define TOK_RES    10   // reserved word (ID in tok_val)
 
 // Reserved word IDs
 #define RES_RHO     0
@@ -24,13 +24,13 @@
 #define RES_REV     4
 #define RES_CAT     5
 
-#define TOK_MAX    64
+#define TOK_MAX    64   // max tokens per line
 
 // Token storage (parallel arrays)
-int tok_type[TOK_MAX];
-int tok_val[TOK_MAX];
-int tok_pos[TOK_MAX];
-int tok_count;
+int tok_type[TOK_MAX];  // token type
+int tok_val[TOK_MAX];   // numeric value or reserved word ID
+int tok_pos[TOK_MAX];   // start position in source line
+int tok_count;           // number of tokens produced
 
 // ---- String helpers ----
 
