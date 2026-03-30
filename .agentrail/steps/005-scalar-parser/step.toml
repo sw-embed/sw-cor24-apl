@@ -1,6 +1,6 @@
 number = 5
 slug = "scalar-parser"
-status = "pending"
+status = "in-progress"
 description = "Right-to-left recursive descent parser for scalar expressions with +, -, *, parens, monadic negate. (Phase 1, Step 1.2)"
 role = "legacy"
 context_files = []

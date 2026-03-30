@@ -33,11 +33,13 @@ Requires `tc24r` (C compiler) and `cor24-run` (emulator) on PATH.
 
 ## Status
 
-Phase 1 in progress. Tokenizer complete -- lexes input into token
-stream with NUM, IDENT, RESERVED, operators, ASSIGN, parens, EOL.
-Reserved word lookup for `rho`, `iota`, `take`, `drop`, `rev`, `cat`.
-Parser and evaluator are next. Implementation tracked via agentrail
-saga (`cor24-apl-interpreter`, 26 steps across 6 phases).
+Phase 1 in progress. Tokenizer and scalar parser complete. Parser
+uses right-to-left recursive descent (APL semantics: no operator
+precedence, all functions right-associative). Supports +, -, *, /,
+parentheses, monadic negate, and integer literals with APL
+underscore-negative convention. Evaluator is next. Implementation
+tracked via agentrail saga (`cor24-apl-interpreter`, 26 steps across
+6 phases).
 
 ## Example (target syntax)
 
