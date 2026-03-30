@@ -41,6 +41,15 @@ int parse_int(char *s, int start, int *end) {
     return val;
 }
 
+// Return the print width of an integer (digit count + 1 for underscore if negative).
+int num_width(int n) {
+    int w = 0;
+    if (n < 0) { w = 1; n = 0 - n; }
+    if (n == 0) return w + 1;
+    while (n > 0) { w++; n = n / 10; }
+    return w;
+}
+
 // Print an integer to UART using APL underscore-negative convention.
 // Negative numbers are printed as _N (e.g., -42 prints as _42).
 void print_int(int n) {
@@ -63,4 +72,12 @@ void print_int(int n) {
         i--;
         putchar(buf[i]);
     }
+}
+
+// Print an integer right-justified in a field of given width.
+void print_int_rj(int n, int width) {
+    int w = num_width(n);
+    int pad = width - w;
+    while (pad > 0) { putchar(32); pad--; }
+    print_int(n);
 }

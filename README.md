@@ -33,19 +33,19 @@ Requires `tc24r` (C compiler) and `cor24-run` (emulator) on PATH.
 
 ## Status
 
-Phase 2 in progress. Phase 1 (scalar REPL) complete with tokenizer,
-parser (right-to-left recursive descent), tree-walking evaluator, and
-symbol table. Phase 2.3 adds element-wise vector operations: vector +
-vector, scalar extension (scalar op vector, vector op scalar), and
-conformability checks (LENGTH ERROR on mismatched lengths). Monadic
-negate works on vectors. Bump-allocated heap (4096 words) with
-per-iteration reclamation for temporaries. Supports +, -, *, /
-(software divide), parentheses, monadic negate, integer literals with
-APL underscore-negative convention, vector literals (stranding), and
-variable assignment/reference via `<-`. Errors: SYNTAX ERROR, DOMAIN
-ERROR (div by zero), VALUE ERROR (undefined variable), LENGTH ERROR
-(vector size mismatch). Implementation tracked via agentrail saga
-(`cor24-apl-interpreter`, 26 steps across 6 phases).
+Phase 2 complete. Phase 1 (scalar REPL) includes tokenizer, parser
+(right-to-left recursive descent), tree-walking evaluator, and symbol
+table. Phase 2 adds vector support: vector literals (stranding),
+element-wise operations with scalar extension, conformability checks
+(LENGTH ERROR), and right-justified vector output with consistent
+column widths. Bump-allocated heap (4096 words) with per-iteration
+reclamation for temporaries. Supports +, -, *, / (software divide),
+parentheses, monadic negate (scalar and vector), integer literals with
+APL underscore-negative convention, and variable assignment/reference
+via `<-`. Errors: SYNTAX ERROR, DOMAIN ERROR (div by zero), VALUE
+ERROR (undefined variable), LENGTH ERROR (vector size mismatch).
+Implementation tracked via agentrail saga (`cor24-apl-interpreter`,
+26 steps across 6 phases).
 
 ## Example (target syntax)
 

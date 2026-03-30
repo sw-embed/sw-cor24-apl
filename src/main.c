@@ -1,5 +1,5 @@
 // COR24 APL Interpreter -- main entry point
-// Phase 2.3: Element-wise vector operations
+// Phase 2.4: Right-justified vector output
 
 #include <stdio.h>
 #include "io.h"
@@ -61,12 +61,21 @@ int main() {
                             print_int(arr_get(result, 0));
                             putchar(10);
                         } else if (rank == 1) {
-                            io_print("  ");
                             int sz = arr_dim0(result);
+                            // Find max width across all elements
+                            int maxw = 1;
                             int j = 0;
                             while (j < sz) {
-                                if (j > 0) putchar(32);
-                                print_int(arr_get(result, j));
+                                int w = num_width(arr_get(result, j));
+                                if (w > maxw) maxw = w;
+                                j++;
+                            }
+                            // Print each element right-justified
+                            j = 0;
+                            while (j < sz) {
+                                if (j == 0) putchar(32);
+                                print_int_rj(arr_get(result, j), maxw);
+                                if (j + 1 < sz) putchar(32);
                                 j++;
                             }
                             putchar(10);
