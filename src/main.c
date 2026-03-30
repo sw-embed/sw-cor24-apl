@@ -1,5 +1,5 @@
 // COR24 APL Interpreter -- main entry point
-// Phase 4.3: matrix element-wise ops and scalar extension
+// Phase 4.4: matrix take/drop on rows
 
 #include <stdio.h>
 #include "io.h"

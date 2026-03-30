@@ -301,46 +301,101 @@ int eval(int n) {
         }
 
         if (res_id == RES_TAKE) {
-            // N take A: take first N elements (negative N = from end)
+            // N take A: take first N elements/rows (negative N = from end)
             if (arr_rank(lv) != 0) { eval_err = 1; return -1; }
             int count = arr_get(lv, 0);
-            int sz = arr_size(rv);
-            int abs_n = count;
-            if (abs_n < 0) abs_n = 0 - abs_n;
-            if (abs_n > sz) { eval_err = 3; return -1; }
+            int rrk = arr_rank(rv);
 
-            int r = arr_vector(abs_n);
-            if (r < 0) { eval_err = 1; return -1; }
-            int start = 0;
-            if (count < 0) start = sz - abs_n;
-            int i = 0;
-            while (i < abs_n) {
-                arr_set(r, i, arr_get(rv, start + i));
-                i++;
+            if (rrk <= 1) {
+                int sz = arr_size(rv);
+                int abs_n = count;
+                if (abs_n < 0) abs_n = 0 - abs_n;
+                if (abs_n > sz) { eval_err = 3; return -1; }
+
+                int r = arr_vector(abs_n);
+                if (r < 0) { eval_err = 1; return -1; }
+                int start = 0;
+                if (count < 0) start = sz - abs_n;
+                int i = 0;
+                while (i < abs_n) {
+                    arr_set(r, i, arr_get(rv, start + i));
+                    i++;
+                }
+                return r;
             }
-            return r;
+
+            if (rrk == 2) {
+                int rows = arr_dim0(rv);
+                int cols = arr_dim1(rv);
+                int abs_n = count;
+                if (abs_n < 0) abs_n = 0 - abs_n;
+                if (abs_n > rows) { eval_err = 3; return -1; }
+
+                int r = arr_new(2, abs_n, cols);
+                if (r < 0) { eval_err = 1; return -1; }
+                int start_row = 0;
+                if (count < 0) start_row = rows - abs_n;
+                int total = abs_n * cols;
+                int i = 0;
+                while (i < total) {
+                    arr_set(r, i, arr_get(rv, start_row * cols + i));
+                    i++;
+                }
+                return r;
+            }
+
+            eval_err = 1;
+            return -1;
         }
 
         if (res_id == RES_DROP) {
-            // N drop A: drop first N elements (negative N = from end)
+            // N drop A: drop first N elements/rows (negative N = from end)
             if (arr_rank(lv) != 0) { eval_err = 1; return -1; }
             int count = arr_get(lv, 0);
-            int sz = arr_size(rv);
-            int abs_n = count;
-            if (abs_n < 0) abs_n = 0 - abs_n;
-            if (abs_n > sz) abs_n = sz;
+            int rrk = arr_rank(rv);
 
-            int new_sz = sz - abs_n;
-            int r = arr_vector(new_sz);
-            if (r < 0) { eval_err = 1; return -1; }
-            int start = abs_n;
-            if (count < 0) start = 0;
-            int i = 0;
-            while (i < new_sz) {
-                arr_set(r, i, arr_get(rv, start + i));
-                i++;
+            if (rrk <= 1) {
+                int sz = arr_size(rv);
+                int abs_n = count;
+                if (abs_n < 0) abs_n = 0 - abs_n;
+                if (abs_n > sz) abs_n = sz;
+
+                int new_sz = sz - abs_n;
+                int r = arr_vector(new_sz);
+                if (r < 0) { eval_err = 1; return -1; }
+                int start = abs_n;
+                if (count < 0) start = 0;
+                int i = 0;
+                while (i < new_sz) {
+                    arr_set(r, i, arr_get(rv, start + i));
+                    i++;
+                }
+                return r;
             }
-            return r;
+
+            if (rrk == 2) {
+                int rows = arr_dim0(rv);
+                int cols = arr_dim1(rv);
+                int abs_n = count;
+                if (abs_n < 0) abs_n = 0 - abs_n;
+                if (abs_n > rows) abs_n = rows;
+
+                int new_rows = rows - abs_n;
+                int r = arr_new(2, new_rows, cols);
+                if (r < 0) { eval_err = 1; return -1; }
+                int start_row = abs_n;
+                if (count < 0) start_row = 0;
+                int total = new_rows * cols;
+                int i = 0;
+                while (i < total) {
+                    arr_set(r, i, arr_get(rv, start_row * cols + i));
+                    i++;
+                }
+                return r;
+            }
+
+            eval_err = 1;
+            return -1;
         }
 
         if (res_id == RES_CAT) {
