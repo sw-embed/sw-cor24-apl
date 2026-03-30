@@ -20,6 +20,24 @@ int eval(int n) {
         return node_val[n];
     }
 
+    if (ty == NODE_IDENT) {
+        int idx = node_val[n];
+        if (!sym_set_flag[idx]) {
+            eval_err = 2;  // VALUE ERROR
+            return 0;
+        }
+        return sym_val[idx];
+    }
+
+    if (ty == NODE_ASSIGN) {
+        int idx = node_val[n];
+        int v = eval(node_right[n]);
+        if (eval_err) return 0;
+        sym_val[idx] = v;
+        sym_set_flag[idx] = 1;
+        return v;
+    }
+
     if (ty == NODE_NEG) {
         int v = eval(node_right[n]);
         return 0 - v;

@@ -33,14 +33,14 @@ Requires `tc24r` (C compiler) and `cor24-run` (emulator) on PATH.
 
 ## Status
 
-Phase 1 in progress. Tokenizer, scalar parser, and scalar evaluator
-complete. Parser uses right-to-left recursive descent (APL semantics:
-no operator precedence, all functions right-associative). Tree-walking
-evaluator supports +, -, *, / (software divide), parentheses, monadic
-negate, and integer literals with APL underscore-negative convention.
-Division by zero reports DOMAIN ERROR. REPL integration is next.
-Implementation tracked via agentrail saga (`cor24-apl-interpreter`,
-26 steps across 6 phases).
+Phase 1 complete. Full scalar REPL with variables. Tokenizer, parser
+(right-to-left recursive descent), tree-walking evaluator, and symbol
+table all operational. Supports +, -, *, / (software divide),
+parentheses, monadic negate, integer literals with APL underscore-
+negative convention, and variable assignment/reference via `<-`.
+Errors: SYNTAX ERROR, DOMAIN ERROR (div by zero), VALUE ERROR
+(undefined variable). Implementation tracked via agentrail saga
+(`cor24-apl-interpreter`, 26 steps across 6 phases).
 
 ## Example (target syntax)
 

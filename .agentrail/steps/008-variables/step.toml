@@ -1,6 +1,6 @@
 number = 8
 slug = "variables"
-status = "pending"
+status = "in-progress"
 description = "Symbol table (64 entries), assignment with <-, variable references in expressions. (Phase 1, Step 1.5)"
 role = "legacy"
 context_files = []

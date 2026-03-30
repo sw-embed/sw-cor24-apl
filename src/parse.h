@@ -9,6 +9,8 @@
 #define NODE_NUM    0   // integer literal (val = value)
 #define NODE_BINOP  1   // binary op (val = operator tok type)
 #define NODE_NEG    2   // monadic negate (right = operand)
+#define NODE_IDENT  3   // variable reference (val = symbol index)
+#define NODE_ASSIGN 4   // assignment (val = symbol index, right = expr)
 
 #define AST_MAX 64
 
@@ -22,6 +24,7 @@ int node_count;
 // Parser state
 int parse_pos;
 int parse_err;
+char *parse_line;   // source line for identifier lookup
 
 // Allocate a new AST node
 int ast_new() {
@@ -59,6 +62,21 @@ int ast_neg(int operand) {
     return n;
 }
 
+int ast_ident(int sym_idx) {
+    int n = ast_new();
+    node_type[n] = NODE_IDENT;
+    node_val[n] = sym_idx;
+    return n;
+}
+
+int ast_assign(int sym_idx, int expr) {
+    int n = ast_new();
+    node_type[n] = NODE_ASSIGN;
+    node_val[n] = sym_idx;
+    node_right[n] = expr;
+    return n;
+}
+
 int is_binop(int ty) {
     return ty == TOK_PLUS || ty == TOK_MINUS || ty == TOK_STAR || ty == TOK_SLASH;
 }
@@ -87,6 +105,11 @@ int parse_node(int mode) {
             return 0;
         }
         parse_pos++;
+    } else if (ty == TOK_IDENT) {
+        int sym_idx = sym_lookup(parse_line, tok_val[parse_pos]);
+        if (sym_idx < 0) { parse_err = 1; return 0; }
+        left = ast_ident(sym_idx);
+        parse_pos++;
     } else if (ty == TOK_MINUS) {
         // Monadic negate: applies to entire right expression (APL rule)
         parse_pos++;
@@ -112,10 +135,23 @@ int parse_node(int mode) {
 }
 
 // Parse the token stream. Returns root node index, or -1 on error.
-int parse() {
+// line is needed for identifier name resolution into the symbol table.
+int parse(char *line) {
     node_count = 0;
     parse_pos = 0;
     parse_err = 0;
+    parse_line = line;
+
+    // Check for assignment: IDENT <- expr
+    if (tok_type[0] == TOK_IDENT && tok_type[1] == TOK_ASSIGN) {
+        int sym_idx = sym_lookup(line, tok_val[0]);
+        if (sym_idx < 0) { return -1; }
+        parse_pos = 2;
+        int expr = parse_node(0);
+        if (parse_err) return -1;
+        if (tok_type[parse_pos] != TOK_EOL) return -1;
+        return ast_assign(sym_idx, expr);
+    }
 
     int root = parse_node(0);
 
