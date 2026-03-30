@@ -33,10 +33,11 @@ Requires `tc24r` (C compiler) and `cor24-run` (emulator) on PATH.
 
 ## Status
 
-Phase 0 complete. UART I/O bootstrap with line editing, number
-parsing (`parse_int`) and printing (`print_int`) with APL
-underscore-negative convention. Implementation tracked via
-agentrail saga (`cor24-apl-interpreter`, 26 steps across 6 phases).
+Phase 1 in progress. Tokenizer complete -- lexes input into token
+stream with NUM, IDENT, RESERVED, operators, ASSIGN, parens, EOL.
+Reserved word lookup for `rho`, `iota`, `take`, `drop`, `rev`, `cat`.
+Parser and evaluator are next. Implementation tracked via agentrail
+saga (`cor24-apl-interpreter`, 26 steps across 6 phases).
 
 ## Example (target syntax)
 

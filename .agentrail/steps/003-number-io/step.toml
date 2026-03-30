@@ -1,7 +1,8 @@
 number = 3
 slug = "number-io"
-status = "in-progress"
+status = "completed"
 description = "Write print_int and parse_int for decimal I/O with underscore-negative. Test round-trip. (Phase 0, Step 0.3)"
 role = "legacy"
 context_files = []
 created_at = "2026-03-29T16:25:16"
+completed_at = "2026-03-29T19:08:16"

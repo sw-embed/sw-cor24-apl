@@ -1,6 +1,6 @@
 number = 4
 slug = "tokenizer"
-status = "pending"
+status = "in-progress"
 description = "Implement lexer with token types NUM, IDENT, RESERVED, operators, ASSIGN, parens. Reserved word lookup. (Phase 1, Step 1.1)"
 role = "legacy"
 context_files = []
