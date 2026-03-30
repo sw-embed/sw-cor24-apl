@@ -1,0 +1,1 @@
+Implemented symbol table (64 entries, linear scan) with flat name buffer, assignment via A <- expr (silent per APL convention), variable references in expressions, and VALUE ERROR for undefined variables. All tested on COR24 emulator: assignment, reference, expressions with variables, undefined variable error, and continued arithmetic.

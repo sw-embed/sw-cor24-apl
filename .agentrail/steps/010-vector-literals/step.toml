@@ -1,6 +1,6 @@
 number = 10
 slug = "vector-literals"
-status = "pending"
+status = "in-progress"
 description = "Parser recognizes adjacent numbers as vectors. Create vector nodes in AST. (Phase 2, Step 2.2)"
 role = "legacy"
 context_files = []

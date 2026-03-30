@@ -1,14 +1,14 @@
 // COR24 APL Interpreter -- main entry point
-// Phase 2.1: Array data structure
+// Phase 2.2: Vector literals
 
 #include <stdio.h>
 #include "io.h"
 #include "num.h"
+#include "arr.h"
 #include "tok.h"
 #include "sym.h"
 #include "parse.h"
 #include "eval.h"
-#include "arr.h"
 
 int main() {
     char line[IO_LINE_MAX];
@@ -27,25 +27,48 @@ int main() {
                 io_print("  SYNTAX ERROR");
                 putchar(10);
             } else {
+                // Save heap position for temporary reclamation
+                int heap_save = heap_top;
+
                 int root = parse(line);
                 if (root < 0) {
+                    heap_top = heap_save;
                     io_print("  SYNTAX ERROR");
                     putchar(10);
                 } else {
                     eval_err = 0;
                     int result = eval(root);
                     if (eval_err == 2) {
+                        heap_top = heap_save;
                         io_print("  VALUE ERROR");
                         putchar(10);
                     } else if (eval_err) {
+                        heap_top = heap_save;
                         io_print("  DOMAIN ERROR");
                         putchar(10);
                     } else if (node_type[root] == NODE_ASSIGN) {
                         // Assignment: no output (APL convention)
+                        // Don't restore heap -- variable value persists
                     } else {
-                        io_print("  ");
-                        print_int(result);
-                        putchar(10);
+                        // Print result based on rank
+                        int rank = arr_rank(result);
+                        if (rank == 0) {
+                            io_print("  ");
+                            print_int(arr_get(result, 0));
+                            putchar(10);
+                        } else if (rank == 1) {
+                            io_print("  ");
+                            int sz = arr_dim0(result);
+                            int j = 0;
+                            while (j < sz) {
+                                if (j > 0) putchar(32);
+                                print_int(arr_get(result, j));
+                                j++;
+                            }
+                            putchar(10);
+                        }
+                        // Reclaim temporaries
+                        heap_top = heap_save;
                     }
                 }
             }

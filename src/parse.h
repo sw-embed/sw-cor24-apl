@@ -1,7 +1,8 @@
 // COR24 APL Interpreter -- Parser
-// Right-to-left recursive descent for scalar expressions.
+// Right-to-left recursive descent with vector literal stranding.
 // APL: all operators equal precedence, right-associative.
 // 2 + 3 * 4  ->  2 + (3 * 4)  ->  14
+// 1 2 3      ->  3-element vector (adjacent numbers strand)
 
 #pragma once
 
@@ -11,6 +12,7 @@
 #define NODE_NEG    2   // monadic negate (right = operand)
 #define NODE_IDENT  3   // variable reference (val = symbol index)
 #define NODE_ASSIGN 4   // assignment (val = symbol index, right = expr)
+#define NODE_VEC    5   // vector literal (val = heap array index)
 
 #define AST_MAX 64
 
@@ -77,6 +79,16 @@ int ast_assign(int sym_idx, int expr) {
     return n;
 }
 
+int ast_vec(int heap_idx) {
+    int n = ast_new();
+    node_type[n] = NODE_VEC;
+    node_val[n] = heap_idx;
+    return n;
+}
+
+// Temporary buffer for collecting strand elements
+int strand_buf[64];
+
 int is_binop(int ty) {
     return ty == TOK_PLUS || ty == TOK_MINUS || ty == TOK_STAR || ty == TOK_SLASH;
 }
@@ -96,6 +108,25 @@ int parse_node(int mode) {
     if (ty == TOK_NUM) {
         left = ast_num(tok_val[parse_pos]);
         parse_pos++;
+
+        // Stranding: adjacent numbers form a vector (e.g. 1 2 3)
+        if (tok_type[parse_pos] == TOK_NUM) {
+            strand_buf[0] = node_val[left];
+            int count = 1;
+            while (tok_type[parse_pos] == TOK_NUM && count < 64) {
+                strand_buf[count] = tok_val[parse_pos];
+                parse_pos++;
+                count++;
+            }
+            int aidx = arr_vector(count);
+            if (aidx < 0) { parse_err = 1; return 0; }
+            int si = 0;
+            while (si < count) {
+                arr_set(aidx, si, strand_buf[si]);
+                si++;
+            }
+            left = ast_vec(aidx);
+        }
     } else if (ty == TOK_LPAREN) {
         parse_pos++;
         left = parse_node(0);

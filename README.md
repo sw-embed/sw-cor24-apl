@@ -35,14 +35,16 @@ Requires `tc24r` (C compiler) and `cor24-run` (emulator) on PATH.
 
 Phase 2 in progress. Phase 1 (scalar REPL) complete with tokenizer,
 parser (right-to-left recursive descent), tree-walking evaluator, and
-symbol table. Phase 2.1 adds array data structure: bump-allocated heap
-(4096 words), array headers with rank/shape metadata, and accessors
-for scalars, vectors, and matrices. Supports +, -, *, / (software
-divide), parentheses, monadic negate, integer literals with APL
-underscore-negative convention, and variable assignment/reference via
-`<-`. Errors: SYNTAX ERROR, DOMAIN ERROR (div by zero), VALUE ERROR
-(undefined variable). Implementation tracked via agentrail saga
-(`cor24-apl-interpreter`, 26 steps across 6 phases).
+symbol table. Phase 2.2 adds vector literal support: adjacent numbers
+strand into vectors (e.g. `1 2 3`), evaluator returns heap-allocated
+arrays, and variables can hold vector values. Bump-allocated heap
+(4096 words) with per-iteration reclamation for temporaries. Supports
++, -, *, / (software divide), parentheses, monadic negate, integer
+literals with APL underscore-negative convention, vector literals, and
+variable assignment/reference via `<-`. Errors: SYNTAX ERROR, DOMAIN
+ERROR (div by zero), VALUE ERROR (undefined variable). Implementation
+tracked via agentrail saga (`cor24-apl-interpreter`, 26 steps across
+6 phases).
 
 ## Example (target syntax)
 
