@@ -1,5 +1,5 @@
 // COR24 APL Interpreter -- main entry point
-// Phase 3.4: Dyadic take and drop with negative-N support
+// Phase 3.4+: Quad output ([] <- expr) for explicit I/O
 
 #include <stdio.h>
 #include "io.h"

@@ -60,6 +60,12 @@ int eval(int n) {
         return v;
     }
 
+    if (ty == NODE_QOUT) {
+        int v = eval(node_right[n]);
+        if (eval_err) return -1;
+        return v;
+    }
+
     if (ty == NODE_NEG) {
         int v = eval(node_right[n]);
         if (eval_err) return -1;

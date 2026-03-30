@@ -15,6 +15,7 @@
 #define TOK_RPAREN  8   // )
 #define TOK_ASSIGN  9   // <-
 #define TOK_RES    10   // reserved word (ID in tok_val)
+#define TOK_QUAD   11   // quad ([] — bare quad for I/O)
 
 // Reserved word IDs
 #define RES_RHO     0
@@ -118,7 +119,7 @@ int tokenize(char *line) {
             continue;
         }
 
-        // Lowercase letter: reserved word or unknown
+        // Lowercase letter: quad variables, reserved word, or unknown
         if (is_lower(line[i])) {
             int end;
             int res = lookup_reserved(line, i, &end);
@@ -152,6 +153,16 @@ int tokenize(char *line) {
         if (line[i] == 47) { tok_type[t] = TOK_SLASH;  tok_pos[t] = i; tok_val[t] = 0; t++; i++; continue; }
         if (line[i] == 40) { tok_type[t] = TOK_LPAREN; tok_pos[t] = i; tok_val[t] = 0; t++; i++; continue; }
         if (line[i] == 41) { tok_type[t] = TOK_RPAREN; tok_pos[t] = i; tok_val[t] = 0; t++; i++; continue; }
+
+        // Quad: [] (IBM 5100 ASCII convention for ⎕)
+        if (line[i] == 91 && line[i + 1] == 93) {
+            tok_type[t] = TOK_QUAD;
+            tok_pos[t] = i;
+            tok_val[t] = 0;
+            t++;
+            i = i + 2;
+            continue;
+        }
 
         // Assignment: <-
         if (line[i] == 60 && line[i + 1] == 45) {
