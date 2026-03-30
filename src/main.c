@@ -1,5 +1,5 @@
 // COR24 APL Interpreter -- main entry point
-// Phase 1.5: Variables and assignment
+// Phase 2.1: Array data structure
 
 #include <stdio.h>
 #include "io.h"
@@ -8,10 +8,12 @@
 #include "sym.h"
 #include "parse.h"
 #include "eval.h"
+#include "arr.h"
 
 int main() {
     char line[IO_LINE_MAX];
 
+    arr_reset();
     puts("COR24 APL v0.1");
 
     while (1) {
