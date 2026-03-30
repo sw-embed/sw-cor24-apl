@@ -1,11 +1,12 @@
 // COR24 APL Interpreter -- main entry point
-// Phase 1.2: Parser test mode
+// Phase 1.3: Scalar evaluator
 
 #include <stdio.h>
 #include "io.h"
 #include "num.h"
 #include "tok.h"
 #include "parse.h"
+#include "eval.h"
 
 int main() {
     char line[IO_LINE_MAX];
@@ -28,9 +29,16 @@ int main() {
                     io_print("  SYNTAX ERROR");
                     putchar(10);
                 } else {
-                    io_print("  ");
-                    ast_dump(root);
-                    putchar(10);
+                    eval_err = 0;
+                    int result = eval(root);
+                    if (eval_err) {
+                        io_print("  DOMAIN ERROR");
+                        putchar(10);
+                    } else {
+                        io_print("  ");
+                        print_int(result);
+                        putchar(10);
+                    }
                 }
             }
         }
