@@ -33,9 +33,10 @@ Requires `tc24r` (C compiler) and `cor24-run` (emulator) on PATH.
 
 ## Status
 
-Phase 0 in progress. UART I/O bootstrap complete with line editing.
-Implementation tracked via agentrail saga
-(`cor24-apl-interpreter`, 26 steps across 6 phases).
+Phase 0 complete. UART I/O bootstrap with line editing, number
+parsing (`parse_int`) and printing (`print_int`) with APL
+underscore-negative convention. Implementation tracked via
+agentrail saga (`cor24-apl-interpreter`, 26 steps across 6 phases).
 
 ## Example (target syntax)
 
