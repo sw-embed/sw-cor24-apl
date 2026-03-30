@@ -33,7 +33,7 @@ Requires `tc24r` (C compiler) and `cor24-run` (emulator) on PATH.
 
 ## Status
 
-Phase 3 in progress. Phase 1 (scalar REPL) includes tokenizer, parser
+Phase 4 in progress. Phase 1 (scalar REPL) includes tokenizer, parser
 (right-to-left recursive descent), tree-walking evaluator, and symbol
 table. Phase 2 adds vector support: vector literals (stranding),
 element-wise operations with scalar extension, conformability checks
@@ -49,7 +49,10 @@ reduction over vectors (e.g., `-/ 1 2 3` = `1-(2-3)` = 2). Scalar
 passthrough for reduce on scalars. Phase 3.4 adds dyadic `take` and
 `drop` with negative-N support (`_2 take iota 5` -> `3 4`,
 `2 drop iota 5` -> `2 3 4`). Phase 3.5 adds monadic `rev` (reverse vector), monadic `cat` (ravel/flatten
-to 1D), and dyadic `cat` (catenate arrays). Quad output (`[] <- expr`)
+to 1D), and dyadic `cat` (catenate arrays). Phase 4.1 adds matrix creation and display: `2 3 rho iota 6` creates
+a 2x3 matrix displayed one row per line with right-justified columns.
+Monadic `rho` on matrices returns 2-element shape vector. Monadic `cat`
+(ravel) flattens matrices to 1D vectors. Quad output (`[] <- expr`)
 provides explicit I/O following IBM 5100 conventions. Supports +, -, *,
 / (software
 divide), parentheses, monadic negate (scalar and vector), integer

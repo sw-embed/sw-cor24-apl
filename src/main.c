@@ -1,5 +1,5 @@
 // COR24 APL Interpreter -- main entry point
-// Phase 3.5: rev (reverse), cat (ravel/catenate)
+// Phase 4.1: matrix creation and display
 
 #include <stdio.h>
 #include "io.h"
@@ -79,6 +79,31 @@ int main() {
                                 j++;
                             }
                             putchar(10);
+                        } else if (rank == 2) {
+                            int rows = arr_dim0(result);
+                            int cols = arr_dim1(result);
+                            int sz = rows * cols;
+                            // Find max width across all elements
+                            int maxw = 1;
+                            int j = 0;
+                            while (j < sz) {
+                                int w = num_width(arr_get(result, j));
+                                if (w > maxw) maxw = w;
+                                j++;
+                            }
+                            // Print each row on its own line
+                            int r = 0;
+                            while (r < rows) {
+                                int c = 0;
+                                while (c < cols) {
+                                    if (c == 0) putchar(32);
+                                    print_int_rj(arr_get(result, r * cols + c), maxw);
+                                    if (c + 1 < cols) putchar(32);
+                                    c++;
+                                }
+                                putchar(10);
+                                r++;
+                            }
                         }
                         // Reclaim temporaries
                         heap_top = heap_save;
