@@ -1,5 +1,5 @@
 // COR24 APL Interpreter -- main entry point
-// Phase 4.1: matrix creation and display
+// Phase 4.3: matrix element-wise ops and scalar extension
 
 #include <stdio.h>
 #include "io.h"

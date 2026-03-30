@@ -52,7 +52,9 @@ passthrough for reduce on scalars. Phase 3.4 adds dyadic `take` and
 to 1D), and dyadic `cat` (catenate arrays). Phase 4.1 adds matrix creation and display: `2 3 rho iota 6` creates
 a 2x3 matrix displayed one row per line with right-justified columns.
 Monadic `rho` on matrices returns 2-element shape vector. Monadic `cat`
-(ravel) flattens matrices to 1D vectors. Quad output (`[] <- expr`)
+(ravel) flattens matrices to 1D vectors. Phase 4.3 adds element-wise
+operations on matrices (matrix+matrix, scalar+matrix, matrix*scalar),
+matrix negate, and conformability checks for mismatched matrix shapes. Quad output (`[] <- expr`)
 provides explicit I/O following IBM 5100 conventions. Supports +, -, *,
 / (software
 divide), parentheses, monadic negate (scalar and vector), integer

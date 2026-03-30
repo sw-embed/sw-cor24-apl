@@ -76,15 +76,33 @@ int eval(int n) {
             return r;
         }
         // Negate each element of vector
-        int sz = arr_size(v);
-        int r = arr_vector(sz);
-        if (r < 0) { eval_err = 1; return -1; }
-        int i = 0;
-        while (i < sz) {
-            arr_set(r, i, 0 - arr_get(v, i));
-            i++;
+        if (rk == 1) {
+            int sz = arr_size(v);
+            int r = arr_vector(sz);
+            if (r < 0) { eval_err = 1; return -1; }
+            int i = 0;
+            while (i < sz) {
+                arr_set(r, i, 0 - arr_get(v, i));
+                i++;
+            }
+            return r;
         }
-        return r;
+        // Negate each element of matrix
+        if (rk == 2) {
+            int d0 = arr_dim0(v);
+            int d1 = arr_dim1(v);
+            int sz = d0 * d1;
+            int r = arr_new(2, d0, d1);
+            if (r < 0) { eval_err = 1; return -1; }
+            int i = 0;
+            while (i < sz) {
+                arr_set(r, i, 0 - arr_get(v, i));
+                i++;
+            }
+            return r;
+        }
+        eval_err = 1;
+        return -1;
     }
 
     if (ty == NODE_MONAD) {
@@ -412,6 +430,62 @@ int eval(int n) {
             if (r < 0) { eval_err = 1; return -1; }
             int i = 0;
             while (i < lsz) {
+                int val = eval_binop_scalar(op, arr_get(lv, i), ra);
+                if (eval_err) return -1;
+                arr_set(r, i, val);
+                i++;
+            }
+            return r;
+        }
+
+        // Matrix op matrix: must match shape
+        if (lrk == 2 && rrk == 2) {
+            if (arr_dim0(lv) != arr_dim0(rv) || arr_dim1(lv) != arr_dim1(rv)) {
+                eval_err = 3; return -1;
+            }
+            int d0 = arr_dim0(lv);
+            int d1 = arr_dim1(lv);
+            int r = arr_new(2, d0, d1);
+            if (r < 0) { eval_err = 1; return -1; }
+            int sz = d0 * d1;
+            int i = 0;
+            while (i < sz) {
+                int val = eval_binop_scalar(op, arr_get(lv, i), arr_get(rv, i));
+                if (eval_err) return -1;
+                arr_set(r, i, val);
+                i++;
+            }
+            return r;
+        }
+
+        // Scalar op matrix
+        if (lrk == 0 && rrk == 2) {
+            int la = arr_get(lv, 0);
+            int d0 = arr_dim0(rv);
+            int d1 = arr_dim1(rv);
+            int r = arr_new(2, d0, d1);
+            if (r < 0) { eval_err = 1; return -1; }
+            int sz = d0 * d1;
+            int i = 0;
+            while (i < sz) {
+                int val = eval_binop_scalar(op, la, arr_get(rv, i));
+                if (eval_err) return -1;
+                arr_set(r, i, val);
+                i++;
+            }
+            return r;
+        }
+
+        // Matrix op scalar
+        if (lrk == 2 && rrk == 0) {
+            int ra = arr_get(rv, 0);
+            int d0 = arr_dim0(lv);
+            int d1 = arr_dim1(lv);
+            int r = arr_new(2, d0, d1);
+            if (r < 0) { eval_err = 1; return -1; }
+            int sz = d0 * d1;
+            int i = 0;
+            while (i < sz) {
                 int val = eval_binop_scalar(op, arr_get(lv, i), ra);
                 if (eval_err) return -1;
                 arr_set(r, i, val);
