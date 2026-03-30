@@ -1,6 +1,6 @@
 number = 7
 slug = "scalar-repl"
-status = "pending"
+status = "in-progress"
 description = "Wire up REPL loop: read line, tokenize, parse, eval, print. Error recovery. (Phase 1, Step 1.4)"
 role = "legacy"
 context_files = []
