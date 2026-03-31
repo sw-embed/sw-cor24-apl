@@ -1,5 +1,15 @@
 # Changelog
 
+## Phase 6.3: Quad Expression Contexts (2026-03-31)
+
+- Verified quad variables work in arbitrary expression contexts
+- Cross-variable: `qled <- qsw` copies switch state to LED
+- Toggle pattern: `qled <- 1 - qled` flips LED state
+- Arithmetic: `qsw + qled`, `qled + 100`, `qled * 3`
+- Variable capture: `A <- qled + qsw`, `B <- qled * 3`
+- Self-assignment: `qled <- qled` (identity through shadow register)
+- Added test sample 16-quad-exprs with expected output
+
 ## Phase 6.2: Quad Switch (2026-03-31)
 
 - Added `qsw` quad system variable for switch S2 hardware I/O (read-only)

@@ -1,6 +1,6 @@
 number = 29
 slug = "029-quad-exprs"
-status = "pending"
+status = "in-progress"
 description = "Verify quad variables work in arbitrary expression contexts. Test qled <- qsw..."
 role = "production"
 context_files = []

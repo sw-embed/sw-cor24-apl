@@ -1,0 +1,17 @@
+qled <- qsw
+qled
+qled <- 1
+qled <- 1 - qled
+qled
+qled <- 1
+qled <- 1 - qled
+qled
+qsw + qled
+qled + 100
+A <- qled + qsw
+A
+qled <- 1
+B <- qled * 3
+B
+qled <- qled
+qled

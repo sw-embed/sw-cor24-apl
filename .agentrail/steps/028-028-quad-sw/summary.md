@@ -1,0 +1,1 @@
+Implemented qsw read-only quad system variable for switch S2 hardware I/O. Added TOK_QSW to tokenizer, NODE_QSW to parser (with assignment rejection as SYNTAX ERROR), and evaluator that reads 0xFF0000 bit 0 with active-low inversion (1=pressed, 0=released). Added test sample 15-qsw. Verified with --switch on/off. Full suite 15/15 pass.

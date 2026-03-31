@@ -71,7 +71,10 @@ Quad output (`[] <- expr`) provides explicit I/O following IBM 5100
 conventions. Phase 6.1 adds `qled` quad system variable for LED D2
 hardware I/O (`qled <- 1` turns LED on, `qled` reads state).
 Phase 6.2 adds `qsw` read-only quad variable for switch S2
-(`qsw` returns 1 when pressed, 0 when released). Supports +, -, *, / (software divide), parentheses,
+(`qsw` returns 1 when pressed, 0 when released).
+Phase 6.3 verifies quad variables in expression contexts:
+cross-variable (`qled <- qsw`), toggle (`qled <- 1 - qled`),
+and arithmetic with quad vars. Supports +, -, *, / (software divide), parentheses,
 monadic negate (scalar and vector), integer literals with APL
 underscore-negative convention, and variable assignment/reference
 via `<-`. Implementation tracked via agentrail saga
