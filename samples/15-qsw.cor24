@@ -1,0 +1,5 @@
+qsw
+qsw + 5
+A <- qsw
+A
+qsw <- 1

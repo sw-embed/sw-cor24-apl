@@ -1,5 +1,13 @@
 # Changelog
 
+## Phase 6.2: Quad Switch (2026-03-31)
+
+- Added `qsw` quad system variable for switch S2 hardware I/O (read-only)
+- `qsw` reads switch state: 1=pressed, 0=released (active-low inversion)
+- Assignment to `qsw` produces SYNTAX ERROR (read-only variable)
+- Works in expressions: `qsw + 5`, `A <- qsw`
+- Added test sample 15-qsw with expected output
+
 ## Phase 6.1: Quad LED (2026-03-30)
 
 - Added `qled` quad system variable for LED D2 hardware I/O

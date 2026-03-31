@@ -1,6 +1,6 @@
 number = 28
 slug = "028-quad-sw"
-status = "pending"
+status = "in-progress"
 description = "Implement qsw quad system variable for switch S2 hardware I/O. Add TOK_QSW to..."
 role = "production"
 context_files = []

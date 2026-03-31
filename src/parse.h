@@ -19,6 +19,7 @@
 #define NODE_QOUT   9   // quad output (right = expr to print)
 #define NODE_QLED  10   // qled read (no children)
 #define NODE_QLED_ASSIGN 11  // qled <- expr (right = expr)
+#define NODE_QSW   12   // qsw read (no children, read-only)
 
 #define AST_MAX 64
 
@@ -177,6 +178,11 @@ int parse_node(int mode) {
         node_type[n] = NODE_QLED;
         left = n;
         parse_pos++;
+    } else if (ty == TOK_QSW) {
+        int n = ast_new();
+        node_type[n] = NODE_QSW;
+        left = n;
+        parse_pos++;
     } else if (ty == TOK_IDENT) {
         int sym_idx = sym_lookup(parse_line, tok_val[parse_pos]);
         if (sym_idx < 0) { parse_err = 1; return 0; }
@@ -246,6 +252,11 @@ int parse(char *line) {
         node_type[n] = NODE_QLED_ASSIGN;
         node_right[n] = expr;
         return n;
+    }
+
+    // Check for qsw assignment: qsw is read-only, reject with SYNTAX ERROR
+    if (tok_type[0] == TOK_QSW && tok_type[1] == TOK_ASSIGN) {
+        return -1;
     }
 
     // Check for quad output: [] <- expr (IBM 5100 convention)

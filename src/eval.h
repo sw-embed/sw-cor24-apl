@@ -77,6 +77,15 @@ int eval(int n) {
         return r;
     }
 
+    if (ty == NODE_QSW) {
+        // Read switch S2: bit 0 of 0xFF0000, inverted (1=pressed, 0=released)
+        int raw = *(char *)0xFF0000;
+        int val = (raw ^ 1) & 1;
+        int r = arr_scalar(val);
+        if (r < 0) { eval_err = 5; return -1; }
+        return r;
+    }
+
     if (ty == NODE_QLED_ASSIGN) {
         int v = eval(node_right[n]);
         if (eval_err) return -1;

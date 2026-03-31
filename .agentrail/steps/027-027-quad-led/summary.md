@@ -1,0 +1,1 @@
+Implemented qled quad system variable for LED D2 hardware I/O. Added TOK_QLED to tokenizer, NODE_QLED/NODE_QLED_ASSIGN to parser, and MMIO read/write with active-low inversion to evaluator. Uses shadow register for read-back since hardware LED register is write-only. Fixed build.sh include path for renamed tinyc repo. All 14 tests pass.

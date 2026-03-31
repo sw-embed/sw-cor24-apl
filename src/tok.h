@@ -17,6 +17,7 @@
 #define TOK_RES    10   // reserved word (ID in tok_val)
 #define TOK_QUAD   11   // quad ([] — bare quad for I/O)
 #define TOK_QLED   12   // qled — LED D2 hardware I/O
+#define TOK_QSW    13   // qsw — switch S2 hardware I/O (read-only)
 
 // Reserved word IDs
 #define RES_RHO     0
@@ -131,6 +132,16 @@ int tokenize(char *line) {
                 tok_val[t] = 0;
                 t++;
                 i = i + 4;
+                continue;
+            }
+
+            len = str_match(line, i, "qsw");
+            if (len == 3 && !is_alnum(line[i + 3])) {
+                tok_type[t] = TOK_QSW;
+                tok_pos[t] = i;
+                tok_val[t] = 0;
+                t++;
+                i = i + 3;
                 continue;
             }
 

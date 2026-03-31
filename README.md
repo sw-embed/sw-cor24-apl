@@ -69,7 +69,9 @@ single-element arrays, deeply nested parentheses, WS FULL recovery,
 and reduce identity elements (`+/ iota 0` = 0, `*/ iota 0` = 1).
 Quad output (`[] <- expr`) provides explicit I/O following IBM 5100
 conventions. Phase 6.1 adds `qled` quad system variable for LED D2
-hardware I/O (`qled <- 1` turns LED on, `qled` reads state). Supports +, -, *, / (software divide), parentheses,
+hardware I/O (`qled <- 1` turns LED on, `qled` reads state).
+Phase 6.2 adds `qsw` read-only quad variable for switch S2
+(`qsw` returns 1 when pressed, 0 when released). Supports +, -, *, / (software divide), parentheses,
 monadic negate (scalar and vector), integer literals with APL
 underscore-negative convention, and variable assignment/reference
 via `<-`. Implementation tracked via agentrail saga
