@@ -1,0 +1,21 @@
+iota 0
+rho iota 0
+rev iota 0
+(iota 0) cat (iota 3)
+(iota 0) + (iota 0)
+0 take iota 5
+5 drop iota 5
+0 rho 1 2 3
+rho (0 rho 1 2 3)
++/ iota 0
+iota 1
++/ iota 1
+1 rho 5
+rho (1 rho 5)
+1 1 rho 5
+rho (1 1 rho 5)
+((((1 + 2))))
+(((((((42)))))))
+(1 + (2 + (3 + (4 + 5))))
+iota 4094
+3 + 4

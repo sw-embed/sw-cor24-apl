@@ -63,12 +63,16 @@ differentiated error handling with 6 error types: SYNTAX ERROR,
 DOMAIN ERROR (div by zero), VALUE ERROR (undefined variable),
 LENGTH ERROR (vector/matrix size mismatch), RANK ERROR (unsupported
 rank combinations), and WS FULL (heap exhaustion). All errors recover
-cleanly — the REPL continues after each error. Quad output (`[] <- expr`)
-provides explicit I/O following IBM 5100 conventions. Supports +, -, *,
-/ (software divide), parentheses, monadic negate (scalar and vector),
-integer literals with APL underscore-negative convention, and variable
-assignment/reference via `<-`. Implementation tracked
-via agentrail saga (`cor24-apl-interpreter`).
+cleanly — the REPL continues after each error. Phase 5.3 validates
+edge cases: empty vectors (`iota 0`, operations on empty arrays),
+single-element arrays, deeply nested parentheses, WS FULL recovery,
+and reduce identity elements (`+/ iota 0` = 0, `*/ iota 0` = 1).
+Quad output (`[] <- expr`) provides explicit I/O following IBM 5100
+conventions. Supports +, -, *, / (software divide), parentheses,
+monadic negate (scalar and vector), integer literals with APL
+underscore-negative convention, and variable assignment/reference
+via `<-`. Implementation tracked via agentrail saga
+(`cor24-apl-interpreter`).
 
 ## Example (target syntax)
 

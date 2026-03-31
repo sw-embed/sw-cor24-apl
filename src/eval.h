@@ -223,7 +223,16 @@ int eval(int n) {
         // Vector reduce: right-to-left fold
         if (rk == 1) {
             int sz = arr_size(v);
-            if (sz == 0) { eval_err = 1; return -1; }
+            if (sz == 0) {
+                // Empty vector: return identity element
+                int id;
+                if (op == TOK_PLUS || op == TOK_MINUS) id = 0;
+                else if (op == TOK_STAR || op == TOK_SLASH) id = 1;
+                else { eval_err = 1; return -1; }
+                int r = arr_scalar(id);
+                if (r < 0) { eval_err = 5; return -1; }
+                return r;
+            }
             int acc = arr_get(v, sz - 1);
             int i = sz - 2;
             while (i >= 0) {
