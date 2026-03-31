@@ -1,7 +1,8 @@
 number = 30
 slug = "030-qsvo-system-fn"
-status = "in-progress"
+status = "completed"
 description = "Implement □SVO system function. Tokenizer recognizes qSVO as TOK_QSVO. Dyad..."
 role = "production"
 context_files = []
 created_at = "2026-03-30T11:04:53"
+completed_at = "2026-03-31T02:10:07"
