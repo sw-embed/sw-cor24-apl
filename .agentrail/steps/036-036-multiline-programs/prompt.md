@@ -1,1 +1,0 @@
-Implement multi-line program storage. Line array in heap. [N] expr syntax to define lines. )LIST to display, )RUN to execute from line 1. Test: enter and run a multi-line program interactively. (Phase 8, Step 8.2)

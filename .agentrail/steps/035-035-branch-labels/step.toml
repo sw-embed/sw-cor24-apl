@@ -1,7 +1,0 @@
-number = 35
-slug = "035-branch-labels"
-status = "pending"
-description = "Implement branch (→) and labels. →N branches to line N, →LABEL to label..."
-role = "production"
-context_files = []
-created_at = "2026-03-30T11:05:15"

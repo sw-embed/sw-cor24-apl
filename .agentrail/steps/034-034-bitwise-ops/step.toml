@@ -1,7 +1,0 @@
-number = 34
-slug = "034-bitwise-ops"
-status = "pending"
-description = "Implement bitwise operations: and (AND), or (OR), not (NOT). Reserved words l..."
-role = "production"
-context_files = []
-created_at = "2026-03-30T11:05:15"

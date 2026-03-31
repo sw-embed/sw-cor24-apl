@@ -1,7 +1,0 @@
-number = 28
-slug = "028-quad-sw"
-status = "pending"
-description = "Implement qsw quad system variable for switch S2 hardware I/O. Add TOK_QSW to..."
-role = "production"
-context_files = []
-created_at = "2026-03-30T10:18:41"

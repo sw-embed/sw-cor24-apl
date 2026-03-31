@@ -1,7 +1,0 @@
-number = 29
-slug = "029-quad-exprs"
-status = "pending"
-description = "Verify quad variables work in arbitrary expression contexts. Test qled <- qsw..."
-role = "production"
-context_files = []
-created_at = "2026-03-30T10:18:41"

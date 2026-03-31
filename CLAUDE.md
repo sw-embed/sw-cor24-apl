@@ -14,74 +14,20 @@ See `docs/` for detailed documentation:
 - `docs/plan.md` -- phased implementation plan
 - `docs/research.txt` -- APL history and design research
 
-## CRITICAL: AgentRail Session Protocol (MUST follow exactly)
-
-### 1. START (do this FIRST, before anything else)
-```bash
-agentrail next
-```
-Read the output carefully. It contains your current step, prompt,
-plan context, and any relevant skills/trajectories.
-
-### 2. BEGIN (immediately after reading the next output)
-```bash
-agentrail begin
-```
-
-### 3. WORK (do what the step prompt says)
-Do NOT ask "want me to proceed?". The step prompt IS your instruction.
-Execute it directly.
-
-### 4. COMMIT (after the work is done)
-Commit your code changes with git. Use `/mw-cp` for the checkpoint
-process (pre-commit checks, docs, detailed commit, push).
-
-### 5. COMPLETE (LAST thing, after committing)
-```bash
-agentrail complete --summary "what you accomplished" \
-  --reward 1 \
-  --actions "tools and approach used"
-```
-- If the step failed: `--reward -1 --failure-mode "what went wrong"`
-- If the saga is finished: add `--done`
-
-### 6. STOP (after complete, DO NOT continue working)
-Do NOT make further code changes after running `agentrail complete`.
-Any changes after complete are untracked and invisible to the next
-session. Future work belongs in the NEXT step, not this one.
-
-## Key Rules
-
-- **Do NOT skip steps** -- the next session depends on accurate tracking
-- **Do NOT ask for permission** -- the step prompt is the instruction
-- **Do NOT continue working** after `agentrail complete`
-- **Commit before complete** -- always commit first, then record completion
-
-## Useful Commands
-
-```bash
-agentrail status          # Current saga state
-agentrail history         # All completed steps
-agentrail plan            # View the plan
-agentrail next            # Current step + context
-```
-
 ## Build / Test
 
 This project uses tc24r (C compiler) and cor24-run (emulator):
 
 ```bash
-# Compile C to COR24 assembly (tc24r location TBD -- check stable repos)
-# Assemble and run on emulator
-cor24-run <assembled-output>
+./build.sh              # compile only
+./build.sh run          # compile and run on emulator
+./build.sh run --terminal   # interactive REPL mode
+./build.sh clean        # remove build artifacts
 ```
 
-Stable toolchain code is in the original repos under:
-- `~/github/sw-vibe-coding/tc24r` -- C compiler
-- `~/github/sw-embed/sw-cor24-emulator` -- emulator + assembler
-
-The `~/github/sw-embed/sw-cor24-project` repo is an in-progress
-refactoring -- use the original repos above for stable references.
+Toolchain repos (siblings under `~/github/sw-embed/`):
+- `sw-cor24-tinyc` -- C compiler (tc24r)
+- `sw-cor24-emulator` -- emulator + assembler (cor24-run)
 
 ## COR24 Quick Reference
 

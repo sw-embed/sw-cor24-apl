@@ -1,8 +1,0 @@
-number = 20
-slug = "matrix-ops"
-status = "completed"
-description = "Element-wise ops on matrices, scalar extension to matrices, rho/cat on matrices. (Phase 4, Step 4.3)"
-role = "legacy"
-context_files = []
-created_at = "2026-03-29T16:25:16"
-completed_at = "2026-03-30T15:46:07"

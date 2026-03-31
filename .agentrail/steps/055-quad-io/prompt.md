@@ -1,1 +1,0 @@
-Implement []IO (quad index origin) system variable. Default value 1 (standard APL). Support []IO <- 0 for zero-indexed iota. Store as global int io_origin=1. Modify iota to generate io_origin..io_origin+N-1 instead of 0..N-1. Update all samples and expected outputs to work with default []IO=1. Add []IO <- 0 and []IO <- 1 test cases.

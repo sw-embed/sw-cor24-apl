@@ -1,1 +1,0 @@
-Implement graceful degradation pattern. Verify →(MMIORC<2)/NODEV branch-around works when AP returns 0. Test portable code that skips hardware on unsupported APs. (Phase 6, Step 6.3)

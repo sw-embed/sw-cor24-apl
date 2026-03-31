@@ -1,1 +1,0 @@
-Implement qsw quad system variable for switch S2 hardware I/O. Add TOK_QSW to tokenizer. Reading qsw reads 0xFF0000 bit 0 (inverted: 1=pressed). qsw is read-only, assignment produces SYNTAX ERROR. Test with --switch on/off. (Phase 6, Step 6.2)

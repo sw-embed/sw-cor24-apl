@@ -1,1 +1,0 @@
-Implemented monadic iota N generating 0..N-1 vector. Added NODE_MONAD AST node type and ast_monad() for parsing monadic primitives (iota, rho, etc). Parser handles TOK_RES tokens as monadic function calls. Evaluator creates index vector from scalar argument with domain/length error handling. Tested: iota 5, iota 0, iota 1, iota 10, 1+iota 5, variable assignment with iota.

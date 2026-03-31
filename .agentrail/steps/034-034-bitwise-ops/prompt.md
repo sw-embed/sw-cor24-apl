@@ -1,1 +1,0 @@
-Implement bitwise operations: and (AND), or (OR), not (NOT). Reserved words like rho/iota. Needed for UART status bit testing. Test: 128 and 130 returns 128, 3 or 4 returns 7. (Phase 7, Step 7.2)

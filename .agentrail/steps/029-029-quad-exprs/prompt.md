@@ -1,1 +1,0 @@
-Verify quad variables work in arbitrary expression contexts. Test qled <- qsw, qled <- 1 - qled (toggle), arithmetic with quad vars. (Phase 6, Step 6.3)

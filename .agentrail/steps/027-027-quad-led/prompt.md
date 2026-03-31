@@ -1,1 +1,0 @@
-Implement qled quad system variable for LED D2 hardware I/O. Add TOK_QLED to tokenizer. In evaluator, reading qled reads 0xFF0000 bit 0 (inverted: 1=on). Assignment qled <- expr writes inverted bit 0. Test on emulator with --dump. (Phase 6, Step 6.1)

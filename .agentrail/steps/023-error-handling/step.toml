@@ -1,7 +1,0 @@
-number = 23
-slug = "error-handling"
-status = "pending"
-description = "SYNTAX, LENGTH, RANK, DOMAIN, WS FULL, VALUE errors with recovery. (Phase 5, Step 5.2)"
-role = "legacy"
-context_files = []
-created_at = "2026-03-29T16:25:16"

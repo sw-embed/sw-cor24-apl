@@ -1,7 +1,0 @@
-number = 54
-slug = "054-horse-race-test"
-status = "pending"
-description = "Transliterate and run both horse race APL programs on COR24 emulator. Verify output matches GNU APL behavior. Milestone: full APL programs running on custom interpreter. (Horse race milestone)"
-role = "production"
-context_files = []
-created_at = "2026-03-30T11:10:00"

@@ -1,1 +1,0 @@
-Added matrix display to main.c for rank-2 arrays. Dyadic rho already supported matrix creation internally; added display path printing one row per line with right-justified columns using global max width. Verified: 2x3 rho iota, 3x3 cyclic fill, monadic rho returning 2-element shape, ravel flattening matrix to vector, mixed-width alignment.

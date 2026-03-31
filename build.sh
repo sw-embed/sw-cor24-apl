@@ -16,7 +16,7 @@ SRC_DIR="$SCRIPT_DIR/src"
 # Toolchain
 TC24R="tc24r"
 COR24_RUN="cor24-run"
-TC24R_INCLUDE="/Users/mike/github/sw-vibe-coding/tc24r/include"
+TC24R_INCLUDE="/Users/mike/github/sw-embed/sw-cor24-tinyc/include"
 
 # Source and output
 MAIN_C="$SRC_DIR/main.c"

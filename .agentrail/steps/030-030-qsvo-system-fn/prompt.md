@@ -1,1 +1,0 @@
-Implement □SVO system function. Tokenizer recognizes qSVO as TOK_QSVO. Dyadic: NAME qSVO AP returns coupling degree. Shared variable table maps names to AP+region. AP 242 handler for MMIO byte access (FF0000+offset). Active-low inversion on offset 0. Return 2 for supported APs, 0 for unknown. (Phase 6, Step 6.1)

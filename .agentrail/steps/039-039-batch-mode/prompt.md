@@ -1,1 +1,0 @@
-Implement batch mode detection and reader. Check known address for non-zero image pointer (set via --patch). Batch: read lines from SRAM not UART. UART free for APL program. Interactive mode unchanged. Test: load and execute simple APL program from memory. (Phase 9, Step 9.2)

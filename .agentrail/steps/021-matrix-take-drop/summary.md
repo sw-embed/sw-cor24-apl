@@ -1,1 +1,0 @@
-Implemented matrix take/drop on rows (Phase 4.4). Extended RES_TAKE and RES_DROP in eval.h to handle rank-2 arrays: scalar N takes/drops N rows from front (positive) or back (negative). Added test sample 10-matrix-take-drop with 6 test cases. All 10 tests pass.

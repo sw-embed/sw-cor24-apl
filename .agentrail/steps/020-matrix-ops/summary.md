@@ -1,1 +1,0 @@
-Implemented element-wise matrix operations (Phase 4.3): matrix+matrix with shape conformability check, scalar+matrix broadcast, matrix+scalar broadcast for all arithmetic ops (+,-,*,/). Extended monadic negate for rank-2 arrays. All operations preserve matrix shape in results. Verified on COR24 emulator with comprehensive tests.

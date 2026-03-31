@@ -1,1 +1,0 @@
-Build and test the full UART echo demo. APL batch program: echoes UART in to out, buffers if TX busy, toggles LED per char based on switch state. Load via --load-binary, run with --terminal. End-to-end validation. (Phase 9, Step 9.3)
