@@ -1,5 +1,5 @@
 // COR24 APL Interpreter -- main entry point
-// Phase 5.1: system commands )CLEAR )VARS )OFF
+// Phase 5.2: error handling with RANK ERROR and WS FULL
 
 #include <stdio.h>
 #include "io.h"
@@ -74,6 +74,14 @@ int main() {
                     } else if (eval_err == 3) {
                         heap_top = heap_save;
                         io_print("  LENGTH ERROR");
+                        putchar(10);
+                    } else if (eval_err == 4) {
+                        heap_top = heap_save;
+                        io_print("  RANK ERROR");
+                        putchar(10);
+                    } else if (eval_err == 5) {
+                        heap_top = heap_save;
+                        io_print("  WS FULL");
                         putchar(10);
                     } else if (eval_err) {
                         heap_top = heap_save;

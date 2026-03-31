@@ -33,7 +33,7 @@ Requires `tc24r` (C compiler) and `cor24-run` (emulator) on PATH.
 
 ## Status
 
-Phase 4 in progress. Phase 1 (scalar REPL) includes tokenizer, parser
+Phase 5 in progress. Phase 1 (scalar REPL) includes tokenizer, parser
 (right-to-left recursive descent), tree-walking evaluator, and symbol
 table. Phase 2 adds vector support: vector literals (stranding),
 element-wise operations with scalar extension, conformability checks
@@ -58,14 +58,16 @@ matrix negate, and conformability checks for mismatched matrix shapes.
 Phase 4.4 adds `take` and `drop` on matrices operating on rows
 (`1 take M` = first row, `_1 drop M` = all but last row). Phase 5.1
 adds system commands: `)CLEAR` (reset workspace), `)VARS` (list
-defined variables), `)OFF` (exit interpreter). Quad output (`[] <- expr`)
+defined variables), `)OFF` (exit interpreter). Phase 5.2 adds
+differentiated error handling with 6 error types: SYNTAX ERROR,
+DOMAIN ERROR (div by zero), VALUE ERROR (undefined variable),
+LENGTH ERROR (vector/matrix size mismatch), RANK ERROR (unsupported
+rank combinations), and WS FULL (heap exhaustion). All errors recover
+cleanly — the REPL continues after each error. Quad output (`[] <- expr`)
 provides explicit I/O following IBM 5100 conventions. Supports +, -, *,
-/ (software
-divide), parentheses, monadic negate (scalar and vector), integer
-literals with APL underscore-negative convention, and variable
-assignment/reference via `<-`. Errors:
-SYNTAX ERROR, DOMAIN ERROR (div by zero), VALUE ERROR (undefined
-variable), LENGTH ERROR (vector size mismatch). Implementation tracked
+/ (software divide), parentheses, monadic negate (scalar and vector),
+integer literals with APL underscore-negative convention, and variable
+assignment/reference via `<-`. Implementation tracked
 via agentrail saga (`cor24-apl-interpreter`).
 
 ## Example (target syntax)

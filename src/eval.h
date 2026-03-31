@@ -5,7 +5,7 @@
 
 #pragma once
 
-// Error codes: 0=none, 1=DOMAIN, 2=VALUE, 3=LENGTH
+// Error codes: 0=none, 1=DOMAIN, 2=VALUE, 3=LENGTH, 4=RANK, 5=WS FULL
 int eval_err;
 
 // Apply a binary op to two scalars
@@ -34,7 +34,7 @@ int eval(int n) {
 
     if (ty == NODE_NUM) {
         int r = arr_scalar(node_val[n]);
-        if (r < 0) { eval_err = 1; return -1; }
+        if (r < 0) { eval_err = 5; return -1; }
         return r;
     }
 
@@ -72,14 +72,14 @@ int eval(int n) {
         int rk = arr_rank(v);
         if (rk == 0) {
             int r = arr_scalar(0 - arr_get(v, 0));
-            if (r < 0) { eval_err = 1; return -1; }
+            if (r < 0) { eval_err = 5; return -1; }
             return r;
         }
         // Negate each element of vector
         if (rk == 1) {
             int sz = arr_size(v);
             int r = arr_vector(sz);
-            if (r < 0) { eval_err = 1; return -1; }
+            if (r < 0) { eval_err = 5; return -1; }
             int i = 0;
             while (i < sz) {
                 arr_set(r, i, 0 - arr_get(v, i));
@@ -93,7 +93,7 @@ int eval(int n) {
             int d1 = arr_dim1(v);
             int sz = d0 * d1;
             int r = arr_new(2, d0, d1);
-            if (r < 0) { eval_err = 1; return -1; }
+            if (r < 0) { eval_err = 5; return -1; }
             int i = 0;
             while (i < sz) {
                 arr_set(r, i, 0 - arr_get(v, i));
@@ -101,7 +101,7 @@ int eval(int n) {
             }
             return r;
         }
-        eval_err = 1;
+        eval_err = 4;
         return -1;
     }
 
@@ -112,11 +112,11 @@ int eval(int n) {
 
         if (res_id == RES_IOTA) {
             // iota N: generate vector 0 1 2 ... N-1
-            if (arr_rank(v) != 0) { eval_err = 3; return -1; }
+            if (arr_rank(v) != 0) { eval_err = 4; return -1; }
             int count = arr_get(v, 0);
             if (count < 0) { eval_err = 1; return -1; }
             int r = arr_vector(count);
-            if (r < 0) { eval_err = 1; return -1; }
+            if (r < 0) { eval_err = 5; return -1; }
             int i = 0;
             while (i < count) {
                 arr_set(r, i, i);
@@ -131,24 +131,24 @@ int eval(int n) {
             if (rk == 0) {
                 // Scalar: shape is empty vector
                 int r = arr_vector(0);
-                if (r < 0) { eval_err = 1; return -1; }
+                if (r < 0) { eval_err = 5; return -1; }
                 return r;
             }
             if (rk == 1) {
                 // Vector: shape is 1-element vector with length
                 int r = arr_scalar(arr_dim0(v));
-                if (r < 0) { eval_err = 1; return -1; }
+                if (r < 0) { eval_err = 5; return -1; }
                 return r;
             }
             if (rk == 2) {
                 // Matrix: shape is 2-element vector (rows cols)
                 int r = arr_vector(2);
-                if (r < 0) { eval_err = 1; return -1; }
+                if (r < 0) { eval_err = 5; return -1; }
                 arr_set(r, 0, arr_dim0(v));
                 arr_set(r, 1, arr_dim1(v));
                 return r;
             }
-            eval_err = 1;
+            eval_err = 4;
             return -1;
         }
 
@@ -162,7 +162,7 @@ int eval(int n) {
             if (rk == 1) {
                 int sz = arr_size(v);
                 int r = arr_vector(sz);
-                if (r < 0) { eval_err = 1; return -1; }
+                if (r < 0) { eval_err = 5; return -1; }
                 int i = 0;
                 while (i < sz) {
                     arr_set(r, i, arr_get(v, sz - 1 - i));
@@ -170,7 +170,7 @@ int eval(int n) {
                 }
                 return r;
             }
-            eval_err = 1;
+            eval_err = 4;
             return -1;
         }
 
@@ -180,7 +180,7 @@ int eval(int n) {
             if (rk == 0) {
                 // Scalar -> 1-element vector
                 int r = arr_vector(1);
-                if (r < 0) { eval_err = 1; return -1; }
+                if (r < 0) { eval_err = 5; return -1; }
                 arr_set(r, 0, arr_get(v, 0));
                 return r;
             }
@@ -192,7 +192,7 @@ int eval(int n) {
                 // Matrix -> vector of all elements
                 int sz = arr_size(v);
                 int r = arr_vector(sz);
-                if (r < 0) { eval_err = 1; return -1; }
+                if (r < 0) { eval_err = 5; return -1; }
                 int i = 0;
                 while (i < sz) {
                     arr_set(r, i, arr_get(v, i));
@@ -200,7 +200,7 @@ int eval(int n) {
                 }
                 return r;
             }
-            eval_err = 1;
+            eval_err = 4;
             return -1;
         }
 
@@ -232,12 +232,12 @@ int eval(int n) {
                 i--;
             }
             int r = arr_scalar(acc);
-            if (r < 0) { eval_err = 1; return -1; }
+            if (r < 0) { eval_err = 5; return -1; }
             return r;
         }
 
-        // Unsupported rank
-        eval_err = 1;
+        // Unsupported rank for reduce
+        eval_err = 4;
         return -1;
     }
 
@@ -277,20 +277,20 @@ int eval(int n) {
                     if (d0 < 0 || d1 < 0) { eval_err = 1; return -1; }
                 } else {
                     // Only rank 1 and 2 supported
-                    eval_err = 1;
+                    eval_err = 4;
                     return -1;
                 }
             } else {
-                eval_err = 1;
+                eval_err = 4;
                 return -1;
             }
 
             int r = arr_new(new_rank, d0, d1);
-            if (r < 0) { eval_err = 1; return -1; }
+            if (r < 0) { eval_err = 5; return -1; }
 
             int total = arr_size(r);
             int src_sz = arr_size(rv);
-            if (src_sz == 0) { eval_err = 1; return -1; }
+            if (src_sz == 0) { eval_err = 3; return -1; }
 
             int i = 0;
             while (i < total) {
@@ -302,7 +302,7 @@ int eval(int n) {
 
         if (res_id == RES_TAKE) {
             // N take A: take first N elements/rows (negative N = from end)
-            if (arr_rank(lv) != 0) { eval_err = 1; return -1; }
+            if (arr_rank(lv) != 0) { eval_err = 4; return -1; }
             int count = arr_get(lv, 0);
             int rrk = arr_rank(rv);
 
@@ -313,7 +313,7 @@ int eval(int n) {
                 if (abs_n > sz) { eval_err = 3; return -1; }
 
                 int r = arr_vector(abs_n);
-                if (r < 0) { eval_err = 1; return -1; }
+                if (r < 0) { eval_err = 5; return -1; }
                 int start = 0;
                 if (count < 0) start = sz - abs_n;
                 int i = 0;
@@ -332,7 +332,7 @@ int eval(int n) {
                 if (abs_n > rows) { eval_err = 3; return -1; }
 
                 int r = arr_new(2, abs_n, cols);
-                if (r < 0) { eval_err = 1; return -1; }
+                if (r < 0) { eval_err = 5; return -1; }
                 int start_row = 0;
                 if (count < 0) start_row = rows - abs_n;
                 int total = abs_n * cols;
@@ -344,13 +344,13 @@ int eval(int n) {
                 return r;
             }
 
-            eval_err = 1;
+            eval_err = 4;
             return -1;
         }
 
         if (res_id == RES_DROP) {
             // N drop A: drop first N elements/rows (negative N = from end)
-            if (arr_rank(lv) != 0) { eval_err = 1; return -1; }
+            if (arr_rank(lv) != 0) { eval_err = 4; return -1; }
             int count = arr_get(lv, 0);
             int rrk = arr_rank(rv);
 
@@ -362,7 +362,7 @@ int eval(int n) {
 
                 int new_sz = sz - abs_n;
                 int r = arr_vector(new_sz);
-                if (r < 0) { eval_err = 1; return -1; }
+                if (r < 0) { eval_err = 5; return -1; }
                 int start = abs_n;
                 if (count < 0) start = 0;
                 int i = 0;
@@ -382,7 +382,7 @@ int eval(int n) {
 
                 int new_rows = rows - abs_n;
                 int r = arr_new(2, new_rows, cols);
-                if (r < 0) { eval_err = 1; return -1; }
+                if (r < 0) { eval_err = 5; return -1; }
                 int start_row = abs_n;
                 if (count < 0) start_row = 0;
                 int total = new_rows * cols;
@@ -394,7 +394,7 @@ int eval(int n) {
                 return r;
             }
 
-            eval_err = 1;
+            eval_err = 4;
             return -1;
         }
 
@@ -406,7 +406,7 @@ int eval(int n) {
             int rsz = arr_size(rv);
             int total = lsz + rsz;
             int r = arr_vector(total);
-            if (r < 0) { eval_err = 1; return -1; }
+            if (r < 0) { eval_err = 5; return -1; }
             int i = 0;
             while (i < lsz) {
                 arr_set(r, i, arr_get(lv, i));
@@ -440,7 +440,7 @@ int eval(int n) {
             int result = eval_binop_scalar(op, arr_get(lv, 0), arr_get(rv, 0));
             if (eval_err) return -1;
             int r = arr_scalar(result);
-            if (r < 0) { eval_err = 1; return -1; }
+            if (r < 0) { eval_err = 5; return -1; }
             return r;
         }
 
@@ -450,7 +450,7 @@ int eval(int n) {
             int rsz = arr_size(rv);
             if (lsz != rsz) { eval_err = 3; return -1; }
             int r = arr_vector(lsz);
-            if (r < 0) { eval_err = 1; return -1; }
+            if (r < 0) { eval_err = 5; return -1; }
             int i = 0;
             while (i < lsz) {
                 int val = eval_binop_scalar(op, arr_get(lv, i), arr_get(rv, i));
@@ -466,7 +466,7 @@ int eval(int n) {
             int la = arr_get(lv, 0);
             int rsz = arr_size(rv);
             int r = arr_vector(rsz);
-            if (r < 0) { eval_err = 1; return -1; }
+            if (r < 0) { eval_err = 5; return -1; }
             int i = 0;
             while (i < rsz) {
                 int val = eval_binop_scalar(op, la, arr_get(rv, i));
@@ -482,7 +482,7 @@ int eval(int n) {
             int ra = arr_get(rv, 0);
             int lsz = arr_size(lv);
             int r = arr_vector(lsz);
-            if (r < 0) { eval_err = 1; return -1; }
+            if (r < 0) { eval_err = 5; return -1; }
             int i = 0;
             while (i < lsz) {
                 int val = eval_binop_scalar(op, arr_get(lv, i), ra);
@@ -501,7 +501,7 @@ int eval(int n) {
             int d0 = arr_dim0(lv);
             int d1 = arr_dim1(lv);
             int r = arr_new(2, d0, d1);
-            if (r < 0) { eval_err = 1; return -1; }
+            if (r < 0) { eval_err = 5; return -1; }
             int sz = d0 * d1;
             int i = 0;
             while (i < sz) {
@@ -519,7 +519,7 @@ int eval(int n) {
             int d0 = arr_dim0(rv);
             int d1 = arr_dim1(rv);
             int r = arr_new(2, d0, d1);
-            if (r < 0) { eval_err = 1; return -1; }
+            if (r < 0) { eval_err = 5; return -1; }
             int sz = d0 * d1;
             int i = 0;
             while (i < sz) {
@@ -537,7 +537,7 @@ int eval(int n) {
             int d0 = arr_dim0(lv);
             int d1 = arr_dim1(lv);
             int r = arr_new(2, d0, d1);
-            if (r < 0) { eval_err = 1; return -1; }
+            if (r < 0) { eval_err = 5; return -1; }
             int sz = d0 * d1;
             int i = 0;
             while (i < sz) {
@@ -550,7 +550,7 @@ int eval(int n) {
         }
 
         // Unsupported rank combination
-        eval_err = 1;
+        eval_err = 4;
         return -1;
     }
 
