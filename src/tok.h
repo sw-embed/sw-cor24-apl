@@ -16,6 +16,7 @@
 #define TOK_ASSIGN  9   // <-
 #define TOK_RES    10   // reserved word (ID in tok_val)
 #define TOK_QUAD   11   // quad ([] — bare quad for I/O)
+#define TOK_QLED   12   // qled — LED D2 hardware I/O
 
 // Reserved word IDs
 #define RES_RHO     0
@@ -121,6 +122,18 @@ int tokenize(char *line) {
 
         // Lowercase letter: quad variables, reserved word, or unknown
         if (is_lower(line[i])) {
+            // Check for quad variables first
+            int len;
+            len = str_match(line, i, "qled");
+            if (len == 4 && !is_alnum(line[i + 4])) {
+                tok_type[t] = TOK_QLED;
+                tok_pos[t] = i;
+                tok_val[t] = 0;
+                t++;
+                i = i + 4;
+                continue;
+            }
+
             int end;
             int res = lookup_reserved(line, i, &end);
             if (res >= 0) {

@@ -1,5 +1,5 @@
 // COR24 APL Interpreter -- main entry point
-// Phase 5.2: error handling with RANK ERROR and WS FULL
+// Phase 6: shared variable I/O (qled quad LED)
 
 #include <stdio.h>
 #include "io.h"
@@ -90,6 +90,9 @@ int main() {
                     } else if (node_type[root] == NODE_ASSIGN) {
                         // Assignment: no output (APL convention)
                         // Don't restore heap -- variable value persists
+                    } else if (node_type[root] == NODE_QLED_ASSIGN) {
+                        // Quad LED assignment: no output
+                        heap_top = heap_save;
                     } else {
                         // Print result based on rank
                         int rank = arr_rank(result);

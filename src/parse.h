@@ -17,6 +17,8 @@
 #define NODE_DYAD   7   // dyadic primitive (val = RES_xxx, left/right = args)
 #define NODE_REDUCE 8   // reduce operator (val = op tok type, right = operand)
 #define NODE_QOUT   9   // quad output (right = expr to print)
+#define NODE_QLED  10   // qled read (no children)
+#define NODE_QLED_ASSIGN 11  // qled <- expr (right = expr)
 
 #define AST_MAX 64
 
@@ -170,6 +172,11 @@ int parse_node(int mode) {
             return 0;
         }
         parse_pos++;
+    } else if (ty == TOK_QLED) {
+        int n = ast_new();
+        node_type[n] = NODE_QLED;
+        left = n;
+        parse_pos++;
     } else if (ty == TOK_IDENT) {
         int sym_idx = sym_lookup(parse_line, tok_val[parse_pos]);
         if (sym_idx < 0) { parse_err = 1; return 0; }
@@ -228,6 +235,18 @@ int parse(char *line) {
     parse_pos = 0;
     parse_err = 0;
     parse_line = line;
+
+    // Check for qled assignment: qled <- expr
+    if (tok_type[0] == TOK_QLED && tok_type[1] == TOK_ASSIGN) {
+        parse_pos = 2;
+        int expr = parse_node(0);
+        if (parse_err) return -1;
+        if (tok_type[parse_pos] != TOK_EOL) return -1;
+        int n = ast_new();
+        node_type[n] = NODE_QLED_ASSIGN;
+        node_right[n] = expr;
+        return n;
+    }
 
     // Check for quad output: [] <- expr (IBM 5100 convention)
     if (tok_type[0] == TOK_QUAD && tok_type[1] == TOK_ASSIGN) {

@@ -1,6 +1,6 @@
 number = 27
 slug = "027-quad-led"
-status = "pending"
+status = "in-progress"
 description = "Implement qled quad system variable for LED D2 hardware I/O. Add TOK_QLED to ..."
 role = "production"
 context_files = []

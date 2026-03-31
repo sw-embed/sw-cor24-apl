@@ -1,0 +1,9 @@
+qled
+qled <- 1
+qled
+qled <- 0
+qled
+qled <- 1
+qled + 10
+A <- qled
+A

@@ -8,6 +8,10 @@
 // Error codes: 0=none, 1=DOMAIN, 2=VALUE, 3=LENGTH, 4=RANK, 5=WS FULL
 int eval_err;
 
+// Shadow register for LED D2 (0xFF0000 is write-only for LEDs)
+// Stores the user-visible value (1=on, 0=off), not the raw active-low bit
+int qled_shadow;
+
 // Apply a binary op to two scalars
 int eval_binop_scalar(int op, int a, int b) {
     if (op == TOK_PLUS)       return a + b;
@@ -63,6 +67,24 @@ int eval(int n) {
     if (ty == NODE_QOUT) {
         int v = eval(node_right[n]);
         if (eval_err) return -1;
+        return v;
+    }
+
+    if (ty == NODE_QLED) {
+        // Read LED D2 from shadow register (1=on, 0=off)
+        int r = arr_scalar(qled_shadow);
+        if (r < 0) { eval_err = 5; return -1; }
+        return r;
+    }
+
+    if (ty == NODE_QLED_ASSIGN) {
+        int v = eval(node_right[n]);
+        if (eval_err) return -1;
+        if (arr_rank(v) != 0) { eval_err = 4; return -1; }
+        int val = arr_get(v, 0) & 1;
+        qled_shadow = val;
+        // Write LED D2: invert bit 0 (active-low: 1=on writes 0)
+        *(char *)0xFF0000 = val ^ 1;
         return v;
     }
 

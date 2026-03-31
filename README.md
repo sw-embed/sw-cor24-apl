@@ -33,7 +33,7 @@ Requires `tc24r` (C compiler) and `cor24-run` (emulator) on PATH.
 
 ## Status
 
-Phase 5 in progress. Phase 1 (scalar REPL) includes tokenizer, parser
+Phase 6 in progress. Phase 1 (scalar REPL) includes tokenizer, parser
 (right-to-left recursive descent), tree-walking evaluator, and symbol
 table. Phase 2 adds vector support: vector literals (stranding),
 element-wise operations with scalar extension, conformability checks
@@ -68,7 +68,8 @@ edge cases: empty vectors (`iota 0`, operations on empty arrays),
 single-element arrays, deeply nested parentheses, WS FULL recovery,
 and reduce identity elements (`+/ iota 0` = 0, `*/ iota 0` = 1).
 Quad output (`[] <- expr`) provides explicit I/O following IBM 5100
-conventions. Supports +, -, *, / (software divide), parentheses,
+conventions. Phase 6.1 adds `qled` quad system variable for LED D2
+hardware I/O (`qled <- 1` turns LED on, `qled` reads state). Supports +, -, *, / (software divide), parentheses,
 monadic negate (scalar and vector), integer literals with APL
 underscore-negative convention, and variable assignment/reference
 via `<-`. Implementation tracked via agentrail saga
