@@ -20,6 +20,7 @@
 #define NODE_QLED  10   // qled read (no children)
 #define NODE_QLED_ASSIGN 11  // qled <- expr (right = expr)
 #define NODE_QSW   12   // qsw read (no children, read-only)
+#define NODE_QSVO  13   // shared variable offer (val = sym index, right = AP expr)
 
 #define AST_MAX 64
 
@@ -229,6 +230,19 @@ int parse_node(int mode) {
         int right = parse_node(0);
         if (parse_err) return 0;
         return ast_dyad(res_id, left, right);
+    }
+
+    // Shared variable offer: IDENT qsvo EXPR
+    if (mode == 0 && tok_type[parse_pos] == TOK_QSVO && node_type[left] == NODE_IDENT) {
+        int sym_idx = node_val[left];
+        parse_pos++;
+        int right = parse_node(0);
+        if (parse_err) return 0;
+        int n = ast_new();
+        node_type[n] = NODE_QSVO;
+        node_val[n] = sym_idx;
+        node_right[n] = right;
+        return n;
     }
 
     return left;

@@ -74,7 +74,11 @@ Phase 6.2 adds `qsw` read-only quad variable for switch S2
 (`qsw` returns 1 when pressed, 0 when released).
 Phase 6.3 verifies quad variables in expression contexts:
 cross-variable (`qled <- qsw`), toggle (`qled <- 1 - qled`),
-and arithmetic with quad vars. Supports +, -, *, / (software divide), parentheses,
+and arithmetic with quad vars. Phase 6.4 adds `qsvo` (□SVO)
+shared variable offer for coupling APL variables to auxiliary
+processors (`MMIO qsvo 242` couples to MMIO region, returns
+coupling degree 2; unknown APs return 0).
+Supports +, -, *, / (software divide), parentheses,
 monadic negate (scalar and vector), integer literals with APL
 underscore-negative convention, and variable assignment/reference
 via `<-`. Implementation tracked via agentrail saga

@@ -16,11 +16,16 @@ int sym_count;               // number of symbols defined
 char sym_name_buf[SYM_NAMES]; // flat name storage
 int sym_name_pos;            // next free position in name buffer
 
+// Shared variable table (□SVO coupling)
+// svo_ap[i] = AP number for symbol i (0 = not shared)
+int svo_ap[SYM_MAX];
+
 // Reset symbol table (clear all variables)
 void sym_reset() {
     int i = 0;
     while (i < sym_count) {
         sym_set_flag[i] = 0;
+        svo_ap[i] = 0;
         i++;
     }
     sym_count = 0;

@@ -97,6 +97,28 @@ int eval(int n) {
         return v;
     }
 
+    if (ty == NODE_QSVO) {
+        // Shared variable offer: IDENT qsvo AP
+        // Evaluate AP number, couple symbol if AP supported
+        int v = eval(node_right[n]);
+        if (eval_err) return -1;
+        if (arr_rank(v) != 0) { eval_err = 4; return -1; }
+        int ap = arr_get(v, 0);
+        int sym_idx = node_val[n];
+        if (ap == 242) {
+            // AP 242: MMIO byte access (FF0000+offset)
+            svo_ap[sym_idx] = 242;
+            int r = arr_scalar(2);
+            if (r < 0) { eval_err = 5; return -1; }
+            return r;
+        }
+        // Unknown AP: return 0 (not coupled)
+        svo_ap[sym_idx] = 0;
+        int r = arr_scalar(0);
+        if (r < 0) { eval_err = 5; return -1; }
+        return r;
+    }
+
     if (ty == NODE_NEG) {
         int v = eval(node_right[n]);
         if (eval_err) return -1;

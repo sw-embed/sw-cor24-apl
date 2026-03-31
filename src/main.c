@@ -1,5 +1,5 @@
 // COR24 APL Interpreter -- main entry point
-// Phase 6: shared variable I/O (qled quad LED)
+// Phase 6: shared variable I/O (qled, qsw, qsvo)
 
 #include <stdio.h>
 #include "io.h"

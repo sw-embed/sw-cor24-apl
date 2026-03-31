@@ -1,5 +1,16 @@
 # Changelog
 
+## Phase 6.4: Shared Variable Offer — qsvo (2026-03-31)
+
+- Implemented `qsvo` (□SVO) system function for shared variable coupling
+- Dyadic syntax: `MMIO qsvo 242` couples variable MMIO to AP 242 (MMIO region)
+- Returns coupling degree: 2 for supported APs (242), 0 for unknown APs
+- Shared variable table (`svo_ap[]`) tracks AP coupling per symbol
+- AP 242 maps to COR24 MMIO byte region (0xFF0000+offset)
+- Result usable in expressions: `MMIORC <- MMIO qsvo 242`
+- Added "CPU halted" filter to test runner for clean `)OFF` handling
+- Added test sample 17-qsvo with expected output (18 tests total)
+
 ## Phase 6.3: Quad Expression Contexts (2026-03-31)
 
 - Verified quad variables work in arbitrary expression contexts

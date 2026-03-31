@@ -31,9 +31,13 @@ for cor24 in "$DIR"/*.cor24; do
         uart_input="${uart_input}${line}\\n"
     done < "$cor24"
 
+    # Detect hardware test variants
+    emu_flags=""
+    [[ "$base" == *-pressed* ]] && emu_flags="--switch on"
+
     # Run on emulator, extract output lines (skip banner and prompts)
     raw=$(cor24-run --run "$PROJECT/build/apl.s" -n 20000000 \
-        -u "$uart_input" 2>&1 | grep -A1000 "^UART output:" | tail -n +2) || true
+        $emu_flags -u "$uart_input" 2>&1 | grep -A1000 "^UART output:" | tail -n +2) || true
 
     # Strip prompt lines, input echo, and emulator status lines
     actual=""
@@ -46,6 +50,7 @@ for cor24 in "$DIR"/*.cor24; do
         [[ "$line" == "Executed "* ]] && continue
         [[ "$line" == "Assembled "* ]] && continue
         [[ "$line" == "Running "* ]] && continue
+        [[ "$line" == "CPU halted"* ]] && continue
         actual="${actual}${line}
 "
     done <<< "$raw"

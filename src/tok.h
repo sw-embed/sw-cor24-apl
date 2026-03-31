@@ -18,6 +18,7 @@
 #define TOK_QUAD   11   // quad ([] — bare quad for I/O)
 #define TOK_QLED   12   // qled — LED D2 hardware I/O
 #define TOK_QSW    13   // qsw — switch S2 hardware I/O (read-only)
+#define TOK_QSVO   14   // qsvo — shared variable offer (□SVO)
 
 // Reserved word IDs
 #define RES_RHO     0
@@ -142,6 +143,16 @@ int tokenize(char *line) {
                 tok_val[t] = 0;
                 t++;
                 i = i + 3;
+                continue;
+            }
+
+            len = str_match(line, i, "qsvo");
+            if (len == 4 && !is_alnum(line[i + 4])) {
+                tok_type[t] = TOK_QSVO;
+                tok_pos[t] = i;
+                tok_val[t] = 0;
+                t++;
+                i = i + 4;
                 continue;
             }
 
