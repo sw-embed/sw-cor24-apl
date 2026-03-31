@@ -1,5 +1,16 @@
 # Changelog
 
+## Phase 6.6: Graceful Degradation (2026-03-31)
+
+- Validated graceful degradation pattern for portable APL code
+- Coupling degree return (2=coupled, 0=unsupported) enables AP detection
+- Arithmetic on coupling degree works: `RC - 2` yields 0 when coupled
+- Uncoupled variables produce VALUE ERROR on indexed access (clean fail)
+- Re-coupling after failed offer works correctly
+- Full `→(MMIORC<2)/NODEV` branch-around requires comparison ops (step 041)
+  and branch/labels (step 035) — building blocks validated here
+- Added test sample 19-graceful-degrade with expected output (20 tests total)
+
 ## Phase 6.5: Shared Variable Indexed Read/Write (2026-03-31)
 
 - Implemented bracket-indexed read/write on shared variables

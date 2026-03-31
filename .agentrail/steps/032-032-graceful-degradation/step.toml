@@ -1,6 +1,6 @@
 number = 32
 slug = "032-graceful-degradation"
-status = "pending"
+status = "in-progress"
 description = "Implement graceful degradation pattern. Verify →(MMIORC<2)/NODEV branch-aro..."
 role = "production"
 context_files = []

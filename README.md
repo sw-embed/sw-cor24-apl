@@ -80,6 +80,9 @@ processors (`MMIO qsvo 242` couples to MMIO region, returns
 coupling degree 2; unknown APs return 0). Phase 6.5 adds
 bracket-indexed read/write on shared variables (`MMIO[257]`
 reads UART status, `MMIO[0] <- 1` writes LED register).
+Phase 6.6 validates graceful degradation: coupling degree
+checks enable portable code (0=unsupported, 2=coupled),
+uncoupled variables fail cleanly with VALUE ERROR.
 Supports +, -, *, / (software divide), parentheses,
 monadic negate (scalar and vector), integer literals with APL
 underscore-negative convention, and variable assignment/reference
