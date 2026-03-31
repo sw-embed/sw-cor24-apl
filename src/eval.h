@@ -119,6 +119,51 @@ int eval(int n) {
         return r;
     }
 
+    if (ty == NODE_SVO_READ) {
+        // Shared variable indexed read: IDENT[N]
+        int sym_idx = node_val[n];
+        int ap = svo_ap[sym_idx];
+        if (ap == 0) { eval_err = 2; return -1; }  // VALUE ERROR: not coupled
+        int v = eval(node_right[n]);
+        if (eval_err) return -1;
+        if (arr_rank(v) != 0) { eval_err = 4; return -1; }
+        int offset = arr_get(v, 0);
+        if (ap == 242) {
+            // AP 242: MMIO byte access at FF0000+offset
+            int addr = 0xFF0000 + offset;
+            int val = *(char *)addr;
+            val = val & 0xFF;
+            int r = arr_scalar(val);
+            if (r < 0) { eval_err = 5; return -1; }
+            return r;
+        }
+        eval_err = 1;
+        return -1;
+    }
+
+    if (ty == NODE_SVO_WRITE) {
+        // Shared variable indexed write: IDENT[N] <- expr
+        int sym_idx = node_val[n];
+        int ap = svo_ap[sym_idx];
+        if (ap == 0) { eval_err = 2; return -1; }  // VALUE ERROR: not coupled
+        int idx = eval(node_left[n]);
+        if (eval_err) return -1;
+        if (arr_rank(idx) != 0) { eval_err = 4; return -1; }
+        int offset = arr_get(idx, 0);
+        int v = eval(node_right[n]);
+        if (eval_err) return -1;
+        if (arr_rank(v) != 0) { eval_err = 4; return -1; }
+        int val = arr_get(v, 0);
+        if (ap == 242) {
+            // AP 242: MMIO byte write at FF0000+offset
+            int addr = 0xFF0000 + offset;
+            *(char *)addr = val & 0xFF;
+            return v;
+        }
+        eval_err = 1;
+        return -1;
+    }
+
     if (ty == NODE_NEG) {
         int v = eval(node_right[n]);
         if (eval_err) return -1;

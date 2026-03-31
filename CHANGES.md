@@ -1,5 +1,17 @@
 # Changelog
 
+## Phase 6.5: Shared Variable Indexed Read/Write (2026-03-31)
+
+- Implemented bracket-indexed read/write on shared variables
+- `MMIO[N]` reads byte at `0xFF0000+N` after coupling via `qsvo`
+- `MMIO[N] <- expr` writes byte at `0xFF0000+N`
+- 0-origin offsets regardless of future `□IO` setting
+- Works in expression context: `A <- MMIO[257]`, `MMIO[257] + 10`
+- Uncoupled variables produce VALUE ERROR on indexed access
+- Added `TOK_LBRAK`/`TOK_RBRAK` tokens for bracket syntax
+- New AST nodes: `NODE_SVO_READ`, `NODE_SVO_WRITE`
+- Added test sample 18-svo-index with expected output (19 tests total)
+
 ## Phase 6.4: Shared Variable Offer — qsvo (2026-03-31)
 
 - Implemented `qsvo` (□SVO) system function for shared variable coupling

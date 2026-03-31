@@ -19,6 +19,8 @@
 #define TOK_QLED   12   // qled — LED D2 hardware I/O
 #define TOK_QSW    13   // qsw — switch S2 hardware I/O (read-only)
 #define TOK_QSVO   14   // qsvo — shared variable offer (□SVO)
+#define TOK_LBRAK  15   // [ (bracket index open)
+#define TOK_RBRAK  16   // ] (bracket index close)
 
 // Reserved word IDs
 #define RES_RHO     0
@@ -189,13 +191,31 @@ int tokenize(char *line) {
         if (line[i] == 40) { tok_type[t] = TOK_LPAREN; tok_pos[t] = i; tok_val[t] = 0; t++; i++; continue; }
         if (line[i] == 41) { tok_type[t] = TOK_RPAREN; tok_pos[t] = i; tok_val[t] = 0; t++; i++; continue; }
 
-        // Quad: [] (IBM 5100 ASCII convention for ⎕)
-        if (line[i] == 91 && line[i + 1] == 93) {
-            tok_type[t] = TOK_QUAD;
+        // Quad: [] (IBM 5100 ASCII convention for ⎕) or bracket indexing [expr]
+        if (line[i] == 91) {
+            if (line[i + 1] == 93) {
+                // [] = quad
+                tok_type[t] = TOK_QUAD;
+                tok_pos[t] = i;
+                tok_val[t] = 0;
+                t++;
+                i = i + 2;
+            } else {
+                // [ = bracket index open
+                tok_type[t] = TOK_LBRAK;
+                tok_pos[t] = i;
+                tok_val[t] = 0;
+                t++;
+                i++;
+            }
+            continue;
+        }
+        if (line[i] == 93) {
+            tok_type[t] = TOK_RBRAK;
             tok_pos[t] = i;
             tok_val[t] = 0;
             t++;
-            i = i + 2;
+            i++;
             continue;
         }
 

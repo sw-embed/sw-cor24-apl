@@ -1,6 +1,6 @@
 number = 31
 slug = "031-shared-var-indexing"
-status = "pending"
+status = "in-progress"
 description = "Implement indexed read/write on shared variables. MMIO[N] reads byte at FF000..."
 role = "production"
 context_files = []

@@ -21,6 +21,8 @@
 #define NODE_QLED_ASSIGN 11  // qled <- expr (right = expr)
 #define NODE_QSW   12   // qsw read (no children, read-only)
 #define NODE_QSVO  13   // shared variable offer (val = sym index, right = AP expr)
+#define NODE_SVO_READ  14   // shared var indexed read (val = sym index, right = index expr)
+#define NODE_SVO_WRITE 15  // shared var indexed write (val = sym index, left = index, right = value)
 
 #define AST_MAX 64
 
@@ -187,8 +189,22 @@ int parse_node(int mode) {
     } else if (ty == TOK_IDENT) {
         int sym_idx = sym_lookup(parse_line, tok_val[parse_pos]);
         if (sym_idx < 0) { parse_err = 1; return 0; }
-        left = ast_ident(sym_idx);
         parse_pos++;
+        if (tok_type[parse_pos] == TOK_LBRAK) {
+            // IDENT[expr] -- shared variable indexed read
+            parse_pos++;
+            int idx_expr = parse_node(0);
+            if (parse_err) return 0;
+            if (tok_type[parse_pos] != TOK_RBRAK) { parse_err = 1; return 0; }
+            parse_pos++;
+            int nd = ast_new();
+            node_type[nd] = NODE_SVO_READ;
+            node_val[nd] = sym_idx;
+            node_right[nd] = idx_expr;
+            left = nd;
+        } else {
+            left = ast_ident(sym_idx);
+        }
     } else if (is_binop(ty) && tok_type[parse_pos + 1] == TOK_SLASH) {
         // Reduce operator: +/ -/ */ (op followed by slash)
         int op = ty;
@@ -283,6 +299,45 @@ int parse(char *line) {
         node_type[n] = NODE_QOUT;
         node_right[n] = expr;
         return n;
+    }
+
+    // Check for shared variable indexed write: IDENT[expr] <- expr
+    if (tok_type[0] == TOK_IDENT && tok_type[1] == TOK_LBRAK) {
+        int sym_idx = sym_lookup(line, tok_val[0]);
+        if (sym_idx < 0) { return -1; }
+        parse_pos = 2;
+        int idx_expr = parse_node(0);
+        if (parse_err) return -1;
+        if (tok_type[parse_pos] != TOK_RBRAK) { parse_err = 1; return -1; }
+        parse_pos++;
+        if (tok_type[parse_pos] == TOK_ASSIGN) {
+            // IDENT[expr] <- expr (indexed write)
+            parse_pos++;
+            int val_expr = parse_node(0);
+            if (parse_err) return -1;
+            if (tok_type[parse_pos] != TOK_EOL) return -1;
+            int n = ast_new();
+            node_type[n] = NODE_SVO_WRITE;
+            node_val[n] = sym_idx;
+            node_left[n] = idx_expr;
+            node_right[n] = val_expr;
+            return n;
+        }
+        if (tok_type[parse_pos] != TOK_EOL) {
+            // IDENT[expr] followed by more (could be in expression context)
+            // For now, only standalone read supported at top level
+            // Fall through to expression parsing below
+            parse_pos = 0;
+            node_count = 0;
+            parse_err = 0;
+        } else {
+            // IDENT[expr] standalone read
+            int n = ast_new();
+            node_type[n] = NODE_SVO_READ;
+            node_val[n] = sym_idx;
+            node_right[n] = idx_expr;
+            return n;
+        }
     }
 
     // Check for assignment: IDENT <- expr

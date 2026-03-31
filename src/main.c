@@ -93,6 +93,9 @@ int main() {
                     } else if (node_type[root] == NODE_QLED_ASSIGN) {
                         // Quad LED assignment: no output
                         heap_top = heap_save;
+                    } else if (node_type[root] == NODE_SVO_WRITE) {
+                        // Shared variable indexed write: no output
+                        heap_top = heap_save;
                     } else {
                         // Print result based on rank
                         int rank = arr_rank(result);
