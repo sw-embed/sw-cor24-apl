@@ -1,0 +1,7 @@
+number = 55
+slug = "quad-io"
+status = "pending"
+description = "Implement []IO (quad index origin) system variable. Default value 1 (standard..."
+role = "production"
+context_files = []
+created_at = "2026-03-30T15:55:03"

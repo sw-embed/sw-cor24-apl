@@ -1,0 +1,1 @@
+Implement indexed read/write on shared variables. MMIO[N] reads byte at FF0000+N. MMIO[N]<-expr writes. 0-origin offsets. Requires bracket indexing syntax in parser for shared vars. Test LED, switch, UART data and status registers. (Phase 6, Step 6.2)

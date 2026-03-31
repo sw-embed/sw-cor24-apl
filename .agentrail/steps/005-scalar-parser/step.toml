@@ -1,0 +1,8 @@
+number = 5
+slug = "scalar-parser"
+status = "completed"
+description = "Right-to-left recursive descent parser for scalar expressions with +, -, *, parens, monadic negate. (Phase 1, Step 1.2)"
+role = "legacy"
+context_files = []
+created_at = "2026-03-29T16:25:16"
+completed_at = "2026-03-29T19:58:04"

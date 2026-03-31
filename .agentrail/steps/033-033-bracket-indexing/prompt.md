@@ -1,0 +1,1 @@
+Implement bracket indexing on vectors. V[N] reads element N. V[N]<-expr writes element N. 0-origin. Parser handles bracket syntax for both regular vectors and shared variables. Test: A<-10 20 30 then A[1] returns 20. (Phase 7, Step 7.1)

@@ -1,0 +1,1 @@
+Implemented right-to-left recursive descent parser for scalar APL expressions. AST uses parallel arrays (node_type/val/left/right). Supports +, -, *, /, parens, monadic negate. APL semantics: no precedence, right-associative, monadic negate consumes full right expression. REPL displays fully-parenthesized AST. Verified on COR24 emulator.

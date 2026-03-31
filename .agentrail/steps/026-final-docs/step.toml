@@ -1,0 +1,7 @@
+number = 26
+slug = "final-docs"
+status = "completed"
+description = "Update README, document syntax and operations, example session, known limitations. (Phase 5, Step 5.5)"
+role = "legacy"
+context_files = []
+created_at = "2026-03-29T16:25:16"

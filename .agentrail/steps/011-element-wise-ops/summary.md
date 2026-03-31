@@ -1,0 +1,1 @@
+Implemented element-wise vector operations in eval.h: vector+vector, scalar+vector, vector+scalar (scalar extension), and vector negation. Added LENGTH ERROR (eval_err=3) for mismatched vector lengths. Extracted eval_binop_scalar helper for op dispatch. Updated main.c with LENGTH ERROR handling and README with Phase 2.3 status. All operations verified on COR24 emulator.

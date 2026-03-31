@@ -1,0 +1,7 @@
+number = 38
+slug = "038-apl-image-format"
+status = "pending"
+description = "Define and implement APL image format. Newline-separated lines, null-terminat..."
+role = "production"
+context_files = []
+created_at = "2026-03-30T11:05:15"

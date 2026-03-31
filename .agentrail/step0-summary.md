@@ -1,0 +1,1 @@
+Project initialized with docs (architecture, prd, design, plan) and agentrail saga
