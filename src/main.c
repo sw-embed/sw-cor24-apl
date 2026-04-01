@@ -1,5 +1,5 @@
 // COR24 APL Interpreter -- main entry point
-// Phase 6: shared variable I/O (qled, qsw, qsvo)
+// Phase 8: control flow (goto, labels)
 
 #include <stdio.h>
 #include "io.h"
@@ -10,25 +10,91 @@
 #include "parse.h"
 #include "eval.h"
 
+// Program line buffer for branch support
+// 64 lines * 120 chars = 7680 bytes
+#define PROG_MAX 64
+#define PROG_LINE 120
+
+char prog_buf[7680];
+int prog_count;
+
+void prog_store(char *src, int idx) {
+    char *dst = prog_buf + idx * PROG_LINE;
+    int k = 0;
+    while (src[k] && k < PROG_LINE - 1) {
+        dst[k] = src[k];
+        k++;
+    }
+    dst[k] = 0;
+}
+
 int main() {
     char line[IO_LINE_MAX];
 
     arr_reset();
+    prog_count = 0;
+    branch_target = -1;
     puts("COR24 APL v0.1");
 
+    int pc = -1;  // -1 = read from input, >=0 = replay stored line
+
     while (1) {
-        io_print("      ");
-        int n = io_getline(line, IO_LINE_MAX);
-        if (n == 0) {
-            // Empty line -- just re-prompt
-        } else if (line[0] == 41) {
+        char *cur_line;
+        int cur_lineno;  // 1-based line number
+
+        if (pc >= 0) {
+            // Replaying stored line
+            cur_line = prog_buf + pc * PROG_LINE;
+            cur_lineno = pc + 1;
+        } else {
+            // Read new line from input
+            io_print("      ");
+            int n = io_getline(line, IO_LINE_MAX);
+            if (n == 0) continue;
+            // Store in program buffer
+            if (prog_count < PROG_MAX) {
+                prog_store(line, prog_count);
+                prog_count++;
+            }
+            cur_line = line;
+            cur_lineno = prog_count;
+        }
+
+        // Check for label prefix: IDENT: at start of line
+        char *exec_line = cur_line;
+        if (is_upper(cur_line[0])) {
+            int j = 1;
+            while (is_alnum(cur_line[j])) j++;
+            if (cur_line[j] == 58) {  // ':'
+                // Record label as variable set to line number
+                int sym_idx = sym_lookup(cur_line, 0);
+                if (sym_idx >= 0) {
+                    sym_val[sym_idx] = arr_scalar(cur_lineno);
+                    sym_set_flag[sym_idx] = 1;
+                }
+                j++;
+                while (cur_line[j] == 32) j++;
+                exec_line = cur_line + j;
+                if (exec_line[0] == 0) {
+                    // Label-only line, no code to execute
+                    if (pc >= 0) { pc++; if (pc >= prog_count) pc = -1; }
+                    continue;
+                }
+            }
+        }
+
+        if (exec_line[0] == 0) {
+            // Empty line
+            if (pc >= 0) { pc++; if (pc >= prog_count) pc = -1; }
+            continue;
+        } else if (exec_line[0] == 41) {
             // System command: starts with ')'
-            if (str_match(line, 1, "CLEAR") == 5 && (line[6] == 0 || line[6] == 32)) {
+            if (str_match(exec_line, 1, "CLEAR") == 5 && (exec_line[6] == 0 || exec_line[6] == 32)) {
                 arr_reset();
                 sym_reset();
                 io_print("  CLEAR WS");
                 putchar(10);
-            } else if (str_match(line, 1, "VARS") == 4 && (line[5] == 0 || line[5] == 32)) {
+            } else if (str_match(exec_line, 1, "VARS") == 4 && (exec_line[5] == 0 || exec_line[5] == 32)) {
                 int i = 0;
                 int any = 0;
                 while (i < sym_count) {
@@ -44,14 +110,14 @@ int main() {
                     i++;
                 }
                 if (any) putchar(10);
-            } else if (str_match(line, 1, "OFF") == 3 && (line[4] == 0 || line[4] == 32)) {
+            } else if (str_match(exec_line, 1, "OFF") == 3 && (exec_line[4] == 0 || exec_line[4] == 32)) {
                 return 0;
             } else {
                 io_print("  SYNTAX ERROR");
                 putchar(10);
             }
         } else {
-            int ntok = tokenize(line);
+            int ntok = tokenize(exec_line);
             if (ntok < 0) {
                 io_print("  SYNTAX ERROR");
                 putchar(10);
@@ -59,13 +125,14 @@ int main() {
                 // Save heap position for temporary reclamation
                 int heap_save = heap_top;
 
-                int root = parse(line);
+                int root = parse(exec_line);
                 if (root < 0) {
                     heap_top = heap_save;
                     io_print("  SYNTAX ERROR");
                     putchar(10);
                 } else {
                     eval_err = 0;
+                    branch_target = -1;
                     int result = eval(root);
                     if (eval_err == 2) {
                         heap_top = heap_save;
@@ -95,6 +162,9 @@ int main() {
                         heap_top = heap_save;
                     } else if (node_type[root] == NODE_SVO_WRITE) {
                         // Shared variable indexed write: no output
+                        heap_top = heap_save;
+                    } else if (node_type[root] == NODE_GOTO || node_type[root] == NODE_CGOTO) {
+                        // Branch: no output
                         heap_top = heap_save;
                     } else {
                         // Print result based on rank
@@ -153,6 +223,22 @@ int main() {
                     }
                 }
             }
+        }
+
+        // Check for branch
+        if (branch_target > 0) {
+            pc = branch_target - 1;  // convert 1-based to 0-based
+            branch_target = -1;
+            continue;
+        } else if (branch_target == 0) {
+            // goto 0: stop execution (exit interpreter at top level)
+            return 0;
+        }
+
+        // Advance PC if replaying stored lines
+        if (pc >= 0) {
+            pc++;
+            if (pc >= prog_count) pc = -1;
         }
     }
     return 0;

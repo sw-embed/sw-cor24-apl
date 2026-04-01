@@ -23,6 +23,8 @@
 #define NODE_QSVO  13   // shared variable offer (val = sym index, right = AP expr)
 #define NODE_SVO_READ  14   // shared var indexed read (val = sym index, right = index expr)
 #define NODE_SVO_WRITE 15  // shared var indexed write (val = sym index, left = index, right = value)
+#define NODE_GOTO  16   // unconditional branch (right = target expr)
+#define NODE_CGOTO 17   // conditional branch (left = cond, right = target)
 
 #define AST_MAX 64
 
@@ -338,6 +340,37 @@ int parse(char *line) {
             node_right[n] = idx_expr;
             return n;
         }
+    }
+
+    // Check for goto: goto expr  or  goto (expr)/LABEL
+    if (tok_type[0] == TOK_GOTO) {
+        parse_pos = 1;
+        if (tok_type[1] == TOK_LPAREN) {
+            // Conditional: goto (expr)/TARGET
+            parse_pos = 2;
+            int cond = parse_node(0);
+            if (parse_err) return -1;
+            if (tok_type[parse_pos] != TOK_RPAREN) return -1;
+            parse_pos++;
+            if (tok_type[parse_pos] != TOK_SLASH) return -1;
+            parse_pos++;
+            int target = parse_node(0);
+            if (parse_err) return -1;
+            if (tok_type[parse_pos] != TOK_EOL) return -1;
+            int n = ast_new();
+            node_type[n] = NODE_CGOTO;
+            node_left[n] = cond;
+            node_right[n] = target;
+            return n;
+        }
+        // Unconditional: goto expr
+        int target = parse_node(0);
+        if (parse_err) return -1;
+        if (tok_type[parse_pos] != TOK_EOL) return -1;
+        int n = ast_new();
+        node_type[n] = NODE_GOTO;
+        node_right[n] = target;
+        return n;
     }
 
     // Check for assignment: IDENT <- expr

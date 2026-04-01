@@ -8,6 +8,9 @@
 // Error codes: 0=none, 1=DOMAIN, 2=VALUE, 3=LENGTH, 4=RANK, 5=WS FULL
 int eval_err;
 
+// Branch target: -1=no branch, 0=exit, >0=line number (1-based)
+int branch_target;
+
 // Shadow register for LED D2 (0xFF0000 is write-only for LEDs)
 // Stores the user-visible value (1=on, 0=off), not the raw active-low bit
 int qled_shadow;
@@ -192,6 +195,32 @@ int eval(int n) {
         if (idx < 0 || idx >= sz) { eval_err = 3; return -1; }  // INDEX ERROR
         arr_set(arr, idx, val);
         return v;
+    }
+
+    if (ty == NODE_GOTO) {
+        int v = eval(node_right[n]);
+        if (eval_err) return -1;
+        if (arr_rank(v) != 0) { eval_err = 4; return -1; }
+        branch_target = arr_get(v, 0);
+        int r = arr_scalar(0);
+        if (r < 0) { eval_err = 5; return -1; }
+        return r;
+    }
+
+    if (ty == NODE_CGOTO) {
+        int cv = eval(node_left[n]);
+        if (eval_err) return -1;
+        if (arr_rank(cv) != 0) { eval_err = 4; return -1; }
+        int cond = arr_get(cv, 0);
+        if (cond != 0) {
+            int tv = eval(node_right[n]);
+            if (eval_err) return -1;
+            if (arr_rank(tv) != 0) { eval_err = 4; return -1; }
+            branch_target = arr_get(tv, 0);
+        }
+        int r = arr_scalar(0);
+        if (r < 0) { eval_err = 5; return -1; }
+        return r;
     }
 
     if (ty == NODE_NEG) {

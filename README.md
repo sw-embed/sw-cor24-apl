@@ -90,6 +90,11 @@ regular vector elements.
 Phase 7.2 adds bitwise operations: `and` (AND), `or` (OR),
 `not` (NOT) as reserved words, element-wise on vectors with
 scalar extension. Needed for UART status bit testing.
+Phase 8.1 adds branch and labels: `goto LABEL` (unconditional),
+`goto (expr)/LABEL` (conditional, branches if nonzero),
+`goto 0` (exit). Labels defined with `LABEL:` prefix, stored
+as variables holding line numbers. Program buffer enables
+backward branching for loops.
 Supports +, -, *, / (software divide), parentheses,
 monadic negate (scalar and vector), integer literals with APL
 underscore-negative convention, and variable assignment/reference

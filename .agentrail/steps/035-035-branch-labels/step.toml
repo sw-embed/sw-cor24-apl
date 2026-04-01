@@ -1,6 +1,6 @@
 number = 35
 slug = "035-branch-labels"
-status = "pending"
+status = "in-progress"
 description = "Implement branch (→) and labels. →N branches to line N, →LABEL to label..."
 role = "production"
 context_files = []

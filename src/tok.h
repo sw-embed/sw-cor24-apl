@@ -21,6 +21,7 @@
 #define TOK_QSVO   14   // qsvo — shared variable offer (□SVO)
 #define TOK_LBRAK  15   // [ (bracket index open)
 #define TOK_RBRAK  16   // ] (bracket index close)
+#define TOK_GOTO   17   // goto — branch (→)
 
 // Reserved word IDs
 #define RES_RHO     0
@@ -163,6 +164,16 @@ int tokenize(char *line) {
             len = str_match(line, i, "qsvo");
             if (len == 4 && !is_alnum(line[i + 4])) {
                 tok_type[t] = TOK_QSVO;
+                tok_pos[t] = i;
+                tok_val[t] = 0;
+                t++;
+                i = i + 4;
+                continue;
+            }
+
+            len = str_match(line, i, "goto");
+            if (len == 4 && !is_alnum(line[i + 4])) {
+                tok_type[t] = TOK_GOTO;
                 tok_pos[t] = i;
                 tok_val[t] = 0;
                 t++;

@@ -1,0 +1,6 @@
+N <- 0
+LOOP: N <- N + 1
+[] <- N
+goto (10 - N)/LOOP
+[] <- 99
+)OFF

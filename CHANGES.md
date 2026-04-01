@@ -1,5 +1,20 @@
 # Changelog
 
+## Phase 8.1: Branch and Labels (2026-03-31)
+
+- Implemented `goto` reserved word (ASCII surface syntax for APL →)
+- Unconditional branch: `goto LABEL` branches to labeled line
+- Conditional branch: `goto (expr)/LABEL` branches if expr is nonzero
+- `goto 0` exits the interpreter (APL →0 convention)
+- Label definition: `LABEL:` at start of line sets label to current line number
+- Labels are stored as regular variables (value = line number), following APL convention
+- Program line buffer (64 lines) stores input for backward branching (loops)
+- PC-based execution: replays stored lines when branching backward
+- Forward branches require label to be defined first (pre-scan not yet implemented)
+- Added test sample 22-branch-labels: loop counting 1 to 10 with backward goto
+- Added test sample 23-goto-variants: sum accumulation loop, goto 0 exit
+- All 24 tests pass
+
 ## Phase 7.2: Bitwise Operations (2026-03-31)
 
 - Implemented `and` (bitwise AND), `or` (bitwise OR), `not` (bitwise NOT)
