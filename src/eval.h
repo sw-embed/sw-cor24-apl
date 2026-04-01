@@ -332,6 +332,42 @@ int eval(int n) {
             return -1;
         }
 
+        if (res_id == RES_NOT) {
+            // not A: bitwise NOT (complement)
+            int rk = arr_rank(v);
+            if (rk == 0) {
+                int r = arr_scalar(~arr_get(v, 0));
+                if (r < 0) { eval_err = 5; return -1; }
+                return r;
+            }
+            if (rk == 1) {
+                int sz = arr_size(v);
+                int r = arr_vector(sz);
+                if (r < 0) { eval_err = 5; return -1; }
+                int i = 0;
+                while (i < sz) {
+                    arr_set(r, i, ~arr_get(v, i));
+                    i++;
+                }
+                return r;
+            }
+            if (rk == 2) {
+                int d0 = arr_dim0(v);
+                int d1 = arr_dim1(v);
+                int r = arr_new(2, d0, d1);
+                if (r < 0) { eval_err = 5; return -1; }
+                int sz = d0 * d1;
+                int i = 0;
+                while (i < sz) {
+                    arr_set(r, i, ~arr_get(v, i));
+                    i++;
+                }
+                return r;
+            }
+            eval_err = 4;
+            return -1;
+        }
+
         // Unknown monadic function
         eval_err = 1;
         return -1;
@@ -555,6 +591,72 @@ int eval(int n) {
                 i++;
             }
             return r;
+        }
+
+        if (res_id == RES_AND || res_id == RES_OR) {
+            // Bitwise AND / OR on conformable arrays
+            int lrk = arr_rank(lv);
+            int rrk = arr_rank(rv);
+
+            // Scalar op scalar
+            if (lrk == 0 && rrk == 0) {
+                int a = arr_get(lv, 0);
+                int b = arr_get(rv, 0);
+                int val = (res_id == RES_AND) ? (a & b) : (a | b);
+                int r = arr_scalar(val);
+                if (r < 0) { eval_err = 5; return -1; }
+                return r;
+            }
+
+            // Vector op vector
+            if (lrk == 1 && rrk == 1) {
+                int lsz = arr_size(lv);
+                int rsz = arr_size(rv);
+                if (lsz != rsz) { eval_err = 3; return -1; }
+                int r = arr_vector(lsz);
+                if (r < 0) { eval_err = 5; return -1; }
+                int i = 0;
+                while (i < lsz) {
+                    int a = arr_get(lv, i);
+                    int b = arr_get(rv, i);
+                    arr_set(r, i, (res_id == RES_AND) ? (a & b) : (a | b));
+                    i++;
+                }
+                return r;
+            }
+
+            // Scalar extension: scalar op vector
+            if (lrk == 0 && rrk == 1) {
+                int a = arr_get(lv, 0);
+                int rsz = arr_size(rv);
+                int r = arr_vector(rsz);
+                if (r < 0) { eval_err = 5; return -1; }
+                int i = 0;
+                while (i < rsz) {
+                    int b = arr_get(rv, i);
+                    arr_set(r, i, (res_id == RES_AND) ? (a & b) : (a | b));
+                    i++;
+                }
+                return r;
+            }
+
+            // Scalar extension: vector op scalar
+            if (lrk == 1 && rrk == 0) {
+                int b = arr_get(rv, 0);
+                int lsz = arr_size(lv);
+                int r = arr_vector(lsz);
+                if (r < 0) { eval_err = 5; return -1; }
+                int i = 0;
+                while (i < lsz) {
+                    int a = arr_get(lv, i);
+                    arr_set(r, i, (res_id == RES_AND) ? (a & b) : (a | b));
+                    i++;
+                }
+                return r;
+            }
+
+            eval_err = 4;
+            return -1;
         }
 
         // Unknown dyadic function

@@ -1,5 +1,16 @@
 # Changelog
 
+## Phase 7.2: Bitwise Operations (2026-03-31)
+
+- Implemented `and` (bitwise AND), `or` (bitwise OR), `not` (bitwise NOT)
+- Reserved words like `rho`, `iota` — lowercase syntax
+- Dyadic: `128 and 130` returns 128, `3 or 4` returns 7
+- Monadic: `not 255` returns complement (_256 on 24-bit)
+- Element-wise on vectors with scalar extension:
+  `1 2 3 or 4` returns `5 6 7`, `15 and 3 7 15` returns `3 7 15`
+- Needed for UART status bit testing (`MMIO[257] and 2` checks TX ready)
+- Added test sample 21-bitwise with expected output (22 tests total)
+
 ## Phase 7.1: Bracket Indexing on Vectors (2026-03-31)
 
 - Implemented `V[N]` read and `V[N] <- expr` write on regular vectors

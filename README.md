@@ -87,6 +87,9 @@ Phase 7.1 adds bracket indexing on vectors (`A[1]` reads,
 `A[1] <- 99` writes, 0-origin). Unified syntax: same
 bracket notation works for both SVO hardware variables and
 regular vector elements.
+Phase 7.2 adds bitwise operations: `and` (AND), `or` (OR),
+`not` (NOT) as reserved words, element-wise on vectors with
+scalar extension. Needed for UART status bit testing.
 Supports +, -, *, / (software divide), parentheses,
 monadic negate (scalar and vector), integer literals with APL
 underscore-negative convention, and variable assignment/reference

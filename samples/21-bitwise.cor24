@@ -1,0 +1,14 @@
+128 and 130
+3 or 4
+7 and 15
+5 or 10
+255 and 0
+0 or 0
+128 and 255
+A <- 130
+128 and A
+B <- 1 2 3
+B or 4
+15 and 3 7 15
+not 255
+not 0

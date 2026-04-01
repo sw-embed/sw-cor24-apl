@@ -1,0 +1,1 @@
+Implemented bracket indexing on vectors. V[N] reads element N, V[N]<-expr writes. 0-origin. Unified evaluator: svo_ap!=0 routes to MMIO, svo_ap==0 with set variable routes to vector access, unset variables produce VALUE ERROR. 21 tests pass including graceful degradation regression.

@@ -29,6 +29,9 @@
 #define RES_DROP    3
 #define RES_REV     4
 #define RES_CAT     5
+#define RES_AND     6
+#define RES_OR      7
+#define RES_NOT     8
 
 #define TOK_MAX    64   // max tokens per line
 
@@ -94,6 +97,15 @@ int lookup_reserved(char *src, int pos, int *end) {
 
     len = str_match(src, pos, "cat");
     if (len == 3 && !is_alnum(src[pos + 3])) { *end = pos + 3; return RES_CAT; }
+
+    len = str_match(src, pos, "and");
+    if (len == 3 && !is_alnum(src[pos + 3])) { *end = pos + 3; return RES_AND; }
+
+    len = str_match(src, pos, "or");
+    if (len == 2 && !is_alnum(src[pos + 2])) { *end = pos + 2; return RES_OR; }
+
+    len = str_match(src, pos, "not");
+    if (len == 3 && !is_alnum(src[pos + 3])) { *end = pos + 3; return RES_NOT; }
 
     return -1;
 }

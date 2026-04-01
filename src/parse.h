@@ -123,7 +123,7 @@ int ast_reduce(int op, int operand) {
 
 // Check if a reserved word can be used dyadically
 int is_dyadic_res(int res_id) {
-    return res_id == RES_RHO || res_id == RES_TAKE || res_id == RES_DROP || res_id == RES_CAT;
+    return res_id == RES_RHO || res_id == RES_TAKE || res_id == RES_DROP || res_id == RES_CAT || res_id == RES_AND || res_id == RES_OR;
 }
 
 // Temporary buffer for collecting strand elements

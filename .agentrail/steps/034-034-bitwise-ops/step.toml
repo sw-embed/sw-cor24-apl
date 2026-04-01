@@ -1,6 +1,6 @@
 number = 34
 slug = "034-bitwise-ops"
-status = "pending"
+status = "in-progress"
 description = "Implement bitwise operations: and (AND), or (OR), not (NOT). Reserved words l..."
 role = "production"
 context_files = []
