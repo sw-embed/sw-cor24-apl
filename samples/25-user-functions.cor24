@@ -1,0 +1,21 @@
+del R <- DOUBLE X
+R <- X + X
+del
+DOUBLE 21
+del R <- X ADD Y
+R <- X + Y
+del
+3 ADD 4
+del R <- FACT N
+goto (N - 1)/REC
+R <- 1
+goto 0
+REC: R <- N * FACT N - 1
+del
+FACT 1
+FACT 5
+A <- DOUBLE 10
+A
+DOUBLE DOUBLE 3
+)FNS
+)OFF

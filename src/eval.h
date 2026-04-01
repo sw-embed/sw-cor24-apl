@@ -15,6 +15,249 @@ int branch_target;
 // Stores the user-visible value (1=on, 0=off), not the raw active-low bit
 int qled_shadow;
 
+// ---- Call stack for user function recursion ----
+
+// Save AST state per call frame (CALL_MAX * AST_MAX = 8 * 64 = 512)
+int save_ntype[512];
+int save_nval[512];
+int save_nleft[512];
+int save_nright[512];
+int save_ncount[CALL_MAX];
+
+// Save token state per call frame (CALL_MAX * TOK_MAX = 512)
+int save_ttype[512];
+int save_tval[512];
+int save_tpos[512];
+int save_tcount[CALL_MAX];
+
+// Save branch target per call frame
+int save_btarget[CALL_MAX];
+
+// Save local variables per call frame (result, right, left = 3 per frame)
+int save_lval[24];   // CALL_MAX * 3
+int save_lset[24];   // CALL_MAX * 3
+
+int call_depth;
+
+// ---- Print array result (used for quad output in function bodies) ----
+
+void print_array(int result) {
+    int rank = arr_rank(result);
+    if (rank == 0) {
+        io_print("  ");
+        print_int(arr_get(result, 0));
+        putchar(10);
+    } else if (rank == 1) {
+        int sz = arr_dim0(result);
+        int maxw = 1;
+        int j = 0;
+        while (j < sz) {
+            int w = num_width(arr_get(result, j));
+            if (w > maxw) maxw = w;
+            j++;
+        }
+        j = 0;
+        while (j < sz) {
+            if (j == 0) putchar(32);
+            print_int_rj(arr_get(result, j), maxw);
+            if (j + 1 < sz) putchar(32);
+            j++;
+        }
+        putchar(10);
+    } else if (rank == 2) {
+        int rows = arr_dim0(result);
+        int cols = arr_dim1(result);
+        int sz = rows * cols;
+        int maxw = 1;
+        int j = 0;
+        while (j < sz) {
+            int w = num_width(arr_get(result, j));
+            if (w > maxw) maxw = w;
+            j++;
+        }
+        int r = 0;
+        while (r < rows) {
+            int c = 0;
+            while (c < cols) {
+                if (c == 0) putchar(32);
+                print_int_rj(arr_get(result, r * cols + c), maxw);
+                if (c + 1 < cols) putchar(32);
+                c++;
+            }
+            putchar(10);
+            r++;
+        }
+    }
+}
+
+// ---- Forward declarations for mutual recursion ----
+int eval(int n);
+int eval_fncall(int n);
+
+// ---- User function call execution ----
+// Separated from eval() to reduce stack frame size for recursion.
+
+int eval_fncall(int n) {
+    int fi = node_val[n];
+
+    // Evaluate right argument
+    int ra = eval(node_right[n]);
+    if (eval_err) return -1;
+
+    // Evaluate left argument (dyadic only)
+    int la = -1;
+    if (node_left[n] >= 0) {
+        la = eval(node_left[n]);
+        if (eval_err) return -1;
+    }
+
+    // Check call depth
+    if (call_depth >= CALL_MAX) { eval_err = 5; return -1; }
+    int d = call_depth;
+    call_depth = d + 1;
+
+    // Save AST + token state
+    int base = d * 64;
+    int si = 0;
+    while (si < node_count) {
+        save_ntype[base + si] = node_type[si];
+        save_nval[base + si] = node_val[si];
+        save_nleft[base + si] = node_left[si];
+        save_nright[base + si] = node_right[si];
+        si++;
+    }
+    save_ncount[d] = node_count;
+    si = 0;
+    while (si < tok_count) {
+        save_ttype[base + si] = tok_type[si];
+        save_tval[base + si] = tok_val[si];
+        save_tpos[base + si] = tok_pos[si];
+        si++;
+    }
+    save_tcount[d] = tok_count;
+    save_btarget[d] = branch_target;
+
+    // Save local variables (result, right, left)
+    int lbase = d * 3;
+    int rs = fn_result_sym[fi];
+    int xs = fn_right_sym[fi];
+    save_lval[lbase] = sym_val[rs];
+    save_lset[lbase] = sym_set_flag[rs];
+    save_lval[lbase + 1] = sym_val[xs];
+    save_lset[lbase + 1] = sym_set_flag[xs];
+    if (fn_left_sym[fi] >= 0) {
+        int ys = fn_left_sym[fi];
+        save_lval[lbase + 2] = sym_val[ys];
+        save_lset[lbase + 2] = sym_set_flag[ys];
+    }
+
+    // Set arguments
+    sym_val[xs] = ra;
+    sym_set_flag[xs] = 1;
+    if (fn_left_sym[fi] >= 0 && la >= 0) {
+        sym_val[fn_left_sym[fi]] = la;
+        sym_set_flag[fn_left_sym[fi]] = 1;
+    }
+    sym_set_flag[rs] = 0;  // result initially undefined
+
+    // Pre-scan labels in function body
+    fn_scan_labels(fi);
+
+    // Execute function body lines
+    int fpc = 0;
+    int fdone = 0;
+    branch_target = -1;
+
+    while (fpc < fn_lines[fi] && !fdone) {
+        char *fline = fn_get_line(fi, fpc);
+        if (fline[0] == 0) { fpc++; continue; }
+
+        // Handle label prefix
+        char *fexec = fline;
+        if (is_upper(fline[0])) {
+            int fj = 1;
+            while (is_alnum(fline[fj])) fj++;
+            if (fline[fj] == 58) {  // ':'
+                fj++;
+                while (fline[fj] == 32) fj++;
+                fexec = fline + fj;
+                if (fexec[0] == 0) { fpc++; continue; }
+            }
+        }
+
+        int ntok = tokenize(fexec);
+        if (ntok < 0) { eval_err = 1; fdone = 1; continue; }
+
+        int froot = parse(fexec);
+        if (froot < 0) { eval_err = 1; fdone = 1; continue; }
+
+        eval_err = 0;
+        branch_target = -1;
+        int fres = eval(froot);
+
+        if (eval_err) { fdone = 1; continue; }
+
+        // Print quad output inside functions
+        if (node_type[froot] == NODE_QOUT) {
+            print_array(fres);
+        }
+
+        // Branch handling
+        if (branch_target == 0) {
+            fdone = 1;
+        } else if (branch_target > 0) {
+            fpc = branch_target - 1;
+            branch_target = -1;
+        } else {
+            fpc++;
+        }
+    }
+
+    // Get result from result variable
+    int result = -1;
+    if (!eval_err) {
+        if (sym_set_flag[rs]) {
+            result = sym_val[rs];
+        } else {
+            eval_err = 2;  // VALUE ERROR: result not set
+        }
+    }
+
+    // Restore local variables
+    sym_val[rs] = save_lval[lbase];
+    sym_set_flag[rs] = save_lset[lbase];
+    sym_val[xs] = save_lval[lbase + 1];
+    sym_set_flag[xs] = save_lset[lbase + 1];
+    if (fn_left_sym[fi] >= 0) {
+        int ys = fn_left_sym[fi];
+        sym_val[ys] = save_lval[lbase + 2];
+        sym_set_flag[ys] = save_lset[lbase + 2];
+    }
+
+    // Restore AST + token state
+    node_count = save_ncount[d];
+    si = 0;
+    while (si < node_count) {
+        node_type[si] = save_ntype[base + si];
+        node_val[si] = save_nval[base + si];
+        node_left[si] = save_nleft[base + si];
+        node_right[si] = save_nright[base + si];
+        si++;
+    }
+    tok_count = save_tcount[d];
+    si = 0;
+    while (si < tok_count) {
+        tok_type[si] = save_ttype[base + si];
+        tok_val[si] = save_tval[base + si];
+        tok_pos[si] = save_tpos[base + si];
+        si++;
+    }
+    branch_target = save_btarget[d];
+
+    call_depth = d;
+    return result;
+}
+
 // Apply a binary op to two scalars
 int eval_binop_scalar(int op, int a, int b) {
     if (op == TOK_PLUS)       return a + b;
@@ -65,6 +308,10 @@ int eval(int n) {
         sym_val[idx] = v;
         sym_set_flag[idx] = 1;
         return v;
+    }
+
+    if (ty == NODE_FNCALL) {
+        return eval_fncall(n);
     }
 
     if (ty == NODE_QOUT) {

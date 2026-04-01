@@ -25,6 +25,7 @@
 #define NODE_SVO_WRITE 15  // shared var indexed write (val = sym index, left = index, right = value)
 #define NODE_GOTO  16   // unconditional branch (right = target expr)
 #define NODE_CGOTO 17   // conditional branch (left = cond, right = target)
+#define NODE_FNCALL 18  // user function call (val = fn index, left = left arg/-1, right = right arg)
 
 #define AST_MAX 64
 
@@ -135,6 +136,15 @@ int is_binop(int ty) {
     return ty == TOK_PLUS || ty == TOK_MINUS || ty == TOK_STAR || ty == TOK_SLASH;
 }
 
+// Check if token at pos could start an expression (for function call detection)
+int can_start_expr(int pos) {
+    int ty = tok_type[pos];
+    if (ty == TOK_NUM || ty == TOK_LPAREN || ty == TOK_IDENT ||
+        ty == TOK_MINUS || ty == TOK_RES || ty == TOK_QLED || ty == TOK_QSW) return 1;
+    if (is_binop(ty) && tok_type[pos + 1] == TOK_SLASH) return 1;  // reduce
+    return 0;
+}
+
 // Combined parse function avoids mutual recursion.
 // mode 0 = expression, mode 1 = value only
 int parse_node(int mode);
@@ -192,7 +202,18 @@ int parse_node(int mode) {
         int sym_idx = sym_lookup(parse_line, tok_val[parse_pos]);
         if (sym_idx < 0) { parse_err = 1; return 0; }
         parse_pos++;
-        if (tok_type[parse_pos] == TOK_LBRAK) {
+        // Check for monadic function call
+        int fi = fn_lookup(sym_idx);
+        if (fi >= 0 && fn_left_sym[fi] < 0 && can_start_expr(parse_pos)) {
+            // Monadic user function call: FN expr
+            int arg = parse_node(0);
+            if (parse_err) return 0;
+            int nd = ast_new();
+            node_type[nd] = NODE_FNCALL;
+            node_val[nd] = fi;
+            node_right[nd] = arg;
+            left = nd;
+        } else if (tok_type[parse_pos] == TOK_LBRAK) {
             // IDENT[expr] -- shared variable indexed read
             parse_pos++;
             int idx_expr = parse_node(0);
@@ -261,6 +282,25 @@ int parse_node(int mode) {
         node_val[n] = sym_idx;
         node_right[n] = right;
         return n;
+    }
+
+    // Dyadic user function call: expr FN expr
+    if (mode == 0 && tok_type[parse_pos] == TOK_IDENT) {
+        int dsym = sym_lookup(parse_line, tok_val[parse_pos]);
+        if (dsym >= 0) {
+            int dfi = fn_lookup(dsym);
+            if (dfi >= 0 && fn_left_sym[dfi] >= 0) {
+                parse_pos++;
+                int right = parse_node(0);
+                if (parse_err) return 0;
+                int nd = ast_new();
+                node_type[nd] = NODE_FNCALL;
+                node_val[nd] = dfi;
+                node_left[nd] = left;
+                node_right[nd] = right;
+                return nd;
+            }
+        }
     }
 
     return left;

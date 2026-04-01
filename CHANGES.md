@@ -1,5 +1,26 @@
 # Changelog
 
+## Phase 8.3: User-Defined Functions (2026-04-01)
+
+- Implemented `del` keyword (ASCII for ∇) to define user functions
+- Monadic functions: `del R <- FN X` ... `del` (e.g., DOUBLE)
+- Dyadic functions: `del R <- X FN Y` ... `del` (e.g., ADD)
+- Recursive functions supported with call stack depth up to 8 levels
+- Local variables: result, right arg, left arg saved/restored per call frame
+- AST and token state saved/restored around function body execution
+  to support function calls within larger expressions
+- Labels and `goto` branching work within function bodies
+- Quad output (`[] <- expr`) works inside functions for explicit output
+- `goto 0` exits function early (returns result if set)
+- Function redefinition supported (re-entering `del` with same name overwrites)
+- `)FNS` system command lists defined function names
+- `)CLEAR` resets function table along with variables and heap
+- New files: `src/fn.h` (function table, header parser, label scanner)
+- New AST node: `NODE_FNCALL` with monadic/dyadic dispatch in parser
+- `eval_fncall()` separated from `eval()` to reduce stack frame size
+- Added test sample 25-user-functions: DOUBLE, ADD, FACT (recursive), nested calls
+- All 26 tests pass
+
 ## Phase 8.2: Multi-line Program Storage (2026-04-01)
 
 - Implemented `[N] expr` syntax to store program lines at specific line numbers

@@ -1,0 +1,1 @@
+Completed Phase 8.2 multi-line program storage. Code was already implemented in prior commit (0937fb1). This session: fixed tests 22/23 that broke when auto-store was removed (converted to [N] program entry + )RUN), added new test 24-multiline covering [N] entry, )LIST, )RUN loop with labels, )ERASE. All 25 tests pass.

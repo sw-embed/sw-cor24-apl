@@ -1,5 +1,5 @@
 // COR24 APL Interpreter -- main entry point
-// Phase 8: control flow, labels, multi-line programs
+// Phase 8: control flow, labels, multi-line programs, user functions
 
 #include <stdio.h>
 #include "io.h"
@@ -7,6 +7,7 @@
 #include "arr.h"
 #include "tok.h"
 #include "sym.h"
+#include "fn.h"
 #include "parse.h"
 #include "eval.h"
 
@@ -87,6 +88,8 @@ int main() {
 
     arr_reset();
     prog_clear();
+    fn_reset();
+    call_depth = 0;
     branch_target = -1;
     puts("COR24 APL v0.1");
 
@@ -105,6 +108,25 @@ int main() {
             io_print("      ");
             int n = io_getline(line, IO_LINE_MAX);
             if (n == 0) continue;
+
+            // Function definition mode: collect body lines
+            if (fn_def_mode) {
+                int ci = 0;
+                while (line[ci] == 32) ci++;
+                if (str_match(line, ci, "del") == 3 && !is_alnum(line[ci + 3])) {
+                    // Closing del
+                    fn_def_mode = 0;
+                } else if (fn_def_line >= FN_BODY_MAX) {
+                    io_print("  FN FULL");
+                    putchar(10);
+                    fn_def_mode = 0;
+                } else {
+                    fn_store_line(fn_def_idx, fn_def_line, line);
+                    fn_lines[fn_def_idx] = fn_def_line + 1;
+                    fn_def_line++;
+                }
+                continue;
+            }
 
             // Check for [N] line entry syntax
             char *rest;
@@ -151,6 +173,7 @@ int main() {
             if (str_match(exec_line, 1, "CLEAR") == 5 && (exec_line[6] == 0 || exec_line[6] == 32)) {
                 arr_reset();
                 sym_reset();
+                fn_reset();
                 io_print("  CLEAR WS");
                 putchar(10);
             } else if (str_match(exec_line, 1, "VARS") == 4 && (exec_line[5] == 0 || exec_line[5] == 32)) {
@@ -192,6 +215,21 @@ int main() {
                 }
             } else if (str_match(exec_line, 1, "ERASE") == 5 && (exec_line[6] == 0 || exec_line[6] == 32)) {
                 prog_clear();
+            } else if (str_match(exec_line, 1, "FNS") == 3 && (exec_line[4] == 0 || exec_line[4] == 32)) {
+                int i = 0;
+                int any = 0;
+                while (i < fn_count) {
+                    int sym = fn_name_sym[i];
+                    if (any) io_print("  ");
+                    int off = sym_name_off[sym];
+                    while (sym_name_buf[off]) {
+                        putchar(sym_name_buf[off]);
+                        off++;
+                    }
+                    any = 1;
+                    i++;
+                }
+                if (any) putchar(10);
             } else if (str_match(exec_line, 1, "OFF") == 3 && (exec_line[4] == 0 || exec_line[4] == 32)) {
                 return 0;
             } else {
@@ -199,6 +237,61 @@ int main() {
                 putchar(10);
             }
         } else {
+            // Check for "del" function definition (before tokenize, since
+            // the tokenizer rejects unknown lowercase words)
+            int di = 0;
+            while (exec_line[di] == 32) di++;
+            if (str_match(exec_line, di, "del") == 3 &&
+                (exec_line[di + 3] == 0 || exec_line[di + 3] == 32)) {
+                int after = di + 3;
+                while (exec_line[after] == 32) after++;
+                if (exec_line[after] == 0) {
+                    // Bare "del" outside definition mode
+                    io_print("  SYNTAX ERROR");
+                    if (pc >= 0) { io_print(" ["); print_int(pc + 1); putchar(93); pc = -1; }
+                    putchar(10);
+                } else if (pc >= 0) {
+                    // Can't define functions during program execution
+                    io_print("  SYNTAX ERROR");
+                    io_print(" ["); print_int(pc + 1); putchar(93); pc = -1;
+                    putchar(10);
+                } else {
+                    // Start function definition
+                    int temp = fn_count;
+                    if (temp >= FN_MAX) {
+                        io_print("  FN TABLE FULL");
+                        putchar(10);
+                    } else if (!parse_fn_header(exec_line + after, temp)) {
+                        io_print("  SYNTAX ERROR");
+                        putchar(10);
+                    } else {
+                        // Check for existing function with same name
+                        int ns = fn_name_sym[temp];
+                        int exi = 0;
+                        int found = -1;
+                        while (exi < fn_count) {
+                            if (fn_name_sym[exi] == ns) found = exi;
+                            exi++;
+                        }
+                        if (found >= 0) {
+                            // Redefine existing function
+                            fn_result_sym[found] = fn_result_sym[temp];
+                            fn_right_sym[found] = fn_right_sym[temp];
+                            fn_left_sym[found] = fn_left_sym[temp];
+                            fn_lines[found] = 0;
+                            fn_def_idx = found;
+                        } else {
+                            fn_count++;
+                            fn_def_idx = temp;
+                        }
+                        fn_def_mode = 1;
+                        fn_def_line = 0;
+                    }
+                }
+                if (pc >= 0) { pc++; if (pc >= prog_count) pc = -1; }
+                continue;
+            }
+
             int ntok = tokenize(exec_line);
             if (ntok < 0) {
                 io_print("  SYNTAX ERROR");
