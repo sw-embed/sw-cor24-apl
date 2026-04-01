@@ -44,6 +44,31 @@ int call_depth;
 void print_array(int result) {
     int rank = arr_rank(result);
 
+    // Boxed arrays: print each element on its own line
+    if (arr_type(result) == ARR_BOXED) {
+        int sz = arr_size(result);
+        int j = 0;
+        while (j < sz) {
+            int elem = arr_get(result, j);
+            if (arr_type(elem) == ARR_CHAR) {
+                // String element: print with leading space
+                io_print(" ");
+                int esz = arr_size(elem);
+                int k = 0;
+                while (k < esz) {
+                    putchar(arr_get(elem, k));
+                    k++;
+                }
+                putchar(10);
+            } else {
+                // Numeric or other element: delegate
+                print_array(elem);
+            }
+            j++;
+        }
+        return;
+    }
+
     // Character arrays: print as string
     if (arr_type(result) == ARR_CHAR) {
         int sz = arr_size(result);

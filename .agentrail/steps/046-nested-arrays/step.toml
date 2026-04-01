@@ -1,6 +1,6 @@
 number = 46
 slug = "046-nested-arrays"
-status = "pending"
+status = "in-progress"
 description = "Boxed/nested arrays. Vector-of-strings creation via stranding: 'A' 'B' 'C'. Boxed storage where each element is a heap pointer. Nested vector display. (Horse race prerequisite)"
 role = "production"
 context_files = []

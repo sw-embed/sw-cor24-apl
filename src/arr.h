@@ -6,8 +6,8 @@
 //   [idx+0] = rank  (0, 1, or 2)
 //   [idx+1] = dim0  (length for vectors, rows for matrices)
 //   [idx+2] = dim1  (cols for matrices, 0 otherwise)
-//   [idx+3] = type  (0=numeric, 1=character)
-//   [idx+4..] = data elements
+//   [idx+3] = type  (0=numeric, 1=character, 2=boxed)
+//   [idx+4..] = data elements (boxed: heap indices)
 
 #pragma once
 
@@ -16,6 +16,7 @@
 
 #define ARR_NUM   0
 #define ARR_CHAR  1
+#define ARR_BOXED 2
 
 int heap[HEAP_SIZE];
 int heap_top;

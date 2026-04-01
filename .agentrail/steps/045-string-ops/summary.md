@@ -1,0 +1,1 @@
+Extended rho and cat to preserve character type. Dyadic rho copies ARR_CHAR from source so '5 rho #' produces #####. Dyadic cat sets ARR_CHAR when both operands are char. Monadic cat (ravel) preserves type on flatten. Added samples/19-string-ops.apl and samples/27-string-ops.cor24 tests. All 31 tests pass.

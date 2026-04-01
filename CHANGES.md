@@ -1,5 +1,18 @@
 # Changelog
 
+## Step 046: Nested/Boxed Arrays (2026-04-01)
+
+- Added `ARR_BOXED = 2` type constant for arrays whose elements are heap indices
+- String stranding in parser: adjacent string literals (`'A' 'B' 'C'`) create
+  a boxed vector where each element points to its character array on the heap
+- `print_array()` handles boxed type: prints each element on its own line,
+  delegating recursively for string vs numeric elements
+- `rho` works on boxed vectors (returns element count, e.g. `rho 'a' 'b' 'c'` → 3)
+- Assignment and variable reference work: `A <- 'hello' 'world'` stores boxed vector
+- Added `samples/20-nested-arrays.apl` test (7 test cases, all pass)
+- All existing batch tests pass (0 regressions)
+- Horse race prerequisite: enables vector-of-strings for horse names
+
 ## Step 045: String Operations (2026-04-01)
 
 - Dyadic `rho` now preserves character type: `5 rho '#'` produces `#####`

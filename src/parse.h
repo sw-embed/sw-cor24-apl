@@ -207,6 +207,7 @@ int parse_node(int mode) {
             int sym_idx = sym_lookup(parse_line, tok_val[parse_pos]);
             if (sym_idx < 0) { parse_err = 1; return 0; }
             left = ast_ident(sym_idx);
+            parse_pos++;
         } else {
             // Character vector literal: 'hello' -> char vector
             int start = tok_val[parse_pos];
@@ -221,9 +222,43 @@ int parse_node(int mode) {
                 arr_set(aidx, ci, parse_line[start + ci]);
                 ci++;
             }
-            left = ast_vec(aidx);
+            parse_pos++;
+
+            // String stranding: adjacent strings form a boxed vector
+            if (tok_type[parse_pos] == TOK_STRING) {
+                strand_buf[0] = aidx;
+                int count = 1;
+                while (tok_type[parse_pos] == TOK_STRING && count < 64) {
+                    int s2 = tok_val[parse_pos];
+                    int e2 = s2;
+                    while (parse_line[e2] && parse_line[e2] != 39) e2++;
+                    int l2 = e2 - s2;
+                    int a2 = arr_vector(l2);
+                    if (a2 < 0) { parse_err = 1; return 0; }
+                    arr_set_type(a2, ARR_CHAR);
+                    int k = 0;
+                    while (k < l2) {
+                        arr_set(a2, k, parse_line[s2 + k]);
+                        k++;
+                    }
+                    strand_buf[count] = a2;
+                    parse_pos++;
+                    count++;
+                }
+                // Create boxed vector holding heap indices
+                int bidx = arr_vector(count);
+                if (bidx < 0) { parse_err = 1; return 0; }
+                arr_set_type(bidx, ARR_BOXED);
+                int bi = 0;
+                while (bi < count) {
+                    arr_set(bidx, bi, strand_buf[bi]);
+                    bi++;
+                }
+                left = ast_vec(bidx);
+            } else {
+                left = ast_vec(aidx);
+            }
         }
-        parse_pos++;
     } else if (ty == TOK_IDENT) {
         int sym_idx = sym_lookup(parse_line, tok_val[parse_pos]);
         if (sym_idx < 0) { parse_err = 1; return 0; }
