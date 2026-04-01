@@ -1,5 +1,5 @@
 // COR24 APL Interpreter -- main entry point
-// Phase 8: control flow, labels, multi-line programs, user functions
+// Phase 9: batch mode support via APL image loading
 
 #include <stdio.h>
 #include "io.h"
@@ -10,6 +10,13 @@
 #include "fn.h"
 #include "parse.h"
 #include "eval.h"
+
+// APL image format constants
+// Image pointer at 0x09FF00: if non-zero, points to APL image in SRAM
+// Image data loaded at 0x080000 via --load-binary
+// Format: newline-separated APL lines, null-terminated
+#define APL_IMAGE_PTR  0x09FF00
+#define APL_IMAGE_BASE 0x080000
 
 // Program line buffer for multi-line programs
 // 64 lines * 120 chars = 7680 bytes

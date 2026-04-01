@@ -1,5 +1,16 @@
 # Changelog
 
+## Phase 9.1: APL Image Format (2026-04-01)
+
+- Defined APL image format: newline-separated lines, null-terminated in SRAM
+- Image pointer at 0x09FF00, image data at 0x080000
+- Updated `build.sh` with `--batch <file.apl>` option for loading images
+- Uses `cor24-run --load-binary` and `--patch` to load image and set pointer
+- Updated memory layout in architecture.md to show image region
+- Created `docs/batch-mode.md` with format specification
+- Added `samples/batch-hello.apl` sample image
+- Constants `APL_IMAGE_PTR` and `APL_IMAGE_BASE` defined in main.c
+
 ## Phase 8.3: User-Defined Functions (2026-04-01)
 
 - Implemented `del` keyword (ASCII for ∇) to define user functions

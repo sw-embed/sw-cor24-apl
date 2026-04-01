@@ -205,6 +205,12 @@ Maximum ~64 variables initially. Sufficient for interactive use.
           |   grows upward    |
           |       ...         |
           +------------------+
+0x080000  | APL image (batch) |
+          | (loaded via       |
+          |  --load-binary)   |
+          +------------------+
+0x09FF00  | Image pointer     |
+          +------------------+
 0x0FFFFF  | End of SRAM       |
           +------------------+
 0xFEE000  | Stack (EBR)       |

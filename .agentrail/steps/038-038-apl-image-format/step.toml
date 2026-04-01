@@ -1,6 +1,6 @@
 number = 38
 slug = "038-apl-image-format"
-status = "pending"
+status = "in-progress"
 description = "Define and implement APL image format. Newline-separated lines, null-terminat..."
 role = "production"
 context_files = []

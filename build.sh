@@ -7,6 +7,7 @@ set -euo pipefail
 #   ./build.sh              Build only (compile + assemble check)
 #   ./build.sh run          Build and run on emulator
 #   ./build.sh run --terminal   Build and run in interactive terminal mode
+#   ./build.sh run --batch <file.apl>  Load APL image and run in batch mode
 #   ./build.sh clean        Remove build artifacts
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -33,12 +34,48 @@ build() {
     echo ""
 }
 
+# APL image format constants (must match src/main.c)
+APL_IMAGE_PTR="0x09FF00"
+APL_IMAGE_BASE="0x080000"
+
 run() {
     build
 
+    # Check for --batch <file.apl> argument
+    local batch_file=""
+    local extra_args=()
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --batch)
+                shift
+                batch_file="$1"
+                shift
+                ;;
+            *)
+                extra_args+=("$1")
+                shift
+                ;;
+        esac
+    done
+
     echo "=== Running on COR24 emulator ==="
     echo ""
-    "$COR24_RUN" --run "$MAIN_S" "$@"
+
+    if [[ -n "$batch_file" ]]; then
+        if [[ ! -f "$batch_file" ]]; then
+            echo "Error: APL image file not found: $batch_file"
+            exit 1
+        fi
+        echo "  Loading APL image: $batch_file"
+        echo "  Image address: $APL_IMAGE_BASE"
+        echo ""
+        "$COR24_RUN" --run "$MAIN_S" \
+            --load-binary "$batch_file@$APL_IMAGE_BASE" \
+            --patch "$APL_IMAGE_PTR=$APL_IMAGE_BASE" \
+            ${extra_args[@]+"${extra_args[@]}"}
+    else
+        "$COR24_RUN" --run "$MAIN_S" ${extra_args[@]+"${extra_args[@]}"}
+    fi
 }
 
 clean() {
