@@ -1,7 +1,8 @@
 number = 43
 slug = "043-compress"
-status = "in-progress"
+status = "completed"
 description = "Boolean compress operator. MASK compress VECTOR selects elements where mask is 1. New reserved word or syntax. Test: 1 0 1 compress 10 20 30 -> 10 30. (Horse race prerequisite)"
 role = "production"
 context_files = []
 created_at = "2026-03-30T11:10:00"
+completed_at = "2026-04-01T11:51:51"

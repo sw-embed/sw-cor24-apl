@@ -1,0 +1,1 @@
+Implemented boolean compress operator. Added RES_COMPRESS reserved word to tokenizer, is_dyadic_res in parser, and compress evaluation in eval.h. MASK compress VECTOR selects elements where mask is non-zero. All 6 test cases pass including the classic APL filter pattern (3 = iota 5) compress iota 5 → 3.
