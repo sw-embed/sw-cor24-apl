@@ -614,6 +614,7 @@ int eval(int n) {
                 int r = arr_vector(1);
                 if (r < 0) { eval_err = 5; return -1; }
                 arr_set(r, 0, arr_get(v, 0));
+                arr_set_type(r, arr_type(v));
                 return r;
             }
             if (rk == 1) {
@@ -625,6 +626,7 @@ int eval(int n) {
                 int sz = arr_size(v);
                 int r = arr_vector(sz);
                 if (r < 0) { eval_err = 5; return -1; }
+                arr_set_type(r, arr_type(v));
                 int i = 0;
                 while (i < sz) {
                     arr_set(r, i, arr_get(v, i));
@@ -769,6 +771,9 @@ int eval(int n) {
             int src_sz = arr_size(rv);
             if (src_sz == 0) { eval_err = 3; return -1; }
 
+            // Preserve type (char arrays stay char)
+            arr_set_type(r, arr_type(rv));
+
             int i = 0;
             while (i < total) {
                 arr_set(r, i, arr_get(rv, i % src_sz));
@@ -884,6 +889,10 @@ int eval(int n) {
             int total = lsz + rsz;
             int r = arr_vector(total);
             if (r < 0) { eval_err = 5; return -1; }
+            // Preserve char type if both operands are char
+            if (arr_type(lv) == ARR_CHAR && arr_type(rv) == ARR_CHAR) {
+                arr_set_type(r, ARR_CHAR);
+            }
             int i = 0;
             while (i < lsz) {
                 arr_set(r, i, arr_get(lv, i));

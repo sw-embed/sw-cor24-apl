@@ -1,5 +1,17 @@
 # Changelog
 
+## Step 045: String Operations (2026-04-01)
+
+- Dyadic `rho` now preserves character type: `5 rho '#'` produces `#####`
+- Dyadic `cat` preserves character type when both operands are char:
+  `'hi' cat ' world'` produces `hi world`
+- Monadic `cat` (ravel) preserves character type on flatten
+- Added `samples/19-string-ops.apl` (GNU APL) and `samples/27-string-ops.cor24` tests
+- Tests: `N rho char`, cyclic fill (`3 rho 'ab'` → `aba`), `rho` of char result,
+  catenation of strings, empty string cat
+- All 31 tests pass (0 regressions)
+- Horse race prerequisite: enables building commentary strings via rho/cat
+
 ## Step 044: Character Data Type (2026-04-01)
 
 - Extended array header from 3 to 4 words: added type field (0=numeric, 1=char)

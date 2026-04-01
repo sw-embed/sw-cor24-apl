@@ -1,0 +1,10 @@
+5 rho '#'
+3 rho 'ab'
+1 rho 'xyz'
+rho 5 rho '#'
+'hi' cat ' world'
+'a' cat 'b'
+rho 'hi' cat ' world'
+'' cat 'x'
+'x' cat ''
+)OFF
