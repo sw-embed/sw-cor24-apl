@@ -1,13 +1,13 @@
-I <- 0
-SUM <- 0
-LOOP: I <- I + 1
-SUM <- SUM + I
-goto (5 - I)/LOOP
-[] <- SUM
-N <- 0
-TICK: N <- N + 1
-goto (3 - N)/TICK
-[] <- N
-goto 0
-[] <- 999
+[1] I <- 0
+[2] SUM <- 0
+[3] LOOP: I <- I + 1
+[4] SUM <- SUM + I
+[5] goto (5 - I)/LOOP
+[6] [] <- SUM
+[7] N <- 0
+[8] TICK: N <- N + 1
+[9] goto (3 - N)/TICK
+[10] [] <- N
+[11] goto 0
+)RUN
 )OFF

@@ -1,5 +1,20 @@
 # Changelog
 
+## Phase 8.2: Multi-line Program Storage (2026-04-01)
+
+- Implemented `[N] expr` syntax to store program lines at specific line numbers
+- `)LIST` displays all stored program lines with `[N]` prefix
+- `)RUN` executes stored program from line 1 with pre-scanned labels
+- `)ERASE` clears all stored program lines
+- Labels pre-scanned before execution so forward branches resolve correctly
+- Errors during program execution display offending line number (e.g., `SYNTAX ERROR [3]`)
+- `goto 0` in program mode returns to REPL (not interpreter exit)
+- Sparse line numbering supported (gaps skipped during execution)
+- Line replacement by re-entering same line number
+- Converted branch/label tests (22, 23) from immediate-mode auto-store to `[N]` program entry
+- Added test sample 24-multiline: stored program with loop, )LIST, )RUN, )ERASE
+- All 25 tests pass
+
 ## Phase 8.1: Branch and Labels (2026-03-31)
 
 - Implemented `goto` reserved word (ASCII surface syntax for APL →)
