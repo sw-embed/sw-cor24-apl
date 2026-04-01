@@ -1,5 +1,18 @@
 # Changelog
 
+## Step 043: Boolean Compress (2026-04-01)
+
+- Implemented dyadic `compress` reserved word for boolean selection
+- `RES_COMPRESS` added to tokenizer with `lookup_reserved` entry
+- Added to `is_dyadic_res()` in parser for dyadic dispatch
+- Evaluator: `MASK compress VECTOR` selects elements where mask is 1
+- Supports vectors and scalars; LENGTH ERROR on size mismatch, RANK ERROR on rank > 1
+- Empty result when all-zero mask (e.g., `0 0 0 compress 4 5 6` returns empty vector)
+- Classic APL filter pattern works: `(3 = iota 5) compress iota 5` returns `3`
+- Added `samples/17-compress.apl` (GNU APL) and `samples/batch-compress.apl`
+- All 6 test cases pass including composed expression filtering
+- Horse race prerequisite: enables selecting horses that meet criteria
+
 ## Step 042: Max/Min (ceil/floor) Primitives (2026-04-01)
 
 - Implemented dyadic `ceil` (max) and `floor` (min) reserved words

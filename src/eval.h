@@ -1015,6 +1015,43 @@ int eval(int n) {
             return -1;
         }
 
+        if (res_id == RES_COMPRESS) {
+            // Boolean compress: MASK compress VECTOR
+            // Selects elements of VECTOR where MASK is 1
+            int lrk = arr_rank(lv);
+            int rrk = arr_rank(rv);
+
+            // Left must be a vector (or scalar treated as 1-element)
+            // Right must be a vector (or scalar treated as 1-element)
+            if (lrk > 1 || rrk > 1) { eval_err = 4; return -1; }
+
+            int lsz = arr_size(lv);
+            int rsz = arr_size(rv);
+            if (lsz != rsz) { eval_err = 3; return -1; }
+
+            // Count number of 1s in mask
+            int count = 0;
+            int i = 0;
+            while (i < lsz) {
+                if (arr_get(lv, i)) count++;
+                i++;
+            }
+
+            int r = arr_vector(count);
+            if (r < 0) { eval_err = 5; return -1; }
+
+            int ri = 0;
+            i = 0;
+            while (i < lsz) {
+                if (arr_get(lv, i)) {
+                    arr_set(r, ri, arr_get(rv, i));
+                    ri++;
+                }
+                i++;
+            }
+            return r;
+        }
+
         // Unknown dyadic function
         eval_err = 1;
         return -1;
