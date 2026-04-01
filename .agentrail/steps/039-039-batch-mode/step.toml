@@ -1,6 +1,6 @@
 number = 39
 slug = "039-batch-mode"
-status = "pending"
+status = "in-progress"
 description = "Implement batch mode detection and reader. Check known address for non-zero i..."
 role = "production"
 context_files = []

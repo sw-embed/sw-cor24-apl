@@ -71,6 +71,54 @@ for cor24 in "$DIR"/*.cor24; do
     fi
 done
 
+# Batch mode tests: .apl files with matching .expected
+for apl in "$DIR"/batch-*.apl; do
+    [ -f "$apl" ] || continue
+    base="$(basename "$apl" .apl)"
+    expected="$DIR/${base}.expected"
+    [ -n "$PATTERN" ] && [[ "$base" != *"$PATTERN"* ]] && continue
+
+    if [ ! -f "$expected" ]; then
+        printf "%-25s SKIP (no .expected)\n" "$base"
+        skip=$((skip + 1))
+        continue
+    fi
+
+    # Run in batch mode
+    raw=$(cor24-run --run "$PROJECT/build/apl.s" -n 20000000 \
+        --load-binary "$apl@0x080000" --patch "0x09FF00=0x080000" \
+        2>&1 | grep -A1000 "^UART output:" | tail -n +2) || true
+
+    # Filter output lines
+    actual=""
+    while IFS= read -r line; do
+        [ -z "$line" ] && continue
+        [[ "$line" == "Executed "* ]] && continue
+        [[ "$line" == "Assembled "* ]] && continue
+        [[ "$line" == "Running "* ]] && continue
+        [[ "$line" == "CPU halted"* ]] && continue
+        [[ "$line" == "Loaded "* ]] && continue
+        [[ "$line" == "Patched "* ]] && continue
+        actual="${actual}${line}
+"
+    done <<< "$raw"
+
+    expected_text=$(cat "$expected")
+
+    if [ "$actual" = "${expected_text}
+" ] || [ "$actual" = "$expected_text" ]; then
+        printf "%-25s PASS\n" "$base"
+        pass=$((pass + 1))
+    else
+        printf "%-25s FAIL\n" "$base"
+        echo "  expected:"
+        echo "$expected_text" | sed 's/^/    |/'
+        echo "  actual:"
+        echo "$actual" | sed 's/^/    |/'
+        fail=$((fail + 1))
+    fi
+done
+
 echo ""
 echo "Results: $pass pass, $fail fail, $skip skip"
 [ "$fail" -eq 0 ] || exit 1

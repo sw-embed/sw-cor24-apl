@@ -1,5 +1,16 @@
 # Changelog
 
+## Phase 9.2: Batch Mode Detection and Reader (2026-04-01)
+
+- Implemented batch mode: at startup, reads 24-bit image pointer at 0x09FF00
+- If non-zero, reads APL lines from SRAM image instead of UART
+- `batch_getline()` reads newline-separated lines from memory, null-terminated
+- End of image switches to interactive REPL mode (unless `)OFF` halts first)
+- UART remains free for APL program use via shared variables (□SVO)
+- Interactive mode completely unchanged when no image loaded
+- Added batch test infrastructure to `test-cor24.sh`
+- New batch test samples: `batch-hello`, `batch-vars`, `batch-functions`
+
 ## Phase 9.1: APL Image Format (2026-04-01)
 
 - Defined APL image format: newline-separated lines, null-terminated in SRAM

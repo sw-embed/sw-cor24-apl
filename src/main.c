@@ -18,6 +18,27 @@
 #define APL_IMAGE_PTR  0x09FF00
 #define APL_IMAGE_BASE 0x080000
 
+// Batch mode state
+int batch_mode;      // 1 = reading from SRAM image, 0 = interactive UART
+char *batch_ptr;     // current read position in APL image
+
+// Read next line from APL image in SRAM.
+// Copies up to len-1 chars into buf, null-terminates.
+// Returns number of chars read (0 on empty line, -1 on end of image).
+int batch_getline(char *buf, int len) {
+    if (*batch_ptr == 0) return -1;  // end of image
+    int pos = 0;
+    int maxpos = len - 1;
+    while (*batch_ptr && *batch_ptr != 10 && pos < maxpos) {
+        buf[pos] = *batch_ptr;
+        pos++;
+        batch_ptr++;
+    }
+    buf[pos] = 0;
+    if (*batch_ptr == 10) batch_ptr++;  // skip newline
+    return pos;
+}
+
 // Program line buffer for multi-line programs
 // 64 lines * 120 chars = 7680 bytes
 #define PROG_MAX 64
@@ -98,6 +119,18 @@ int main() {
     fn_reset();
     call_depth = 0;
     branch_target = -1;
+
+    // Detect batch mode: check if image pointer is set
+    // APL_IMAGE_PTR holds a 24-bit address; read as int (24-bit on COR24)
+    int img_addr = *(int *)APL_IMAGE_PTR;
+    if (img_addr) {
+        batch_mode = 1;
+        batch_ptr = (char *)img_addr;
+    } else {
+        batch_mode = 0;
+        batch_ptr = 0;
+    }
+
     puts("COR24 APL v0.1");
 
     int pc = -1;  // -1 = read from input, >=0 = replay stored line
@@ -112,8 +145,18 @@ int main() {
             cur_lineno = pc + 1;
         } else {
             // Read new line from input
-            io_print("      ");
-            int n = io_getline(line, IO_LINE_MAX);
+            int n;
+            if (batch_mode) {
+                n = batch_getline(line, IO_LINE_MAX);
+                if (n < 0) {
+                    // End of image -- switch to interactive mode
+                    batch_mode = 0;
+                    continue;
+                }
+            } else {
+                io_print("      ");
+                n = io_getline(line, IO_LINE_MAX);
+            }
             if (n == 0) continue;
 
             // Function definition mode: collect body lines

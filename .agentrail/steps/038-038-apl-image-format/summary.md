@@ -1,0 +1,1 @@
+Defined APL image format: newline-separated lines, null-terminated in SRAM. Image pointer at 0x09FF00, data at 0x080000. Added --batch flag to build.sh using --load-binary and --patch. Created docs/batch-mode.md, updated architecture memory layout, added sample batch-hello.apl. Constants APL_IMAGE_PTR/APL_IMAGE_BASE in main.c. All 26 tests pass.
