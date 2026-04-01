@@ -1,5 +1,17 @@
 # Changelog
 
+## Step 041: Comparison Operators (2026-04-01)
+
+- Implemented comparison operators: `=`, `!=`, `<`, `>`, `<=`, `>=`
+- Return integer 0 or 1 (APL boolean convention)
+- Element-wise on vectors with scalar extension
+- Tokenizer: `TOK_EQ`, `TOK_NE`, `TOK_LT`, `TOK_GT`, `TOK_LE`, `TOK_GE`
+- Parser: `is_binop()` extended for comparison tokens
+- Evaluator: `apply_binop()` handles all six comparisons
+- Added `samples/15-comparison.apl` (GNU APL) and `samples/batch-comparison.apl`
+- Output matches GNU APL exactly for all test cases
+- Horse race prerequisite: enables `→(MMIORC<2)/NODEV` graceful degradation pattern
+
 ## Phase 9.3: UART Echo Demo (2026-04-01)
 
 - Created `samples/uart-echo.apl`: full UART echo program using shared variables

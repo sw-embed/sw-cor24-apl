@@ -1,0 +1,1 @@
+Built UART echo demo (samples/uart-echo.apl): polls RX status, reads char, toggles LED per switch state, waits TX not busy, echoes char. Fixed heap exhaustion in tight loops via scalar-to-scalar reassignment reuse and program-mode heap reclamation. Added string literal tokenizer for 'NAME' qsvo syntax. Updated existing qsvo samples. All batch samples verified.

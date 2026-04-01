@@ -23,6 +23,12 @@
 #define TOK_RBRAK  16   // ] (bracket index close)
 #define TOK_GOTO   17   // goto — branch (→)
 #define TOK_STRING 18   // string literal 'ABC' (pos of first char in tok_val)
+#define TOK_EQ     19   // =
+#define TOK_NE     20   // !=
+#define TOK_LT     21   // <
+#define TOK_GT     22   // >
+#define TOK_LE     23   // <=
+#define TOK_GE     24   // >=
 
 // Reserved word IDs
 #define RES_RHO     0
@@ -266,6 +272,15 @@ int tokenize(char *line) {
             i = i + 2;
             continue;
         }
+
+        // Comparison operators: = != >= <= > <
+        // 61 '='  33 '!'  62 '>'  60 '<'
+        if (line[i] == 61) { tok_type[t] = TOK_EQ; tok_pos[t] = i; tok_val[t] = 0; t++; i++; continue; }
+        if (line[i] == 33 && line[i + 1] == 61) { tok_type[t] = TOK_NE; tok_pos[t] = i; tok_val[t] = 0; t++; i = i + 2; continue; }
+        if (line[i] == 62 && line[i + 1] == 61) { tok_type[t] = TOK_GE; tok_pos[t] = i; tok_val[t] = 0; t++; i = i + 2; continue; }
+        if (line[i] == 60 && line[i + 1] == 61) { tok_type[t] = TOK_LE; tok_pos[t] = i; tok_val[t] = 0; t++; i = i + 2; continue; }
+        if (line[i] == 62) { tok_type[t] = TOK_GT; tok_pos[t] = i; tok_val[t] = 0; t++; i++; continue; }
+        if (line[i] == 60) { tok_type[t] = TOK_LT; tok_pos[t] = i; tok_val[t] = 0; t++; i++; continue; }
 
         // Unrecognized character
         return -1;

@@ -133,7 +133,9 @@ int is_dyadic_res(int res_id) {
 int strand_buf[64];
 
 int is_binop(int ty) {
-    return ty == TOK_PLUS || ty == TOK_MINUS || ty == TOK_STAR || ty == TOK_SLASH;
+    return ty == TOK_PLUS || ty == TOK_MINUS || ty == TOK_STAR || ty == TOK_SLASH ||
+           ty == TOK_EQ || ty == TOK_NE || ty == TOK_LT || ty == TOK_GT ||
+           ty == TOK_LE || ty == TOK_GE;
 }
 
 // Check if token at pos could start an expression (for function call detection)

@@ -267,6 +267,12 @@ int eval_binop_scalar(int op, int a, int b) {
         if (b == 0) { eval_err = 1; return 0; }
         return a / b;
     }
+    if (op == TOK_EQ)         return a == b;
+    if (op == TOK_NE)         return a != b;
+    if (op == TOK_LT)         return a < b;
+    if (op == TOK_GT)         return a > b;
+    if (op == TOK_LE)         return a <= b;
+    if (op == TOK_GE)         return a >= b;
     eval_err = 1;
     return 0;
 }

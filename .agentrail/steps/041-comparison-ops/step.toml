@@ -1,6 +1,6 @@
 number = 41
 slug = "041-comparison-ops"
-status = "pending"
+status = "in-progress"
 description = "Comparison operators (= >= <= > < !=) returning 0/1 boolean vectors. Element-wise on vectors. Tokenize as new operator tokens, evaluate to integer 0 or 1. Test: 3 = 3 -> 1, 1 2 3 >= 2 -> 0 1 1. (Horse race prerequisite)"
 role = "production"
 context_files = []

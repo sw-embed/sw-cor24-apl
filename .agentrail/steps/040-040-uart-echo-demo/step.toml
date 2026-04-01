@@ -1,7 +1,8 @@
 number = 40
 slug = "040-uart-echo-demo"
-status = "in-progress"
+status = "completed"
 description = "Build and test the full UART echo demo. APL batch program: echoes UART in to ..."
 role = "production"
 context_files = []
 created_at = "2026-03-30T11:05:15"
+completed_at = "2026-04-01T05:50:53"
