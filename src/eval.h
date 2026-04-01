@@ -1099,6 +1099,35 @@ int eval(int n) {
             return r;
         }
 
+        if (res_id == RES_PICK) {
+            // I pick V: pick element I from nested/boxed vector V
+            // Returns the boxed element (string or sub-array)
+            // Also works on simple vectors, returning a scalar
+            int lrk = arr_rank(lv);
+            int rrk = arr_rank(rv);
+
+            // Left must be scalar (the index)
+            if (lrk > 1) { eval_err = 4; return -1; }
+            // Right must be vector
+            if (rrk > 1) { eval_err = 4; return -1; }
+
+            int idx = arr_get(lv, 0);
+            int rsz = arr_size(rv);
+
+            // Bounds check
+            if (idx < 0 || idx >= rsz) { eval_err = 3; return -1; }
+
+            if (arr_type(rv) == ARR_BOXED) {
+                // Return the boxed element (a heap index to another array)
+                return arr_get(rv, idx);
+            }
+            // Simple vector: return scalar
+            int r = arr_scalar(arr_get(rv, idx));
+            if (r < 0) { eval_err = 5; return -1; }
+            arr_set_type(r, arr_type(rv));
+            return r;
+        }
+
         // Unknown dyadic function
         eval_err = 1;
         return -1;

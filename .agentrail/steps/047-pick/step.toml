@@ -1,6 +1,6 @@
 number = 47
 slug = "047-pick"
-status = "pending"
+status = "in-progress"
 description = "Pick operator (pick) for nested vector indexing. I pick V returns the I-th boxed element. Test: 2 pick 'cat' 'dog' 'fish' -> 'fish'. (Horse race prerequisite)"
 role = "production"
 context_files = []

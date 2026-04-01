@@ -1,0 +1,1 @@
+Implemented boxed/nested arrays (ARR_BOXED=2). Adjacent string literals strand into boxed vectors: 'cat' 'dog' 'fish' creates 3-element boxed vector. print_array handles recursive display. rho/assignment/variables work on boxed vectors. 7 test cases pass, 0 regressions.

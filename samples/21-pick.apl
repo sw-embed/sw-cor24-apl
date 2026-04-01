@@ -1,0 +1,9 @@
+0 pick 'cat' 'dog' 'fish'
+1 pick 'cat' 'dog' 'fish'
+2 pick 'cat' 'dog' 'fish'
+A <- 'hello' 'world' 'test'
+1 pick A
+0 pick A
+1 pick 10 20 30
+0 pick iota 5
+)OFF

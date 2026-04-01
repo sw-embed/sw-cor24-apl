@@ -45,6 +45,7 @@
 #define RES_CEIL    9
 #define RES_FLOOR  10
 #define RES_COMPRESS 11
+#define RES_PICK    12
 
 #define TOK_MAX    64   // max tokens per line
 
@@ -128,6 +129,9 @@ int lookup_reserved(char *src, int pos, int *end) {
 
     len = str_match(src, pos, "compress");
     if (len == 8 && !is_alnum(src[pos + 8])) { *end = pos + 8; return RES_COMPRESS; }
+
+    len = str_match(src, pos, "pick");
+    if (len == 4 && !is_alnum(src[pos + 4])) { *end = pos + 4; return RES_PICK; }
 
     return -1;
 }

@@ -1,5 +1,17 @@
 # Changelog
 
+## Step 047: Pick Operator (2026-04-01)
+
+- Added `RES_PICK = 12` reserved word and `pick` keyword in tokenizer
+- `pick` is dyadic: `I pick V` returns the I-th element from vector V
+- Works on boxed vectors: `2 pick 'cat' 'dog' 'fish'` → `fish`
+- Works on simple vectors: `1 pick 10 20 30` → `20`
+- Preserves element type (char scalars from char vectors, heap refs from boxed)
+- Bounds checking: INDEX ERROR on out-of-range, RANK ERROR on non-vector right arg
+- Added `samples/21-pick.apl` and `samples/batch-pick.apl` tests (8 cases, all pass)
+- All existing batch tests pass (0 regressions)
+- Horse race prerequisite: enables indexing into vector-of-strings by horse number
+
 ## Step 046: Nested/Boxed Arrays (2026-04-01)
 
 - Added `ARR_BOXED = 2` type constant for arrays whose elements are heap indices
