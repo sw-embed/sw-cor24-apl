@@ -22,6 +22,7 @@
 #define TOK_LBRAK  15   // [ (bracket index open)
 #define TOK_RBRAK  16   // ] (bracket index close)
 #define TOK_GOTO   17   // goto — branch (→)
+#define TOK_STRING 18   // string literal 'ABC' (pos of first char in tok_val)
 
 // Reserved word IDs
 #define RES_RHO     0
@@ -193,6 +194,20 @@ int tokenize(char *line) {
             }
             // Unknown lowercase word -- error
             return -1;
+        }
+
+        // String literal: 'ABC' (single-quoted, for qsvo left argument)
+        if (line[i] == 39) {
+            // 39 = single quote
+            i++;
+            tok_type[t] = TOK_STRING;
+            tok_pos[t] = i;  // position of first char
+            tok_val[t] = i;  // store start of string content
+            while (line[i] && line[i] != 39) i++;
+            if (line[i] != 39) return -1;  // unterminated string
+            i++;  // skip closing quote
+            t++;
+            continue;
         }
 
         // Uppercase letter: user identifier

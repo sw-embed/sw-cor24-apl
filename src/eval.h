@@ -305,6 +305,13 @@ int eval(int n) {
         int idx = node_val[n];
         int v = eval(node_right[n]);
         if (eval_err) return -1;
+        // Scalar-to-scalar reassignment: reuse existing heap slot
+        // to avoid heap growth in tight loops
+        if (sym_set_flag[idx] && arr_rank(v) == 0 &&
+            arr_rank(sym_val[idx]) == 0) {
+            arr_set(sym_val[idx], 0, arr_get(v, 0));
+            return sym_val[idx];
+        }
         sym_val[idx] = v;
         sym_set_flag[idx] = 1;
         return v;

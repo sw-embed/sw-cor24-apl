@@ -388,7 +388,12 @@ int main() {
                         putchar(10);
                     } else if (node_type[root] == NODE_ASSIGN) {
                         // Assignment: no output (APL convention)
-                        // Don't restore heap -- variable value persists
+                        // In program mode, reclaim RHS temporaries if
+                        // scalar-to-scalar reuse kept the old heap slot
+                        if (pc >= 0 && result == sym_val[node_val[root]] &&
+                            result < heap_save) {
+                            heap_top = heap_save;
+                        }
                     } else if (node_type[root] == NODE_QLED_ASSIGN) {
                         // Quad LED assignment: no output
                         heap_top = heap_save;

@@ -1,4 +1,4 @@
-MMIO qsvo 242
+'MMIO' qsvo 242
 MMIO[0] <- 1
 MMIO[0]
 MMIO[0] <- 0
@@ -7,6 +7,6 @@ MMIO[257]
 MMIO[256 + 1]
 MMIO[0] <- 3
 MMIO[0]
-X qsvo 999
+'X' qsvo 999
 X[0]
 )OFF

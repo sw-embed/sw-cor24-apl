@@ -1,5 +1,20 @@
 # Changelog
 
+## Phase 9.3: UART Echo Demo (2026-04-01)
+
+- Created `samples/uart-echo.apl`: full UART echo program using shared variables
+- Program couples MMIO via `'MMIO' qsvo 242`, polls UART RX status, reads
+  chars, toggles LED based on switch state, waits for TX not busy, echoes char
+- Scalar-to-scalar reassignment optimization in eval: reuses existing heap slot
+  instead of allocating, preventing WS FULL in tight program loops
+- Program-mode heap reclamation: reclaims RHS temporaries after scalar
+  reassignment when the variable's heap slot was reused
+- String literal tokenizer (`TOK_STRING`): single-quoted `'ABC'` for qsvo names
+- Parser support for string literals as identifiers in qsvo expressions
+- Updated qsvo samples to use `'MMIO' qsvo 242` syntax (old bare-ident still works)
+- Verified: echo works with `--terminal`, TX busy polling works with
+  `--uart-never-ready`, LED toggles correctly with `--switch on/off`
+
 ## Phase 9.2: Batch Mode Detection and Reader (2026-04-01)
 
 - Implemented batch mode: at startup, reads 24-bit image pointer at 0x09FF00

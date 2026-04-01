@@ -1,12 +1,12 @@
-RC <- MMIO qsvo 242
+RC <- 'MMIO' qsvo 242
 RC
 RC - 2
-RC2 <- BAD qsvo 999
+RC2 <- 'BAD' qsvo 999
 RC2
 RC2 - 2
 BAD[0]
 MMIO[257]
-GOOD <- MMIO qsvo 242
+GOOD <- 'MMIO' qsvo 242
 GOOD
 MMIO[257]
 )OFF

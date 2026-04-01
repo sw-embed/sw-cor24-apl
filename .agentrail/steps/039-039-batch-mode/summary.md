@@ -1,0 +1,1 @@
+Implemented batch mode detection and SRAM line reader. At startup, reads 24-bit pointer at 0x09FF00; if non-zero, batch_getline() reads lines from SRAM image instead of UART. End of image switches to interactive REPL. Added 3 batch test samples (hello, vars, functions) and batch test infrastructure to test-cor24.sh. All 29 tests pass.

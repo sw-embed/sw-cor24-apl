@@ -198,6 +198,12 @@ int parse_node(int mode) {
         node_type[n] = NODE_QSW;
         left = n;
         parse_pos++;
+    } else if (ty == TOK_STRING) {
+        // String literal becomes an identifier (for 'NAME' qsvo AP)
+        int sym_idx = sym_lookup(parse_line, tok_val[parse_pos]);
+        if (sym_idx < 0) { parse_err = 1; return 0; }
+        left = ast_ident(sym_idx);
+        parse_pos++;
     } else if (ty == TOK_IDENT) {
         int sym_idx = sym_lookup(parse_line, tok_val[parse_pos]);
         if (sym_idx < 0) { parse_err = 1; return 0; }
@@ -271,7 +277,7 @@ int parse_node(int mode) {
         return ast_dyad(res_id, left, right);
     }
 
-    // Shared variable offer: IDENT qsvo EXPR
+    // Shared variable offer: 'NAME' qsvo EXPR  (or legacy: IDENT qsvo EXPR)
     if (mode == 0 && tok_type[parse_pos] == TOK_QSVO && node_type[left] == NODE_IDENT) {
         int sym_idx = node_val[left];
         parse_pos++;
