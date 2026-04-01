@@ -83,6 +83,10 @@ reads UART status, `MMIO[0] <- 1` writes LED register).
 Phase 6.6 validates graceful degradation: coupling degree
 checks enable portable code (0=unsupported, 2=coupled),
 uncoupled variables fail cleanly with VALUE ERROR.
+Phase 7.1 adds bracket indexing on vectors (`A[1]` reads,
+`A[1] <- 99` writes, 0-origin). Unified syntax: same
+bracket notation works for both SVO hardware variables and
+regular vector elements.
 Supports +, -, *, / (software divide), parentheses,
 monadic negate (scalar and vector), integer literals with APL
 underscore-negative convention, and variable assignment/reference

@@ -1,5 +1,18 @@
 # Changelog
 
+## Phase 7.1: Bracket Indexing on Vectors (2026-03-31)
+
+- Implemented `V[N]` read and `V[N] <- expr` write on regular vectors
+- 0-origin indexing: `A <- 10 20 30` then `A[1]` returns 20
+- Works in expression context: `A[0] + A[2]`, `B <- A[1] + 5`
+- In-place mutation: `A[1] <- 99` modifies the vector
+- Out-of-bounds index produces LENGTH ERROR (clean fail)
+- Unified bracket syntax: same `IDENT[N]` for both SVO and vector access
+  - SVO variables (coupled via qsvo) route to MMIO hardware
+  - Regular variables route to vector element access
+  - Uncoupled SVO variables still produce VALUE ERROR (graceful degradation preserved)
+- Added test sample 20-bracket-index with expected output (21 tests total)
+
 ## Phase 6.6: Graceful Degradation (2026-03-31)
 
 - Validated graceful degradation pattern for portable APL code

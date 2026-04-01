@@ -1,6 +1,6 @@
 number = 33
 slug = "033-bracket-indexing"
-status = "pending"
+status = "in-progress"
 description = "Implement bracket indexing on vectors. V[N] reads element N. V[N]<-expr write..."
 role = "production"
 context_files = []

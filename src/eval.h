@@ -120,48 +120,78 @@ int eval(int n) {
     }
 
     if (ty == NODE_SVO_READ) {
-        // Shared variable indexed read: IDENT[N]
+        // Indexed read: IDENT[N]
         int sym_idx = node_val[n];
         int ap = svo_ap[sym_idx];
-        if (ap == 0) { eval_err = 2; return -1; }  // VALUE ERROR: not coupled
+        if (ap != 0) {
+            // Shared variable MMIO access
+            int v = eval(node_right[n]);
+            if (eval_err) return -1;
+            if (arr_rank(v) != 0) { eval_err = 4; return -1; }
+            int offset = arr_get(v, 0);
+            if (ap == 242) {
+                int addr = 0xFF0000 + offset;
+                int val = *(char *)addr;
+                val = val & 0xFF;
+                int r = arr_scalar(val);
+                if (r < 0) { eval_err = 5; return -1; }
+                return r;
+            }
+            eval_err = 1;
+            return -1;
+        }
+        // Regular vector bracket indexing: V[N]
+        if (!sym_set_flag[sym_idx]) { eval_err = 2; return -1; }
+        int arr = sym_val[sym_idx];
         int v = eval(node_right[n]);
         if (eval_err) return -1;
         if (arr_rank(v) != 0) { eval_err = 4; return -1; }
-        int offset = arr_get(v, 0);
-        if (ap == 242) {
-            // AP 242: MMIO byte access at FF0000+offset
-            int addr = 0xFF0000 + offset;
-            int val = *(char *)addr;
-            val = val & 0xFF;
-            int r = arr_scalar(val);
-            if (r < 0) { eval_err = 5; return -1; }
-            return r;
-        }
-        eval_err = 1;
-        return -1;
+        int idx = arr_get(v, 0);
+        int sz = arr_size(arr);
+        if (idx < 0 || idx >= sz) { eval_err = 3; return -1; }  // INDEX ERROR
+        int val = arr_get(arr, idx);
+        int r = arr_scalar(val);
+        if (r < 0) { eval_err = 5; return -1; }
+        return r;
     }
 
     if (ty == NODE_SVO_WRITE) {
-        // Shared variable indexed write: IDENT[N] <- expr
+        // Indexed write: IDENT[N] <- expr
         int sym_idx = node_val[n];
         int ap = svo_ap[sym_idx];
-        if (ap == 0) { eval_err = 2; return -1; }  // VALUE ERROR: not coupled
-        int idx = eval(node_left[n]);
+        if (ap != 0) {
+            // Shared variable MMIO write
+            int idx = eval(node_left[n]);
+            if (eval_err) return -1;
+            if (arr_rank(idx) != 0) { eval_err = 4; return -1; }
+            int offset = arr_get(idx, 0);
+            int v = eval(node_right[n]);
+            if (eval_err) return -1;
+            if (arr_rank(v) != 0) { eval_err = 4; return -1; }
+            int val = arr_get(v, 0);
+            if (ap == 242) {
+                int addr = 0xFF0000 + offset;
+                *(char *)addr = val & 0xFF;
+                return v;
+            }
+            eval_err = 1;
+            return -1;
+        }
+        // Regular vector bracket indexed write: V[N] <- expr
+        if (!sym_set_flag[sym_idx]) { eval_err = 2; return -1; }
+        int arr = sym_val[sym_idx];
+        int idxv = eval(node_left[n]);
         if (eval_err) return -1;
-        if (arr_rank(idx) != 0) { eval_err = 4; return -1; }
-        int offset = arr_get(idx, 0);
+        if (arr_rank(idxv) != 0) { eval_err = 4; return -1; }
+        int idx = arr_get(idxv, 0);
         int v = eval(node_right[n]);
         if (eval_err) return -1;
         if (arr_rank(v) != 0) { eval_err = 4; return -1; }
         int val = arr_get(v, 0);
-        if (ap == 242) {
-            // AP 242: MMIO byte write at FF0000+offset
-            int addr = 0xFF0000 + offset;
-            *(char *)addr = val & 0xFF;
-            return v;
-        }
-        eval_err = 1;
-        return -1;
+        int sz = arr_size(arr);
+        if (idx < 0 || idx >= sz) { eval_err = 3; return -1; }  // INDEX ERROR
+        arr_set(arr, idx, val);
+        return v;
     }
 
     if (ty == NODE_NEG) {
