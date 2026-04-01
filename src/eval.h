@@ -43,6 +43,19 @@ int call_depth;
 
 void print_array(int result) {
     int rank = arr_rank(result);
+
+    // Character arrays: print as string
+    if (arr_type(result) == ARR_CHAR) {
+        int sz = arr_size(result);
+        int j = 0;
+        while (j < sz) {
+            putchar(arr_get(result, j));
+            j++;
+        }
+        putchar(10);
+        return;
+    }
+
     if (rank == 0) {
         io_print("  ");
         print_int(arr_get(result, 0));

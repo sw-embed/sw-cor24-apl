@@ -142,7 +142,8 @@ int is_binop(int ty) {
 int can_start_expr(int pos) {
     int ty = tok_type[pos];
     if (ty == TOK_NUM || ty == TOK_LPAREN || ty == TOK_IDENT ||
-        ty == TOK_MINUS || ty == TOK_RES || ty == TOK_QLED || ty == TOK_QSW) return 1;
+        ty == TOK_MINUS || ty == TOK_RES || ty == TOK_QLED || ty == TOK_QSW ||
+        ty == TOK_STRING) return 1;
     if (is_binop(ty) && tok_type[pos + 1] == TOK_SLASH) return 1;  // reduce
     return 0;
 }
@@ -201,10 +202,27 @@ int parse_node(int mode) {
         left = n;
         parse_pos++;
     } else if (ty == TOK_STRING) {
-        // String literal becomes an identifier (for 'NAME' qsvo AP)
-        int sym_idx = sym_lookup(parse_line, tok_val[parse_pos]);
-        if (sym_idx < 0) { parse_err = 1; return 0; }
-        left = ast_ident(sym_idx);
+        if (tok_type[parse_pos + 1] == TOK_QSVO) {
+            // String as identifier for qsvo coupling: 'NAME' qsvo AP
+            int sym_idx = sym_lookup(parse_line, tok_val[parse_pos]);
+            if (sym_idx < 0) { parse_err = 1; return 0; }
+            left = ast_ident(sym_idx);
+        } else {
+            // Character vector literal: 'hello' -> char vector
+            int start = tok_val[parse_pos];
+            int end = start;
+            while (parse_line[end] && parse_line[end] != 39) end++;
+            int len = end - start;
+            int aidx = arr_vector(len);
+            if (aidx < 0) { parse_err = 1; return 0; }
+            arr_set_type(aidx, ARR_CHAR);
+            int ci = 0;
+            while (ci < len) {
+                arr_set(aidx, ci, parse_line[start + ci]);
+                ci++;
+            }
+            left = ast_vec(aidx);
+        }
         parse_pos++;
     } else if (ty == TOK_IDENT) {
         int sym_idx = sym_lookup(parse_line, tok_val[parse_pos]);

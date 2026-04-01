@@ -404,57 +404,8 @@ int main() {
                         // Branch: no output
                         heap_top = heap_save;
                     } else {
-                        // Print result based on rank
-                        int rank = arr_rank(result);
-                        if (rank == 0) {
-                            io_print("  ");
-                            print_int(arr_get(result, 0));
-                            putchar(10);
-                        } else if (rank == 1) {
-                            int sz = arr_dim0(result);
-                            // Find max width across all elements
-                            int maxw = 1;
-                            int j = 0;
-                            while (j < sz) {
-                                int w = num_width(arr_get(result, j));
-                                if (w > maxw) maxw = w;
-                                j++;
-                            }
-                            // Print each element right-justified
-                            j = 0;
-                            while (j < sz) {
-                                if (j == 0) putchar(32);
-                                print_int_rj(arr_get(result, j), maxw);
-                                if (j + 1 < sz) putchar(32);
-                                j++;
-                            }
-                            putchar(10);
-                        } else if (rank == 2) {
-                            int rows = arr_dim0(result);
-                            int cols = arr_dim1(result);
-                            int sz = rows * cols;
-                            // Find max width across all elements
-                            int maxw = 1;
-                            int j = 0;
-                            while (j < sz) {
-                                int w = num_width(arr_get(result, j));
-                                if (w > maxw) maxw = w;
-                                j++;
-                            }
-                            // Print each row on its own line
-                            int r = 0;
-                            while (r < rows) {
-                                int c = 0;
-                                while (c < cols) {
-                                    if (c == 0) putchar(32);
-                                    print_int_rj(arr_get(result, r * cols + c), maxw);
-                                    if (c + 1 < cols) putchar(32);
-                                    c++;
-                                }
-                                putchar(10);
-                                r++;
-                            }
-                        }
+                        // Print result
+                        print_array(result);
                         // Reclaim temporaries
                         heap_top = heap_save;
                     }

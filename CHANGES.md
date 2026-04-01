@@ -1,5 +1,21 @@
 # Changelog
 
+## Step 044: Character Data Type (2026-04-01)
+
+- Extended array header from 3 to 4 words: added type field (0=numeric, 1=char)
+- `ARR_HDR` changed from 3 to 4; added `ARR_NUM`, `ARR_CHAR` constants
+- Added `arr_type()` and `arr_set_type()` accessors in arr.h
+- Parser: TOK_STRING now creates char vector literals (rank-1, type=char)
+  with ASCII codes stored as data elements
+- Preserved qsvo compatibility: `'NAME' qsvo AP` still resolves as identifier
+- Updated `print_array()` in eval.h: char arrays print as raw characters
+- Replaced inline result printing in main.c with `print_array()` call
+- Added `can_start_expr` support for TOK_STRING in expression contexts
+- Added `samples/18-char-type.apl` and `samples/26-char-type.cor24` tests
+- `rho` on char vectors returns numeric length (correct APL behavior)
+- All 30 tests pass (0 regressions from ARR_HDR change)
+- Horse race prerequisite: enables string display for race commentary
+
 ## Step 043: Boolean Compress (2026-04-01)
 
 - Implemented dyadic `compress` reserved word for boolean selection

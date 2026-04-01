@@ -6,12 +6,16 @@
 //   [idx+0] = rank  (0, 1, or 2)
 //   [idx+1] = dim0  (length for vectors, rows for matrices)
 //   [idx+2] = dim1  (cols for matrices, 0 otherwise)
-//   [idx+3..] = data elements
+//   [idx+3] = type  (0=numeric, 1=character)
+//   [idx+4..] = data elements
 
 #pragma once
 
 #define HEAP_SIZE 4096
-#define ARR_HDR   3
+#define ARR_HDR   4
+
+#define ARR_NUM   0
+#define ARR_CHAR  1
 
 int heap[HEAP_SIZE];
 int heap_top;
@@ -39,6 +43,7 @@ int arr_new(int rank, int dim0, int dim1) {
     heap[idx]     = rank;
     heap[idx + 1] = dim0;
     heap[idx + 2] = dim1;
+    heap[idx + 3] = ARR_NUM;
     heap_top = heap_top + need;
 
     // Zero-fill data
@@ -54,6 +59,8 @@ int arr_new(int rank, int dim0, int dim1) {
 int arr_rank(int idx) { return heap[idx]; }
 int arr_dim0(int idx) { return heap[idx + 1]; }
 int arr_dim1(int idx) { return heap[idx + 2]; }
+int arr_type(int idx) { return heap[idx + 3]; }
+void arr_set_type(int idx, int t) { heap[idx + 3] = t; }
 
 // Total element count
 int arr_size(int idx) {
