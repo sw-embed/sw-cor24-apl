@@ -1,0 +1,14 @@
+qrl <- 42
+roll 6
+roll 6
+roll 6
+roll 10
+roll 100
+roll 6 6 6 6
+qrl <- 42
+roll 6
+roll 6
+roll 6
+roll 1
+roll 1
+roll 1

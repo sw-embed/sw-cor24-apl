@@ -1,0 +1,1 @@
+Implemented pick operator (I pick V) for nested vector indexing. Added RES_PICK reserved word, tokenizer keyword, dyadic parser entry, and evaluator supporting both boxed vectors (returns string element) and simple vectors (returns scalar). Bounds checking and type preservation included. 8 test cases pass in batch-pick.apl.

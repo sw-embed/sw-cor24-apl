@@ -15,6 +15,34 @@ int branch_target;
 // Stores the user-visible value (1=on, 0=off), not the raw active-low bit
 int qled_shadow;
 
+// PRNG state (LCG: Linear Congruential Generator)
+// Constants for 24-bit modulus (overflow handles mod 2^24):
+//   a = 1664525 (0x19660D), c = 12345 (both fit in 24 bits)
+//   a mod 4 = 1, c is odd: guarantees full period
+// Auto-seeded from UART keystroke counter (io_key_count)
+int lcg_seed;
+
+int lcg_next() {
+    // Auto-seed from UART keystroke counter if seed is still 0
+    if (lcg_seed == 0) {
+        lcg_seed = io_key_count * 1664525 + 12345;
+    }
+    lcg_seed = lcg_seed * 1664525 + 12345;
+    return lcg_seed;
+}
+
+// Return random integer in range 1..n (APL convention: 1-origin roll)
+// Avoids modulo on large values (COR24 software divide is O(quotient)).
+// Uses rejection sampling on a small extracted range for uniform distribution.
+int lcg_roll(int n) {
+    if (n <= 0) return 0;
+    int r = lcg_next();
+    // Extract middle bits for better distribution, make positive
+    r = (r >> 8) & 4095;  // 0..4095 (shift right 8, mask 12 bits)
+    // For small n (typical: dice 1-6), modulo on small dividend is fast
+    return (r % n) + 1;
+}
+
 // ---- Call stack for user function recursion ----
 
 // Save AST state per call frame (CALL_MAX * AST_MAX = 8 * 64 = 512)
@@ -400,6 +428,21 @@ int eval(int n) {
         return v;
     }
 
+    if (ty == NODE_QRL) {
+        // Read PRNG seed
+        int r = arr_scalar(lcg_seed);
+        if (r < 0) { eval_err = 5; return -1; }
+        return r;
+    }
+
+    if (ty == NODE_QRL_ASSIGN) {
+        int v = eval(node_right[n]);
+        if (eval_err) return -1;
+        if (arr_rank(v) != 0) { eval_err = 4; return -1; }
+        lcg_seed = arr_get(v, 0);
+        return v;
+    }
+
     if (ty == NODE_QSVO) {
         // Shared variable offer: IDENT qsvo AP
         // Evaluate AP number, couple symbol if AP supported
@@ -691,6 +734,33 @@ int eval(int n) {
                 int i = 0;
                 while (i < sz) {
                     arr_set(r, i, ~arr_get(v, i));
+                    i++;
+                }
+                return r;
+            }
+            eval_err = 4;
+            return -1;
+        }
+
+        if (res_id == RES_ROLL) {
+            // roll N: random integer 1..N (element-wise on vectors)
+            int rk = arr_rank(v);
+            if (rk == 0) {
+                int n_val = arr_get(v, 0);
+                if (n_val <= 0) { eval_err = 1; return -1; }
+                int r = arr_scalar(lcg_roll(n_val));
+                if (r < 0) { eval_err = 5; return -1; }
+                return r;
+            }
+            if (rk == 1) {
+                int sz = arr_size(v);
+                int r = arr_vector(sz);
+                if (r < 0) { eval_err = 5; return -1; }
+                int i = 0;
+                while (i < sz) {
+                    int n_val = arr_get(v, i);
+                    if (n_val <= 0) { eval_err = 1; return -1; }
+                    arr_set(r, i, lcg_roll(n_val));
                     i++;
                 }
                 return r;

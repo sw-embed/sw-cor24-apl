@@ -7,6 +7,9 @@
 
 #define IO_LINE_MAX 120
 
+// Keystroke counter for PRNG entropy (incremented on each keypress)
+int io_key_count;
+
 // Read a line from UART into buf (max len-1 chars + NUL).
 // Handles backspace (BS=8, DEL=127): erases last char, sends BS-SPACE-BS.
 // Returns number of chars read (excluding NUL), or 0 on empty line.
@@ -17,6 +20,7 @@ int io_getline(char *buf, int len) {
 
     while (1) {
         int ch = getchar();
+        io_key_count++;
 
         if (ch == 10 || ch == 13) {
             // Newline -- terminate

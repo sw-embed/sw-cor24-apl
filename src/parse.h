@@ -26,6 +26,8 @@
 #define NODE_GOTO  16   // unconditional branch (right = target expr)
 #define NODE_CGOTO 17   // conditional branch (left = cond, right = target)
 #define NODE_FNCALL 18  // user function call (val = fn index, left = left arg/-1, right = right arg)
+#define NODE_QRL   19   // qrl read (no children — returns PRNG seed)
+#define NODE_QRL_ASSIGN 20  // qrl <- expr (right = expr — sets PRNG seed)
 
 #define AST_MAX 64
 
@@ -143,7 +145,7 @@ int can_start_expr(int pos) {
     int ty = tok_type[pos];
     if (ty == TOK_NUM || ty == TOK_LPAREN || ty == TOK_IDENT ||
         ty == TOK_MINUS || ty == TOK_RES || ty == TOK_QLED || ty == TOK_QSW ||
-        ty == TOK_STRING) return 1;
+        ty == TOK_QRL || ty == TOK_STRING) return 1;
     if (is_binop(ty) && tok_type[pos + 1] == TOK_SLASH) return 1;  // reduce
     return 0;
 }
@@ -199,6 +201,11 @@ int parse_node(int mode) {
     } else if (ty == TOK_QSW) {
         int n = ast_new();
         node_type[n] = NODE_QSW;
+        left = n;
+        parse_pos++;
+    } else if (ty == TOK_QRL) {
+        int n = ast_new();
+        node_type[n] = NODE_QRL;
         left = n;
         parse_pos++;
     } else if (ty == TOK_STRING) {
@@ -397,6 +404,18 @@ int parse(char *line) {
     // Check for qsw assignment: qsw is read-only, reject with SYNTAX ERROR
     if (tok_type[0] == TOK_QSW && tok_type[1] == TOK_ASSIGN) {
         return -1;
+    }
+
+    // Check for qrl assignment: qrl <- expr (set PRNG seed)
+    if (tok_type[0] == TOK_QRL && tok_type[1] == TOK_ASSIGN) {
+        parse_pos = 2;
+        int expr = parse_node(0);
+        if (parse_err) return -1;
+        if (tok_type[parse_pos] != TOK_EOL) return -1;
+        int n = ast_new();
+        node_type[n] = NODE_QRL_ASSIGN;
+        node_right[n] = expr;
+        return n;
     }
 
     // Check for quad output: [] <- expr (IBM 5100 convention)

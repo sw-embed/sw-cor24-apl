@@ -1,5 +1,23 @@
 # Changelog
 
+## Step 048: PRNG and Roll Operator (2026-04-01)
+
+- Implemented LCG pseudo-random number generator for 24-bit COR24 architecture
+- LCG constants: a=1664525, c=12345, modulus 2^24 (natural overflow)
+- Added `roll` reserved word (`RES_ROLL = 13`): monadic random number generation
+- `roll N` returns random integer 1..N (APL 1-origin convention)
+- Element-wise on vectors: `roll 6 6 6 6` returns 4 random dice rolls
+- Added `qrl` quad variable (`TOK_QRL = 27`): read/write PRNG seed
+- `qrl <- 42` sets deterministic seed, `qrl` reads current seed state
+- Auto-seeding from UART keystroke counter (`io_key_count`) on first use
+- Performance: uses bit extraction (`>> 8` + 12-bit mask) before modulo to
+  avoid slow repeated-subtraction division on large values
+- `NODE_QRL` and `NODE_QRL_ASSIGN` AST nodes in parser
+- DOMAIN ERROR on `roll 0` or negative argument
+- Added `samples/22-roll.apl` and `samples/batch-roll.apl` tests
+- Deterministic: same seed produces same sequence (verified by re-seeding)
+- Horse race prerequisite: enables random dice rolls for horse movement
+
 ## Step 047: Pick Operator (2026-04-01)
 
 - Added `RES_PICK = 12` reserved word and `pick` keyword in tokenizer

@@ -31,6 +31,7 @@
 #define TOK_GE     24   // >=
 #define TOK_CEIL   25   // ceil (max) — internal only, used in reduce nodes
 #define TOK_FLOOR  26   // floor (min) — internal only, used in reduce nodes
+#define TOK_QRL    27   // qrl — random link seed (□RL)
 
 // Reserved word IDs
 #define RES_RHO     0
@@ -46,6 +47,7 @@
 #define RES_FLOOR  10
 #define RES_COMPRESS 11
 #define RES_PICK    12
+#define RES_ROLL    13
 
 #define TOK_MAX    64   // max tokens per line
 
@@ -133,6 +135,9 @@ int lookup_reserved(char *src, int pos, int *end) {
     len = str_match(src, pos, "pick");
     if (len == 4 && !is_alnum(src[pos + 4])) { *end = pos + 4; return RES_PICK; }
 
+    len = str_match(src, pos, "roll");
+    if (len == 4 && !is_alnum(src[pos + 4])) { *end = pos + 4; return RES_ROLL; }
+
     return -1;
 }
 
@@ -193,6 +198,16 @@ int tokenize(char *line) {
                 tok_val[t] = 0;
                 t++;
                 i = i + 4;
+                continue;
+            }
+
+            len = str_match(line, i, "qrl");
+            if (len == 3 && !is_alnum(line[i + 3])) {
+                tok_type[t] = TOK_QRL;
+                tok_pos[t] = i;
+                tok_val[t] = 0;
+                t++;
+                i = i + 3;
                 continue;
             }
 
