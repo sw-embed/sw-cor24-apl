@@ -1,5 +1,19 @@
 # Changelog
 
+## Step 042: Max/Min (ceil/floor) Primitives (2026-04-01)
+
+- Implemented dyadic `ceil` (max) and `floor` (min) reserved words
+- `RES_CEIL`, `RES_FLOOR` in tokenizer with `lookup_reserved` entries
+- `TOK_CEIL`, `TOK_FLOOR` internal pseudo-tokens for reduce node values
+- Evaluator: `eval_binop_scalar` handles max/min; `NODE_DYAD` dispatches
+  ceil/floor with full scalar extension (scalar-scalar, vector-vector,
+  scalar-vector, vector-scalar)
+- Reduce: `ceil/` (max-reduce) and `floor/` (min-reduce) via parser
+  detecting `TOK_RES` + `TOK_SLASH` for ceil/floor reserved words
+- Added `samples/16-max-min.apl` (GNU APL) and `samples/batch-max-min.apl`
+- All 14 test cases pass: dyadic, element-wise, scalar extension, reduce
+- Horse race prerequisite: enables finding max/min of race positions
+
 ## Step 041: Comparison Operators (2026-04-01)
 
 - Implemented comparison operators: `=`, `!=`, `<`, `>`, `<=`, `>=`

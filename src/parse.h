@@ -126,7 +126,7 @@ int ast_reduce(int op, int operand) {
 
 // Check if a reserved word can be used dyadically
 int is_dyadic_res(int res_id) {
-    return res_id == RES_RHO || res_id == RES_TAKE || res_id == RES_DROP || res_id == RES_CAT || res_id == RES_AND || res_id == RES_OR;
+    return res_id == RES_RHO || res_id == RES_TAKE || res_id == RES_DROP || res_id == RES_CAT || res_id == RES_AND || res_id == RES_OR || res_id == RES_CEIL || res_id == RES_FLOOR;
 }
 
 // Temporary buffer for collecting strand elements
@@ -239,6 +239,13 @@ int parse_node(int mode) {
     } else if (is_binop(ty) && tok_type[parse_pos + 1] == TOK_SLASH) {
         // Reduce operator: +/ -/ */ (op followed by slash)
         int op = ty;
+        parse_pos = parse_pos + 2;
+        int operand = parse_node(0);
+        if (parse_err) return 0;
+        left = ast_reduce(op, operand);
+    } else if (ty == TOK_RES && (tok_val[parse_pos] == RES_CEIL || tok_val[parse_pos] == RES_FLOOR) && tok_type[parse_pos + 1] == TOK_SLASH) {
+        // Reduce with ceil/ or floor/ (max-reduce, min-reduce)
+        int op = (tok_val[parse_pos] == RES_CEIL) ? TOK_CEIL : TOK_FLOOR;
         parse_pos = parse_pos + 2;
         int operand = parse_node(0);
         if (parse_err) return 0;

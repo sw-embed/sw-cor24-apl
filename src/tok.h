@@ -29,6 +29,8 @@
 #define TOK_GT     22   // >
 #define TOK_LE     23   // <=
 #define TOK_GE     24   // >=
+#define TOK_CEIL   25   // ceil (max) — internal only, used in reduce nodes
+#define TOK_FLOOR  26   // floor (min) — internal only, used in reduce nodes
 
 // Reserved word IDs
 #define RES_RHO     0
@@ -40,6 +42,8 @@
 #define RES_AND     6
 #define RES_OR      7
 #define RES_NOT     8
+#define RES_CEIL    9
+#define RES_FLOOR  10
 
 #define TOK_MAX    64   // max tokens per line
 
@@ -114,6 +118,12 @@ int lookup_reserved(char *src, int pos, int *end) {
 
     len = str_match(src, pos, "not");
     if (len == 3 && !is_alnum(src[pos + 3])) { *end = pos + 3; return RES_NOT; }
+
+    len = str_match(src, pos, "ceil");
+    if (len == 4 && !is_alnum(src[pos + 4])) { *end = pos + 4; return RES_CEIL; }
+
+    len = str_match(src, pos, "floor");
+    if (len == 5 && !is_alnum(src[pos + 5])) { *end = pos + 5; return RES_FLOOR; }
 
     return -1;
 }

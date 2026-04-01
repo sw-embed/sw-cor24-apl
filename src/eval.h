@@ -273,6 +273,8 @@ int eval_binop_scalar(int op, int a, int b) {
     if (op == TOK_GT)         return a > b;
     if (op == TOK_LE)         return a <= b;
     if (op == TOK_GE)         return a >= b;
+    if (op == TOK_CEIL)       return (a > b) ? a : b;
+    if (op == TOK_FLOOR)      return (a < b) ? a : b;
     eval_err = 1;
     return 0;
 }
@@ -939,6 +941,71 @@ int eval(int n) {
                 while (i < lsz) {
                     int a = arr_get(lv, i);
                     arr_set(r, i, (res_id == RES_AND) ? (a & b) : (a | b));
+                    i++;
+                }
+                return r;
+            }
+
+            eval_err = 4;
+            return -1;
+        }
+
+        if (res_id == RES_CEIL || res_id == RES_FLOOR) {
+            // Dyadic ceil (max) / floor (min) on conformable arrays
+            int op = (res_id == RES_CEIL) ? TOK_CEIL : TOK_FLOOR;
+            int lrk = arr_rank(lv);
+            int rrk = arr_rank(rv);
+
+            // Scalar op scalar
+            if (lrk == 0 && rrk == 0) {
+                int val = eval_binop_scalar(op, arr_get(lv, 0), arr_get(rv, 0));
+                if (eval_err) return -1;
+                int r = arr_scalar(val);
+                if (r < 0) { eval_err = 5; return -1; }
+                return r;
+            }
+
+            // Vector op vector
+            if (lrk == 1 && rrk == 1) {
+                int lsz = arr_size(lv);
+                int rsz = arr_size(rv);
+                if (lsz != rsz) { eval_err = 3; return -1; }
+                int r = arr_vector(lsz);
+                if (r < 0) { eval_err = 5; return -1; }
+                int i = 0;
+                while (i < lsz) {
+                    arr_set(r, i, eval_binop_scalar(op, arr_get(lv, i), arr_get(rv, i)));
+                    if (eval_err) return -1;
+                    i++;
+                }
+                return r;
+            }
+
+            // Scalar extension: scalar op vector
+            if (lrk == 0 && rrk == 1) {
+                int a = arr_get(lv, 0);
+                int rsz = arr_size(rv);
+                int r = arr_vector(rsz);
+                if (r < 0) { eval_err = 5; return -1; }
+                int i = 0;
+                while (i < rsz) {
+                    arr_set(r, i, eval_binop_scalar(op, a, arr_get(rv, i)));
+                    if (eval_err) return -1;
+                    i++;
+                }
+                return r;
+            }
+
+            // Scalar extension: vector op scalar
+            if (lrk == 1 && rrk == 0) {
+                int b = arr_get(rv, 0);
+                int lsz = arr_size(lv);
+                int r = arr_vector(lsz);
+                if (r < 0) { eval_err = 5; return -1; }
+                int i = 0;
+                while (i < lsz) {
+                    arr_set(r, i, eval_binop_scalar(op, arr_get(lv, i), b));
+                    if (eval_err) return -1;
                     i++;
                 }
                 return r;

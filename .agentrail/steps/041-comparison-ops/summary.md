@@ -1,0 +1,1 @@
+Implemented comparison operators (= != < > <= >=) returning 0/1 booleans. Tokenizer, parser, and evaluator all already had the code from a previous session. Verified output matches GNU APL exactly for scalar, vector, and scalar-extension cases. Added test samples and changelog entry.
