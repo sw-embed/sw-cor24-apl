@@ -1,5 +1,5 @@
 // COR24 APL Interpreter -- main entry point
-// Phase 8: control flow (goto, labels)
+// Phase 8: control flow, labels, multi-line programs
 
 #include <stdio.h>
 #include "io.h"
@@ -10,13 +10,13 @@
 #include "parse.h"
 #include "eval.h"
 
-// Program line buffer for branch support
+// Program line buffer for multi-line programs
 // 64 lines * 120 chars = 7680 bytes
 #define PROG_MAX 64
 #define PROG_LINE 120
 
 char prog_buf[7680];
-int prog_count;
+int prog_count;  // highest line number stored (1-based count)
 
 void prog_store(char *src, int idx) {
     char *dst = prog_buf + idx * PROG_LINE;
@@ -28,11 +28,65 @@ void prog_store(char *src, int idx) {
     dst[k] = 0;
 }
 
+// Get pointer to program line (0-based index)
+char *prog_get(int idx) {
+    return prog_buf + idx * PROG_LINE;
+}
+
+// Clear all program lines
+void prog_clear() {
+    int i = 0;
+    while (i < PROG_MAX) {
+        prog_buf[i * PROG_LINE] = 0;
+        i++;
+    }
+    prog_count = 0;
+}
+
+// Pre-scan labels in stored program before execution
+void prog_scan_labels() {
+    int i = 0;
+    while (i < prog_count) {
+        char *ln = prog_get(i);
+        if (is_upper(ln[0])) {
+            int j = 1;
+            while (is_alnum(ln[j])) j++;
+            if (ln[j] == 58) {  // ':'
+                int sym_idx = sym_lookup(ln, 0);
+                if (sym_idx >= 0) {
+                    sym_val[sym_idx] = arr_scalar(i + 1);  // 1-based line number
+                    sym_set_flag[sym_idx] = 1;
+                }
+            }
+        }
+        i++;
+    }
+}
+
+// Check if line starts with [N] line entry syntax
+// Returns line number (1-based) if so, 0 if not
+// Sets *rest to point past the "] " to the line content
+int prog_parse_entry(char *line, char **rest) {
+    if (line[0] != 91) return 0;  // '['
+    int i = 1;
+    if (!is_digit(line[i])) return 0;
+    int num = 0;
+    while (is_digit(line[i])) {
+        num = num * 10 + (line[i] - 48);
+        i++;
+    }
+    if (line[i] != 93) return 0;  // ']'
+    i++;
+    while (line[i] == 32) i++;  // skip spaces
+    *rest = line + i;
+    return num;
+}
+
 int main() {
     char line[IO_LINE_MAX];
 
     arr_reset();
-    prog_count = 0;
+    prog_clear();
     branch_target = -1;
     puts("COR24 APL v0.1");
 
@@ -44,20 +98,25 @@ int main() {
 
         if (pc >= 0) {
             // Replaying stored line
-            cur_line = prog_buf + pc * PROG_LINE;
+            cur_line = prog_get(pc);
             cur_lineno = pc + 1;
         } else {
             // Read new line from input
             io_print("      ");
             int n = io_getline(line, IO_LINE_MAX);
             if (n == 0) continue;
-            // Store in program buffer
-            if (prog_count < PROG_MAX) {
-                prog_store(line, prog_count);
-                prog_count++;
+
+            // Check for [N] line entry syntax
+            char *rest;
+            int lnum = prog_parse_entry(line, &rest);
+            if (lnum > 0 && lnum <= PROG_MAX) {
+                prog_store(rest, lnum - 1);
+                if (lnum > prog_count) prog_count = lnum;
+                continue;
             }
+
             cur_line = line;
-            cur_lineno = prog_count;
+            cur_lineno = 0;  // immediate mode, no line number
         }
 
         // Check for label prefix: IDENT: at start of line
@@ -110,6 +169,29 @@ int main() {
                     i++;
                 }
                 if (any) putchar(10);
+            } else if (str_match(exec_line, 1, "LIST") == 4 && (exec_line[5] == 0 || exec_line[5] == 32)) {
+                int i = 0;
+                while (i < prog_count) {
+                    char *ln = prog_get(i);
+                    if (ln[0]) {
+                        putchar(91);  // '['
+                        print_int(i + 1);
+                        putchar(93);  // ']'
+                        putchar(32);
+                        io_print(ln);
+                        putchar(10);
+                    }
+                    i++;
+                }
+            } else if (str_match(exec_line, 1, "RUN") == 3 && (exec_line[4] == 0 || exec_line[4] == 32)) {
+                if (prog_count > 0) {
+                    prog_scan_labels();
+                    pc = 0;
+                    branch_target = -1;
+                    continue;
+                }
+            } else if (str_match(exec_line, 1, "ERASE") == 5 && (exec_line[6] == 0 || exec_line[6] == 32)) {
+                prog_clear();
             } else if (str_match(exec_line, 1, "OFF") == 3 && (exec_line[4] == 0 || exec_line[4] == 32)) {
                 return 0;
             } else {
@@ -120,6 +202,7 @@ int main() {
             int ntok = tokenize(exec_line);
             if (ntok < 0) {
                 io_print("  SYNTAX ERROR");
+                if (pc >= 0) { io_print(" ["); print_int(pc + 1); putchar(93); pc = -1; }
                 putchar(10);
             } else {
                 // Save heap position for temporary reclamation
@@ -129,6 +212,7 @@ int main() {
                 if (root < 0) {
                     heap_top = heap_save;
                     io_print("  SYNTAX ERROR");
+                    if (pc >= 0) { io_print(" ["); print_int(pc + 1); putchar(93); pc = -1; }
                     putchar(10);
                 } else {
                     eval_err = 0;
@@ -137,22 +221,27 @@ int main() {
                     if (eval_err == 2) {
                         heap_top = heap_save;
                         io_print("  VALUE ERROR");
+                        if (pc >= 0) { io_print(" ["); print_int(pc + 1); putchar(93); pc = -1; }
                         putchar(10);
                     } else if (eval_err == 3) {
                         heap_top = heap_save;
                         io_print("  LENGTH ERROR");
+                        if (pc >= 0) { io_print(" ["); print_int(pc + 1); putchar(93); pc = -1; }
                         putchar(10);
                     } else if (eval_err == 4) {
                         heap_top = heap_save;
                         io_print("  RANK ERROR");
+                        if (pc >= 0) { io_print(" ["); print_int(pc + 1); putchar(93); pc = -1; }
                         putchar(10);
                     } else if (eval_err == 5) {
                         heap_top = heap_save;
                         io_print("  WS FULL");
+                        if (pc >= 0) { io_print(" ["); print_int(pc + 1); putchar(93); pc = -1; }
                         putchar(10);
                     } else if (eval_err) {
                         heap_top = heap_save;
                         io_print("  DOMAIN ERROR");
+                        if (pc >= 0) { io_print(" ["); print_int(pc + 1); putchar(93); pc = -1; }
                         putchar(10);
                     } else if (node_type[root] == NODE_ASSIGN) {
                         // Assignment: no output (APL convention)
@@ -231,7 +320,14 @@ int main() {
             branch_target = -1;
             continue;
         } else if (branch_target == 0) {
-            // goto 0: stop execution (exit interpreter at top level)
+            // goto 0: stop execution
+            if (pc >= 0) {
+                // In program mode: return to immediate mode
+                pc = -1;
+                branch_target = -1;
+                continue;
+            }
+            // In immediate mode: exit interpreter
             return 0;
         }
 

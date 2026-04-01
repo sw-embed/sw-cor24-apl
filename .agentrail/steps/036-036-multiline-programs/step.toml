@@ -1,6 +1,6 @@
 number = 36
 slug = "036-multiline-programs"
-status = "pending"
+status = "in-progress"
 description = "Implement multi-line program storage. Line array in heap. [N] expr syntax to ..."
 role = "production"
 context_files = []
