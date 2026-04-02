@@ -1,0 +1,78 @@
+⍝ Edge cases: empty vectors, single-element, nested parens, WS FULL
+⎕IO←0
+⍳0
+⍴⍳0
+⌽⍳0
+(⍳0),⍳3
+(⍳0)+(⍳0)
+0↑⍳5
+5↓⍳5
+0⍴1 2 3
+⍴0⍴1 2 3
++/⍳0
+⍳1
++/⍳1
+1⍴5
+⍴1⍴5
+1 1⍴5
+⍴1 1⍴5
+((((1+2))))
+(((((((42)))))))
+(1+(2+(3+(4+5))))
+)OFF
+⎕IO←0
++/⍳0
+×/⍳0
+-/⍳0
+)OFF
+2 3 ⍴ ⍳ 20
+)OFF
+3 = 3
+3 = 4
+5 > 3
+3 > 5
+5 < 3
+3 < 5
+5 ≥ 5
+5 ≥ 3
+3 ≥ 5
+5 ≤ 5
+3 ≤ 5
+5 ≤ 3
+3 ≠ 3
+3 ≠ 4
+1 2 3 ≥ 2
+1 2 3 = 1 2 3
+1 2 3 = 1 0 3
+)OFF
+1 0 1/10 20 30
+'hello'
+'world'
+'A'
+''
+A <- 'test'
+A
+rho 'hello'
+rho 'A'
+rho ''
+)OFF
+5 rho '#'
+3 rho 'ab'
+1 rho 'xyz'
+rho 5 rho '#'
+'hi' cat ' world'
+'a' cat 'b'
+rho 'hi' cat ' world'
+'' cat 'x'
+'x' cat ''
+)OFF
+5⍴'#'
+3⍴'ab'
+1⍴'xyz'
+⍴5⍴'#'
+'hi',' world'
+'a','b'
+⍴'hi',' world'
+'','x'
+'x',''
+)OFF

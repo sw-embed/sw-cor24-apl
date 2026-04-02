@@ -28,6 +28,7 @@
 #define NODE_FNCALL 18  // user function call (val = fn index, left = left arg/-1, right = right arg)
 #define NODE_QRL   19   // qrl read (no children — returns PRNG seed)
 #define NODE_QRL_ASSIGN 20  // qrl <- expr (right = expr — sets PRNG seed)
+#define NODE_QDL   21   // qdl expr (right = delay ms expr)
 
 #define AST_MAX 64
 
@@ -426,6 +427,18 @@ int parse(char *line) {
         if (tok_type[parse_pos] != TOK_EOL) return -1;
         int n = ast_new();
         node_type[n] = NODE_QOUT;
+        node_right[n] = expr;
+        return n;
+    }
+
+    // Check for qdl (delay): qdl expr
+    if (tok_type[0] == TOK_QDL) {
+        parse_pos = 1;
+        int expr = parse_node(0);
+        if (parse_err) return -1;
+        if (tok_type[parse_pos] != TOK_EOL) return -1;
+        int n = ast_new();
+        node_type[n] = NODE_QDL;
         node_right[n] = expr;
         return n;
     }

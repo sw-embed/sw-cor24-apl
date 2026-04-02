@@ -1,0 +1,1 @@
+Implemented qout keyword (TOK_QOUT=28) as alias for [] <- expr quad output. Added tokenizer recognition and parser support (both qout and [] map to NODE_QOUT). Verified with batch test: scalars, vectors, strings, expressions, and qout inside function bodies all print correctly.

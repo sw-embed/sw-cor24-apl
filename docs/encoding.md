@@ -97,7 +97,7 @@ embedded interpreter with no display hardware beyond a serial terminal.
 | `[]` | `⎕` | U+2395 | Bare quad (I/O) |
 | `[]IO` | `⎕IO` | — | Index origin |
 | `[]RL` | `⎕RL` | — | Random link (seed) |
-| `[]DL` | `⎕DL` | — | Delay |
+| `qdl` | `⎕DL` | — | Delay N milliseconds |
 | `[]SVO` | `⎕SVO` | — | Shared variable offer |
 
 ### Identifiers

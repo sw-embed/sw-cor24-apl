@@ -1,5 +1,17 @@
 # Changelog
 
+## Step 051: Delay Function (2026-04-01)
+
+- Implemented `qdl` keyword for delay/pause functionality (APL `⎕DL`)
+- `qdl N` pauses execution for approximately N milliseconds
+- Added `TOK_QDL = 29` token type, tokenizer recognition for `qdl` keyword
+- Added `NODE_QDL = 21` AST node, parsed as monadic statement (`qdl expr`)
+- Delay implemented as calibrated spin loop (~100 iterations/ms on COR24 emulator)
+- Silent output: `qdl` produces no printed result (side-effect only)
+- Works in REPL, batch mode, and inside user-defined function bodies
+- Added `samples/batch-delay.a24` test covering direct calls and function-wrapped usage
+- Horse race prerequisite: enables timed pauses between race rounds
+
 ## Step 050: Quad Output (2026-04-01)
 
 - Implemented `qout` keyword as alias for `[] <- expr` quad output syntax

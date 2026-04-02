@@ -1,6 +1,6 @@
 number = 51
 slug = "051-delay"
-status = "pending"
+status = "in-progress"
 description = "Delay function qDL. qDL N pauses for N milliseconds. Implement as calibrated spin loop or timer register read. Integer ms (no float). (Horse race prerequisite)"
 role = "production"
 context_files = []

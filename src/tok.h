@@ -33,6 +33,7 @@
 #define TOK_FLOOR  26   // floor (min) — internal only, used in reduce nodes
 #define TOK_QRL    27   // qrl — random link seed (□RL)
 #define TOK_QOUT   28   // qout — quad output (□ <- expr)
+#define TOK_QDL    29   // qdl — delay N milliseconds (□DL)
 
 // Reserved word IDs
 #define RES_RHO     0
@@ -223,6 +224,16 @@ int tokenize(char *line) {
                 tok_val[t] = 0;
                 t++;
                 i = i + 4;
+                continue;
+            }
+
+            len = str_match(line, i, "qdl");
+            if (len == 3 && !is_alnum(line[i + 3])) {
+                tok_type[t] = TOK_QDL;
+                tok_pos[t] = i;
+                tok_val[t] = 0;
+                t++;
+                i = i + 3;
                 continue;
             }
 

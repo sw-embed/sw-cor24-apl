@@ -443,6 +443,20 @@ int eval(int n) {
         return v;
     }
 
+    if (ty == NODE_QDL) {
+        int v = eval(node_right[n]);
+        if (eval_err) return -1;
+        if (arr_rank(v) != 0) { eval_err = 4; return -1; }
+        int ms = arr_get(v, 0);
+        if (ms > 0) {
+            // Calibrated spin loop: ~100 iterations per ms on COR24 emulator
+            int loops = ms * 100;
+            int i = 0;
+            while (i < loops) { i++; }
+        }
+        return v;
+    }
+
     if (ty == NODE_QSVO) {
         // Shared variable offer: IDENT qsvo AP
         // Evaluate AP number, couple symbol if AP supported

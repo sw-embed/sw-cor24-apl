@@ -400,6 +400,9 @@ int main() {
                     } else if (node_type[root] == NODE_SVO_WRITE) {
                         // Shared variable indexed write: no output
                         heap_top = heap_save;
+                    } else if (node_type[root] == NODE_QDL) {
+                        // Delay: no output
+                        heap_top = heap_save;
                     } else if (node_type[root] == NODE_GOTO || node_type[root] == NODE_CGOTO) {
                         // Branch: no output
                         heap_top = heap_save;
