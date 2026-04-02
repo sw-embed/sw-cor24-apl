@@ -1,0 +1,1 @@
+Implemented qdl (quad DL) delay function. TOK_QDL=29 token, NODE_QDL=21 AST node. Parsed as monadic statement (qdl expr). Evaluator uses calibrated spin loop (~100 iterations/ms). Silent output in REPL. Tested in batch mode: direct calls and function-wrapped usage with proportional timing verified.

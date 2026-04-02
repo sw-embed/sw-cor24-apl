@@ -1,0 +1,7 @@
+# This is a full-line comment
+A <- 5 # inline comment after expression
+qout <- A + 3
+# Another comment
+B <- 10 20 30
+qout <- +/ B # sum of vector
+# Final comment at end

@@ -1,5 +1,15 @@
 # Changelog
 
+## Step 052: Line Comments (2026-04-01)
+
+- Implemented `#` as line comment character in the tokenizer
+- `#` at any token position skips the rest of the line
+- Full-line comments: `# this is a comment` (produces empty token stream, skipped)
+- Inline comments: `A <- 5 # assign five` (tokens before `#` are processed normally)
+- Added empty-line skip in main loop for comment-only lines (TOK_EOL as first token)
+- Added `samples/batch-comments.a24` test covering both comment styles
+- Horse race prerequisite: enables documenting APL programs
+
 ## Step 051: Delay Function (2026-04-01)
 
 - Implemented `qdl` keyword for delay/pause functionality (APL `⎕DL`)

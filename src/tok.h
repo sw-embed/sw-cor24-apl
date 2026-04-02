@@ -162,6 +162,11 @@ int tokenize(char *line) {
             continue;
         }
 
+        // Comment: # skips to end of line
+        if (line[i] == 35) {
+            break;
+        }
+
         // Number: digits, or underscore followed by digit (APL negative)
         if (is_digit(line[i]) || (line[i] == 95 && is_digit(line[i + 1]))) {
             tok_type[t] = TOK_NUM;

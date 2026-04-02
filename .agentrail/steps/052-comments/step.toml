@@ -1,6 +1,6 @@
 number = 52
 slug = "052-comments"
-status = "pending"
+status = "in-progress"
 description = "Line comments. # at start of token position skips to end of line. Allows documenting APL programs. (Horse race prerequisite)"
 role = "production"
 context_files = []

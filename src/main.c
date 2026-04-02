@@ -343,6 +343,11 @@ int main() {
             }
 
             int ntok = tokenize(exec_line);
+            // Skip empty lines (comment-only or blank)
+            if (ntok > 0 && tok_type[0] == TOK_EOL) {
+                if (pc >= 0) { pc++; if (pc >= prog_count) pc = -1; }
+                continue;
+            }
             if (ntok < 0) {
                 io_print("  SYNTAX ERROR");
                 if (pc >= 0) { io_print(" ["); print_int(pc + 1); putchar(93); pc = -1; }
