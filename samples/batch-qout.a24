@@ -1,0 +1,13 @@
+qout <- 42
+qout <- 1 2 3
+qout <- 'hello'
+A <- 10
+qout <- A + 5
+qout <- iota 5
+[] <- 99
+del R <- SHOW X
+R <- X
+qout <- 'value:'
+qout <- X
+del
+SHOW 7

@@ -1,6 +1,6 @@
 number = 50
 slug = "050-quad-output"
-status = "pending"
+status = "in-progress"
 description = "Quad output (qout). qout <- expr prints value with newline. Needed for explicit output inside functions. Currently output is implicit from REPL eval. (Horse race prerequisite)"
 role = "production"
 context_files = []

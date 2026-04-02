@@ -418,8 +418,8 @@ int parse(char *line) {
         return n;
     }
 
-    // Check for quad output: [] <- expr (IBM 5100 convention)
-    if (tok_type[0] == TOK_QUAD && tok_type[1] == TOK_ASSIGN) {
+    // Check for quad output: [] <- expr or qout <- expr
+    if ((tok_type[0] == TOK_QUAD || tok_type[0] == TOK_QOUT) && tok_type[1] == TOK_ASSIGN) {
         parse_pos = 2;
         int expr = parse_node(0);
         if (parse_err) return -1;

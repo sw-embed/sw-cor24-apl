@@ -1,5 +1,16 @@
 # Changelog
 
+## Step 050: Quad Output (2026-04-01)
+
+- Implemented `qout` keyword as alias for `[] <- expr` quad output syntax
+- `qout <- expr` prints value with newline (explicit output inside functions)
+- Added `TOK_QOUT = 28` token type, tokenizer recognition for `qout` keyword
+- Parser accepts both `qout <- expr` and `[] <- expr` for quad output
+- Both map to existing `NODE_QOUT` AST node (evaluator unchanged)
+- Works in REPL, batch mode, and inside user-defined function bodies
+- Added `samples/batch-qout.a24` test and `samples/20-qout.apl` GNU APL reference
+- Horse race prerequisite: enables explicit output in function bodies
+
 ## Step 049: Format Operator and .a24 Extension (2026-04-01)
 
 - Implemented `fmt` monadic operator (`RES_FMT = 14`) for integer-to-string conversion

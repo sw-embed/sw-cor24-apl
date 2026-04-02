@@ -1,0 +1,1 @@
+Implemented fmt monadic operator (RES_FMT=14) for integer-to-string conversion. fmt N converts scalar to char vector, fmt V converts vector to space-separated string. Handles negatives with underscore. Also renamed COR24 ASCII-dialect sample files from .apl to .a24 extension, keeping .apl for GNU APL Unicode reference files. Updated build.sh, test scripts, and docs.
