@@ -71,10 +71,10 @@ for cor24 in "$DIR"/*.cor24; do
     fi
 done
 
-# Batch mode tests: .apl files with matching .expected
-for apl in "$DIR"/batch-*.apl; do
+# Batch mode tests: .a24 files with matching .expected
+for apl in "$DIR"/batch-*.a24; do
     [ -f "$apl" ] || continue
-    base="$(basename "$apl" .apl)"
+    base="$(basename "$apl" .a24)"
     expected="$DIR/${base}.expected"
     [ -n "$PATTERN" ] && [[ "$base" != *"$PATTERN"* ]] && continue
 

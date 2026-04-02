@@ -1,0 +1,11 @@
+fmt 42
+fmt _7
+fmt 0
+fmt 1 2 3
+rho fmt 42
+rho fmt 100
+rho fmt _5
+rho fmt 1 2 3
+'ROUND ' cat fmt 5
+'Score: ' cat fmt 123
+)OFF

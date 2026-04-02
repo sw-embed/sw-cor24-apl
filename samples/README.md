@@ -4,6 +4,7 @@ Sample APL programs for testing COR24 APL against GNU APL.
 
 ## Naming Convention
 
+- `*.a24` — COR24 ASCII APL samples (keyword syntax, 0-indexed iota)
 - `*.apl` — GNU APL scripts (Unicode symbols, 1-indexed ⍳)
 - `*.cor24` — COR24 APL input (ASCII keywords, 0-indexed iota)
 - `*.expected` — Expected output for COR24 tests

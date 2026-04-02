@@ -70,7 +70,7 @@ A ← ⍳10
 ⎕ ← ¯2↑A
 ```
 
-### COR24 form (`test.cor24.apl`)
+### COR24 form (`test.cor24.a24`)
 ```
 A <- iota 10
 [] <- +/ A
@@ -119,7 +119,7 @@ apl --script -f test.apl > expected.txt 2>/dev/null
 
 ```bash
 # Convert newlines to \n escapes for --uart-input
-INPUT=$(cat test.cor24.apl | sed 's/$/\\n/' | tr -d '\n')
+INPUT=$(cat test.cor24.a24 | sed 's/$/\\n/' | tr -d '\n')
 cor24-run --run build/apl.s --uart-input "$INPUT" \
     -t 60 -s 1000000 2>&1 \
     | grep 'UART output' -A 1000 \
@@ -246,8 +246,8 @@ When the test corpus grows, automate with a script:
 #!/bin/bash
 # test/run-compat.sh
 PASS=0; FAIL=0
-for test in test/compat/*.cor24.apl; do
-    base="${test%.cor24.apl}"
+for test in test/compat/*.cor24.a24; do
+    base="${test%.cor24.a24}"
     expected="$base.expected"
     actual=$(run_cor24 "$test")
     if diff -q <(echo "$actual") "$expected" > /dev/null 2>&1; then

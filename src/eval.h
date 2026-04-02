@@ -769,6 +769,77 @@ int eval(int n) {
             return -1;
         }
 
+        if (res_id == RES_FMT) {
+            // fmt N: convert integer to character vector
+            // fmt V: convert vector to space-separated character vector
+            int rk = arr_rank(v);
+            if (rk == 0) {
+                // Scalar: format single integer
+                int val = arr_get(v, 0);
+                int w = num_width(val);
+                int r = arr_vector(w);
+                if (r < 0) { eval_err = 5; return -1; }
+                arr_set_type(r, ARR_CHAR);
+                // Fill digits from right to left
+                int pos = w - 1;
+                int n_abs = val;
+                if (val < 0) { n_abs = 0 - val; }
+                if (n_abs == 0) {
+                    arr_set(r, pos, 48);
+                } else {
+                    while (n_abs > 0) {
+                        arr_set(r, pos, 48 + n_abs % 10);
+                        n_abs = n_abs / 10;
+                        pos--;
+                    }
+                }
+                if (val < 0) { arr_set(r, 0, 95); } // underscore for negative
+                return r;
+            }
+            if (rk == 1) {
+                // Vector: format each element, space-separated
+                int sz = arr_size(v);
+                // Calculate total length
+                int total = 0;
+                int i = 0;
+                while (i < sz) {
+                    if (i > 0) total++; // space separator
+                    total = total + num_width(arr_get(v, i));
+                    i++;
+                }
+                int r = arr_vector(total);
+                if (r < 0) { eval_err = 5; return -1; }
+                arr_set_type(r, ARR_CHAR);
+                int dp = 0; // destination position
+                i = 0;
+                while (i < sz) {
+                    if (i > 0) { arr_set(r, dp, 32); dp++; } // space
+                    int val = arr_get(v, i);
+                    int w = num_width(val);
+                    int n_abs = val;
+                    if (val < 0) { n_abs = 0 - val; }
+                    // Fill this number right-to-left within its field
+                    int ep = dp + w - 1; // end position
+                    if (n_abs == 0) {
+                        arr_set(r, ep, 48);
+                    } else {
+                        int p = ep;
+                        while (n_abs > 0) {
+                            arr_set(r, p, 48 + n_abs % 10);
+                            n_abs = n_abs / 10;
+                            p--;
+                        }
+                    }
+                    if (val < 0) { arr_set(r, dp, 95); }
+                    dp = dp + w;
+                    i++;
+                }
+                return r;
+            }
+            eval_err = 4;
+            return -1;
+        }
+
         // Unknown monadic function
         eval_err = 1;
         return -1;

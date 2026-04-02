@@ -1,5 +1,19 @@
 # Changelog
 
+## Step 049: Format Operator and .a24 Extension (2026-04-01)
+
+- Implemented `fmt` monadic operator (`RES_FMT = 14`) for integer-to-string conversion
+- `fmt N` converts scalar integer to character vector: `fmt 42` → `'42'`
+- `fmt V` converts vector to space-separated string: `fmt 1 2 3` → `'1 2 3'`
+- Handles negative numbers with underscore prefix: `fmt _7` → `'_7'`
+- Key use case: `'ROUND ' cat fmt N` for string concatenation in horse race
+- Renamed COR24 ASCII dialect samples from `.apl` to `.a24` extension
+  - `.apl` reserved for GNU APL Unicode reference files
+  - `.a24` for COR24 keyword-syntax files (samples, batch tests)
+- Updated build.sh, test-cor24.sh, docs/batch-mode.md, docs/compatibility-testing.md
+- Added `samples/23-fmt.a24` test file
+- Horse race prerequisite: enables formatted output like `'Score: ' cat fmt 123`
+
 ## Step 048: PRNG and Roll Operator (2026-04-01)
 
 - Implemented LCG pseudo-random number generator for 24-bit COR24 architecture

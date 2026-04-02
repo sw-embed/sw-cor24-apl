@@ -7,7 +7,7 @@ set -euo pipefail
 #   ./build.sh              Build only (compile + assemble check)
 #   ./build.sh run          Build and run on emulator
 #   ./build.sh run --terminal   Build and run in interactive terminal mode
-#   ./build.sh run --batch <file.apl>  Load APL image and run in batch mode
+#   ./build.sh run --batch <file.a24>  Load APL image and run in batch mode
 #   ./build.sh clean        Remove build artifacts
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -41,7 +41,7 @@ APL_IMAGE_BASE="0x080000"
 run() {
     build
 
-    # Check for --batch <file.apl> argument
+    # Check for --batch <file.a24> argument
     local batch_file=""
     local extra_args=()
     while [[ $# -gt 0 ]]; do

@@ -1,0 +1,1 @@
+Implemented PRNG with LCG algorithm (a=1664525, c=12345, mod 2^24) and roll operator. roll N returns random 1..N, element-wise on vectors. qrl quad variable for seed read/write. Auto-seeds from UART keystroke counter. Uses bit extraction (>>8) before modulo to avoid slow COR24 software division on large values. Deterministic sequences verified with re-seeding.

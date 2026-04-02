@@ -49,19 +49,19 @@ Use `cor24-run` flags to load the image and set the pointer:
 
 ```bash
 cor24-run --run build/apl.s \
-  --load-binary program.apl@0x080000 \
+  --load-binary program.a24@0x080000 \
   --patch 0x09FF00=0x080000
 ```
 
 Or use the build script shorthand:
 
 ```bash
-./build.sh run --batch program.apl
+./build.sh run --batch program.a24
 ```
 
 ## Example
 
-File `hello.apl`:
+File `hello.a24`:
 ```
 1 + 1
 iota 5
@@ -71,7 +71,7 @@ iota 5
 
 Run:
 ```bash
-./build.sh run --batch hello.apl
+./build.sh run --batch hello.a24
 ```
 
 Output:
