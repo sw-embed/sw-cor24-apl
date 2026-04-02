@@ -1,5 +1,4 @@
 ⍝ Rho (reshape and shape-of)
-⎕IO←0
 ⍴ 42
 3 ⍴ 1 2 3
 5 ⍴ 1 2 3

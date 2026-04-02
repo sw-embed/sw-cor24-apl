@@ -4,16 +4,16 @@ Sample APL programs for testing COR24 APL against GNU APL.
 
 ## Naming Convention
 
-- `*.a24` — COR24 ASCII APL samples (keyword syntax, 0-indexed iota)
+- `*.a24` — COR24 ASCII APL samples (keyword syntax, default 1-indexed iota)
 - `*.apl` — GNU APL scripts (Unicode symbols, 1-indexed ⍳)
-- `*.cor24` — COR24 APL input (ASCII keywords, 0-indexed iota)
+- `*.cor24` — COR24 APL input (ASCII keywords, default 1-indexed iota)
 - `*.expected` — Expected output for COR24 tests
 
 ## Key Differences: COR24 vs GNU APL
 
 | Feature | COR24 APL | GNU APL |
 |---------|-----------|---------|
-| iota | 0-indexed (`iota 5` → `0 1 2 3 4`) | 1-indexed (`⍳5` → `1 2 3 4 5`) |
+| iota | 1-indexed by default (`iota 5` → `1 2 3 4 5`), `qio <- 0` for 0-origin | 1-indexed (`⍳5` → `1 2 3 4 5`) |
 | rho | `rho` keyword | `⍴` symbol |
 | take | `take` keyword | `↑` symbol |
 | drop | `drop` keyword | `↓` symbol |
@@ -26,9 +26,9 @@ Sample APL programs for testing COR24 APL against GNU APL.
 
 ## Index Origin
 
-COR24 APL currently uses 0-indexed iota (⎕IO←0). GNU APL samples
-include `⎕IO←0` to match. A future step will add `[]IO` support
-with default 1 (standard APL) and `[]IO <- 0` option.
+COR24 APL defaults to 1-indexed iota (⎕IO=1), matching standard APL.
+Use `qio <- 0` for 0-origin. GNU APL samples no longer need `⎕IO←0`
+since both interpreters now default to 1-origin.
 
 ## Running
 

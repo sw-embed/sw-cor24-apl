@@ -15,6 +15,10 @@ int branch_target;
 // Stores the user-visible value (1=on, 0=off), not the raw active-low bit
 int qled_shadow;
 
+// Index origin (□IO): 0 or 1, affects iota generation
+// Default 1 = standard APL (iota N → 1 2 ... N)
+int io_origin = 1;
+
 // PRNG state (LCG: Linear Congruential Generator)
 // Constants for 24-bit modulus (overflow handles mod 2^24):
 //   a = 1664525 (0x19660D), c = 12345 (both fit in 24 bits)
@@ -453,6 +457,23 @@ int eval(int n) {
         return v;
     }
 
+    if (ty == NODE_QIO) {
+        // Read index origin
+        int r = arr_scalar(io_origin);
+        if (r < 0) { eval_err = 5; return -1; }
+        return r;
+    }
+
+    if (ty == NODE_QIO_ASSIGN) {
+        int v = eval(node_right[n]);
+        if (eval_err) return -1;
+        if (arr_rank(v) != 0) { eval_err = 4; return -1; }
+        int val = arr_get(v, 0);
+        if (val != 0 && val != 1) { eval_err = 1; return -1; }
+        io_origin = val;
+        return v;
+    }
+
     if (ty == NODE_QDL) {
         int v = eval(node_right[n]);
         if (eval_err) return -1;
@@ -635,7 +656,7 @@ int eval(int n) {
         int res_id = node_val[n];
 
         if (res_id == RES_IOTA) {
-            // iota N: generate vector 0 1 2 ... N-1
+            // iota N: generate vector io_origin .. io_origin+N-1
             if (arr_rank(v) != 0) { eval_err = 4; return -1; }
             int count = arr_get(v, 0);
             if (count < 0) { eval_err = 1; return -1; }
@@ -643,7 +664,7 @@ int eval(int n) {
             if (r < 0) { eval_err = 5; return -1; }
             int i = 0;
             while (i < count) {
-                arr_set(r, i, i);
+                arr_set(r, i, i + io_origin);
                 i++;
             }
             return r;

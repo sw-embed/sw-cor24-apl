@@ -1,5 +1,20 @@
 # Changelog
 
+## Step 055: Quad Index Origin — qio (2026-04-01)
+
+- Implemented `qio` system variable (APL `⎕IO`) for index origin control
+- Default value 1 (standard APL): `iota 5` now produces `1 2 3 4 5`
+- `qio <- 0` switches to 0-origin: `iota 5` produces `0 1 2 3 4`
+- `qio <- 1` switches back; `qio` alone reads current value
+- DOMAIN ERROR on any value other than 0 or 1
+- `)CLEAR` resets index origin to 1
+- Token `TOK_QIO = 32`, AST nodes `NODE_QIO` / `NODE_QIO_ASSIGN`
+- Global `io_origin` in eval.h, used by iota vector generation
+- Updated all 33 test expected outputs for 1-origin default
+- Horse race programs use `qio <- 0` (depend on 0-based pick/bracket indexing)
+- Removed `⎕IO←0` from GNU APL .apl reference files (no longer needed)
+- Updated samples/README.md to reflect 1-indexed default
+
 ## Step 054: Horse Race Demo Programs (2026-04-01)
 
 - Created two horse race APL programs running on the COR24 interpreter:

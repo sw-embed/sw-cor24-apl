@@ -2,7 +2,7 @@
 ⍝ 4 horses race to a finish line
 ⍝ COR24 equivalent: horse-race-simple.a24
 
-⍝ NOTE: GNU APL uses ⎕IO←0 for 0-origin
+⍝ Uses ⎕IO←0 for 0-origin (program logic depends on it)
 ⎕IO←0
 
 ⍝ Seed not portable — COR24 uses qrl←42

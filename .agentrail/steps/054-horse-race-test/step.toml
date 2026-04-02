@@ -1,7 +1,8 @@
 number = 54
 slug = "054-horse-race-test"
-status = "in-progress"
+status = "completed"
 description = "Transliterate and run both horse race APL programs on COR24 emulator. Verify output matches GNU APL behavior. Milestone: full APL programs running on custom interpreter. (Horse race milestone)"
 role = "production"
 context_files = []
 created_at = "2026-03-30T11:10:00"
+completed_at = "2026-04-01T20:05:43"

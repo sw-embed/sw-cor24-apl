@@ -1,5 +1,4 @@
 ⍝ Edge cases: empty vectors, single-element, nested parens, WS FULL
-⎕IO←0
 ⍳0
 ⍴⍳0
 ⌽⍳0

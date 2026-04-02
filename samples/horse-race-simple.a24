@@ -2,6 +2,7 @@
 # 4 horses race to a finish line
 # Demonstrates: roll, fmt, cat, qout, comparisons, or/, goto, labels
 #
+qio <- 0
 qrl <- 42
 NH <- 4
 GOAL <- 10

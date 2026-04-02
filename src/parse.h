@@ -29,6 +29,8 @@
 #define NODE_QRL   19   // qrl read (no children — returns PRNG seed)
 #define NODE_QRL_ASSIGN 20  // qrl <- expr (right = expr — sets PRNG seed)
 #define NODE_QDL   21   // qdl expr (right = delay ms expr)
+#define NODE_QIO   22   // qio read (no children — returns index origin)
+#define NODE_QIO_ASSIGN 23  // qio <- expr (right = expr — sets index origin)
 
 #define AST_MAX 64
 
@@ -146,7 +148,7 @@ int can_start_expr(int pos) {
     int ty = tok_type[pos];
     if (ty == TOK_NUM || ty == TOK_LPAREN || ty == TOK_IDENT ||
         ty == TOK_MINUS || ty == TOK_RES || ty == TOK_QLED || ty == TOK_QSW ||
-        ty == TOK_QRL || ty == TOK_STRING) return 1;
+        ty == TOK_QRL || ty == TOK_QIO || ty == TOK_STRING) return 1;
     if (is_binop(ty) && tok_type[pos + 1] == TOK_SLASH) return 1;  // reduce
     return 0;
 }
@@ -207,6 +209,11 @@ int parse_node(int mode) {
     } else if (ty == TOK_QRL) {
         int n = ast_new();
         node_type[n] = NODE_QRL;
+        left = n;
+        parse_pos++;
+    } else if (ty == TOK_QIO) {
+        int n = ast_new();
+        node_type[n] = NODE_QIO;
         left = n;
         parse_pos++;
     } else if (ty == TOK_STRING) {
@@ -416,6 +423,18 @@ int parse(char *line) {
         if (tok_type[parse_pos] != TOK_EOL) return -1;
         int n = ast_new();
         node_type[n] = NODE_QRL_ASSIGN;
+        node_right[n] = expr;
+        return n;
+    }
+
+    // Check for qio assignment: qio <- expr (set index origin)
+    if (tok_type[0] == TOK_QIO && tok_type[1] == TOK_ASSIGN) {
+        parse_pos = 2;
+        int expr = parse_node(0);
+        if (parse_err) return -1;
+        if (tok_type[parse_pos] != TOK_EOL) return -1;
+        int n = ast_new();
+        node_type[n] = NODE_QIO_ASSIGN;
         node_right[n] = expr;
         return n;
     }

@@ -2,7 +2,7 @@
 ⍝ 4 named horses race with track visualization
 ⍝ COR24 equivalent: horse-race.a24
 
-⍝ NOTE: GNU APL uses ⎕IO←0 for 0-origin
+⍝ Uses ⎕IO←0 for 0-origin (program logic depends on it)
 ⎕IO←0
 
 NH←4

@@ -3,6 +3,7 @@
 # Demonstrates: nested arrays, pick, roll, fmt, cat, rho on chars,
 #   qout, ceil/, compress, comparisons, or/, and/, goto, labels
 #
+qio <- 0
 qrl <- 42
 NH <- 4
 GOAL <- 15

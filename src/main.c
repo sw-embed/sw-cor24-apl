@@ -224,6 +224,7 @@ int main() {
                 arr_reset();
                 sym_reset();
                 fn_reset();
+                io_origin = 1;
                 io_print("  CLEAR WS");
                 putchar(10);
             } else if (str_match(exec_line, 1, "VARS") == 4 && (exec_line[5] == 0 || exec_line[5] == 32)) {

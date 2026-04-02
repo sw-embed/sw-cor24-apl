@@ -36,6 +36,7 @@
 #define TOK_QDL    29   // qdl — delay N milliseconds (□DL)
 #define TOK_AND_OP 30   // and — internal only, used in reduce nodes
 #define TOK_OR_OP  31   // or — internal only, used in reduce nodes
+#define TOK_QIO    32   // qio — index origin (□IO)
 
 // Reserved word IDs
 #define RES_RHO     0
@@ -237,6 +238,16 @@ int tokenize(char *line) {
             len = str_match(line, i, "qdl");
             if (len == 3 && !is_alnum(line[i + 3])) {
                 tok_type[t] = TOK_QDL;
+                tok_pos[t] = i;
+                tok_val[t] = 0;
+                t++;
+                i = i + 3;
+                continue;
+            }
+
+            len = str_match(line, i, "qio");
+            if (len == 3 && !is_alnum(line[i + 3])) {
+                tok_type[t] = TOK_QIO;
                 tok_pos[t] = i;
                 tok_val[t] = 0;
                 t++;
