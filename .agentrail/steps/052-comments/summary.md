@@ -1,0 +1,1 @@
+Implemented # line comments in tokenizer. When # is encountered at any token position, the rest of the line is skipped (break out of tokenizer loop). Added empty-line skip in main loop for comment-only lines. Added samples/batch-comments.a24 test verifying full-line and inline comments. Output: 8 and 60 as expected.

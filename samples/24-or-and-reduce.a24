@@ -1,0 +1,5 @@
+# or/ and and/ reduce tests
+or/ 0 0 1 0
+or/ 0 0 0
+and/ 1 1 1
+and/ 1 1 0

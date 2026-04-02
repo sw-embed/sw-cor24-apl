@@ -341,6 +341,8 @@ int eval_binop_scalar(int op, int a, int b) {
     if (op == TOK_GE)         return a >= b;
     if (op == TOK_CEIL)       return (a > b) ? a : b;
     if (op == TOK_FLOOR)      return (a < b) ? a : b;
+    if (op == TOK_AND_OP)     return a & b;
+    if (op == TOK_OR_OP)      return a | b;
     eval_err = 1;
     return 0;
 }
@@ -876,8 +878,10 @@ int eval(int n) {
             if (sz == 0) {
                 // Empty vector: return identity element
                 int id;
-                if (op == TOK_PLUS || op == TOK_MINUS) id = 0;
-                else if (op == TOK_STAR || op == TOK_SLASH) id = 1;
+                if (op == TOK_PLUS || op == TOK_MINUS || op == TOK_OR_OP) id = 0;
+                else if (op == TOK_STAR || op == TOK_SLASH || op == TOK_AND_OP) id = 1;
+                else if (op == TOK_CEIL) id = -8388608;
+                else if (op == TOK_FLOOR) id = 8388607;
                 else { eval_err = 1; return -1; }
                 int r = arr_scalar(id);
                 if (r < 0) { eval_err = 5; return -1; }

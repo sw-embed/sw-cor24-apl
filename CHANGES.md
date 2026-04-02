@@ -1,5 +1,16 @@
 # Changelog
 
+## Step 053: OR/AND Reduce (2026-04-01)
+
+- Extended reduce operator to support `or/` (logical OR reduce) and `and/` (logical AND reduce)
+- Added `TOK_AND_OP = 30` and `TOK_OR_OP = 31` internal token types for reduce nodes
+- Extended parser to recognize `and/` and `or/` alongside existing `ceil/` and `floor/` reduce
+- Added `or/` and `and/` cases to `eval_binop_scalar` (bitwise `|` and `&`)
+- Identity elements for empty vector reduce: `or/` → 0, `and/` → 1
+- Also added identity elements for `ceil/` and `floor/` empty reduce
+- Added `samples/batch-or-and-reduce.a24` and `samples/24-or-and-reduce.a24` test files
+- Horse race prerequisite: enables boolean aggregation in game logic
+
 ## Step 052: Line Comments (2026-04-01)
 
 - Implemented `#` as line comment character in the tokenizer

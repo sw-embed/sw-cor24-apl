@@ -34,6 +34,8 @@
 #define TOK_QRL    27   // qrl — random link seed (□RL)
 #define TOK_QOUT   28   // qout — quad output (□ <- expr)
 #define TOK_QDL    29   // qdl — delay N milliseconds (□DL)
+#define TOK_AND_OP 30   // and — internal only, used in reduce nodes
+#define TOK_OR_OP  31   // or — internal only, used in reduce nodes
 
 // Reserved word IDs
 #define RES_RHO     0

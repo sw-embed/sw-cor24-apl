@@ -304,9 +304,10 @@ int parse_node(int mode) {
         int operand = parse_node(0);
         if (parse_err) return 0;
         left = ast_reduce(op, operand);
-    } else if (ty == TOK_RES && (tok_val[parse_pos] == RES_CEIL || tok_val[parse_pos] == RES_FLOOR) && tok_type[parse_pos + 1] == TOK_SLASH) {
-        // Reduce with ceil/ or floor/ (max-reduce, min-reduce)
-        int op = (tok_val[parse_pos] == RES_CEIL) ? TOK_CEIL : TOK_FLOOR;
+    } else if (ty == TOK_RES && (tok_val[parse_pos] == RES_CEIL || tok_val[parse_pos] == RES_FLOOR || tok_val[parse_pos] == RES_AND || tok_val[parse_pos] == RES_OR) && tok_type[parse_pos + 1] == TOK_SLASH) {
+        // Reduce with ceil/ floor/ and/ or/
+        int rv = tok_val[parse_pos];
+        int op = (rv == RES_CEIL) ? TOK_CEIL : (rv == RES_FLOOR) ? TOK_FLOOR : (rv == RES_AND) ? TOK_AND_OP : TOK_OR_OP;
         parse_pos = parse_pos + 2;
         int operand = parse_node(0);
         if (parse_err) return 0;

@@ -1,0 +1,15 @@
+# or/ reduce tests
+qout <- or/ 0 0 1 0
+qout <- or/ 0 0 0 0
+qout <- or/ 1 1 1 1
+# and/ reduce tests
+qout <- and/ 1 1 1 1
+qout <- and/ 1 1 0 1
+qout <- and/ 0 0 0 0
+# mixed with expressions
+A <- 0 1 0 1
+qout <- or/ A
+qout <- and/ A
+# single element
+qout <- or/ 1
+qout <- and/ 0

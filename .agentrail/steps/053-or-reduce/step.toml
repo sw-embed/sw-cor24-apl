@@ -1,6 +1,6 @@
 number = 53
 slug = "053-or-reduce"
-status = "pending"
+status = "in-progress"
 description = "Extend reduce for or/ (logical OR reduce) and and/ (logical AND reduce). Test: or/ 0 0 1 0 -> 1, and/ 1 1 0 -> 0. (Horse race prerequisite)"
 role = "production"
 context_files = []
