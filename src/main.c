@@ -408,6 +408,9 @@ int main() {
                     } else if (node_type[root] == NODE_QDL) {
                         // Delay: no output
                         heap_top = heap_save;
+                    } else if (node_type[root] == NODE_QRL_ASSIGN) {
+                        // Quad RL assignment: no output
+                        heap_top = heap_save;
                     } else if (node_type[root] == NODE_GOTO || node_type[root] == NODE_CGOTO) {
                         // Branch: no output
                         heap_top = heap_save;

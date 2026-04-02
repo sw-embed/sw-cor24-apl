@@ -1,0 +1,45 @@
+# Horse Race -- Full Version
+# 4 named horses race with track visualization
+# Demonstrates: nested arrays, pick, roll, fmt, cat, rho on chars,
+#   qout, ceil/, compress, comparisons, or/, and/, goto, labels
+#
+qrl <- 42
+NH <- 4
+GOAL <- 15
+POS <- NH rho 0
+RND <- 0
+NAMES <- 'Thndr' 'Lghtn' 'Storm' 'Blaze'
+#
+# Display track for each horse
+del R <- TRACK X
+R <- 0
+I <- 0
+SHOW: R <- (I pick NAMES) cat '|' cat (X[I] rho '#')
+qout <- R
+I <- I + 1
+goto (I < NH)/SHOW
+del
+#
+# Main race function
+del R <- RACE X
+R <- 0
+NEXT: RND <- RND + 1
+qout <- '=== Round ' cat fmt RND
+POS <- POS + roll NH rho 3
+TRACK POS
+LEAD <- ceil/ POS
+qout <- 'Leader at ' cat fmt LEAD
+DONE <- or/ POS >= GOAL
+goto (DONE = 0)/NEXT
+WIN <- (POS >= GOAL) compress iota NH
+NW <- rho WIN
+qout <- 'Race over!'
+goto (NW > 1)/TIE
+qout <- 'Winner: ' cat ((0 pick WIN) pick NAMES)
+goto 0
+TIE: qout <- (fmt NW) cat '-way tie!'
+del
+#
+qout <- '*** HORSE RACE ***'
+Z <- RACE 0
+)OFF

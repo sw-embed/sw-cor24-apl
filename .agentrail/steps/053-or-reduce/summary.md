@@ -1,0 +1,1 @@
+Implemented or/ and and/ reduce operators. Added TOK_AND_OP/TOK_OR_OP internal tokens, extended parser to recognize and/or reserved words with / reduce syntax, added eval_binop_scalar cases using bitwise &/|, and identity elements for empty vectors (or/->0, and/->1). All 10 test cases pass.

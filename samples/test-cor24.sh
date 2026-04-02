@@ -36,7 +36,7 @@ for cor24 in "$DIR"/*.cor24; do
     [[ "$base" == *-pressed* ]] && emu_flags="--switch on"
 
     # Run on emulator, extract output lines (skip banner and prompts)
-    raw=$(cor24-run --run "$PROJECT/build/apl.s" -n 20000000 \
+    raw=$(cor24-run --run "$PROJECT/build/apl.s" --stack-kilobytes 8 -n 20000000 \
         $emu_flags -u "$uart_input" 2>&1 | grep -A1000 "^UART output:" | tail -n +2) || true
 
     # Strip prompt lines, input echo, and emulator status lines
@@ -72,7 +72,7 @@ for cor24 in "$DIR"/*.cor24; do
 done
 
 # Batch mode tests: .a24 files with matching .expected
-for apl in "$DIR"/batch-*.a24; do
+for apl in "$DIR"/batch-*.a24 "$DIR"/horse-race*.a24; do
     [ -f "$apl" ] || continue
     base="$(basename "$apl" .a24)"
     expected="$DIR/${base}.expected"
@@ -84,8 +84,8 @@ for apl in "$DIR"/batch-*.a24; do
         continue
     fi
 
-    # Run in batch mode
-    raw=$(cor24-run --run "$PROJECT/build/apl.s" -n 20000000 \
+    # Run in batch mode (use -s 0 for unlimited speed on complex programs)
+    raw=$(cor24-run --run "$PROJECT/build/apl.s" --stack-kilobytes 8 -s 0 -n 50000000 \
         --load-binary "$apl@0x080000" --patch "0x09FF00=0x080000" \
         2>&1 | grep -A1000 "^UART output:" | tail -n +2) || true
 

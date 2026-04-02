@@ -232,6 +232,7 @@ int eval_fncall(int n) {
     // Execute function body lines
     int fpc = 0;
     int fdone = 0;
+    int fheap_save = 0;
     branch_target = -1;
 
     while (fpc < fn_lines[fi] && !fdone) {
@@ -254,18 +255,25 @@ int eval_fncall(int n) {
         int ntok = tokenize(fexec);
         if (ntok < 0) { eval_err = 1; fdone = 1; continue; }
 
+        // Save heap for temporary reclamation
+        fheap_save = heap_top;
+
         int froot = parse(fexec);
-        if (froot < 0) { eval_err = 1; fdone = 1; continue; }
+        if (froot < 0) { heap_top = fheap_save; eval_err = 1; fdone = 1; continue; }
 
         eval_err = 0;
         branch_target = -1;
         int fres = eval(froot);
 
-        if (eval_err) { fdone = 1; continue; }
+        if (eval_err) { heap_top = fheap_save; fdone = 1; continue; }
 
-        // Print quad output inside functions
+        // Print quad output inside functions, then reclaim
         if (node_type[froot] == NODE_QOUT) {
             print_array(fres);
+            heap_top = fheap_save;
+        } else if (node_type[froot] != NODE_ASSIGN) {
+            // Non-assignment, non-output: reclaim temporaries
+            heap_top = fheap_save;
         }
 
         // Branch handling

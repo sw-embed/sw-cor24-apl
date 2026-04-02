@@ -1,5 +1,26 @@
 # Changelog
 
+## Step 054: Horse Race Demo Programs (2026-04-01)
+
+- Created two horse race APL programs running on the COR24 interpreter:
+  - `horse-race-simple.a24`: 4 horses race to goal, shows position vectors each round
+  - `horse-race.a24`: Full version with named horses, track visualization (using `rho '#'`),
+    leader tracking (`ceil/`), tie detection, and all features from steps 041-053
+- GNU APL reference versions: `25-horse-race-simple.apl` and `26-horse-race.apl`
+- Features demonstrated: roll, fmt, cat, qout, rho on chars, nested arrays, pick, compress,
+  ceil/ (max-reduce), or/ (boolean reduce), comparisons, goto/labels, comments, functions
+- Bug fixes discovered during integration:
+  - Fixed `qrl <- expr` printing result (added NODE_QRL_ASSIGN output suppression in main.c)
+  - Added per-line heap reclamation in function executor (eval.h) — prevents heap exhaustion
+    during complex function loops with string temporaries
+  - Fixed stack overflow on deep recursion (FACT 5) by using 8KB EBR stack in test runner
+- Updated test runner (`test-cor24.sh`):
+  - Added `horse-race*.a24` to batch test glob
+  - Use `--stack-kilobytes 8` for all tests (fixes pre-existing FACT recursion failure)
+  - Use `-s 0` (unlimited speed) for batch tests to avoid time limit issues
+- Expected output files for deterministic verification (seed `qrl <- 42`)
+- Milestone: first complete APL programs running on custom COR24 interpreter
+
 ## Step 053: OR/AND Reduce (2026-04-01)
 
 - Extended reduce operator to support `or/` (logical OR reduce) and `and/` (logical AND reduce)
