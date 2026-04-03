@@ -1,7 +1,7 @@
-A <- 10
-B <- 20
+A assign 10
+B assign 20
 A + B
-X <- iota 5
+X assign iota 5
 +/ X
 2 3 rho iota 6
 )OFF

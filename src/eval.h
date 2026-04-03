@@ -656,17 +656,13 @@ int eval(int n) {
         int res_id = node_val[n];
 
         if (res_id == RES_IOTA) {
-            // iota N: generate vector io_origin .. io_origin+N-1
+            // iota N: lazy vector io_origin .. io_origin+N-1
+            // Only allocates header (4 words), elements computed on access.
             if (arr_rank(v) != 0) { eval_err = 4; return -1; }
             int count = arr_get(v, 0);
             if (count < 0) { eval_err = 1; return -1; }
-            int r = arr_vector(count);
+            int r = arr_iota(count, io_origin);
             if (r < 0) { eval_err = 5; return -1; }
-            int i = 0;
-            while (i < count) {
-                arr_set(r, i, i + io_origin);
-                i++;
-            }
             return r;
         }
 
@@ -1001,6 +997,17 @@ int eval(int n) {
             int count = arr_get(lv, 0);
             int rrk = arr_rank(rv);
 
+            // Lazy iota shortcut: return new lazy iota for the slice
+            if (rrk == 1 && arr_type(rv) == ARR_IOTA) {
+                int sz = arr_size(rv);
+                int abs_n = count;
+                if (abs_n < 0) abs_n = 0 - abs_n;
+                if (abs_n > sz) { eval_err = 3; return -1; }
+                int origin = arr_dim1(rv);
+                if (count < 0) origin = origin + sz - abs_n;
+                return arr_iota(abs_n, origin);
+            }
+
             if (rrk <= 1) {
                 int sz = arr_size(rv);
                 int abs_n = count;
@@ -1048,6 +1055,18 @@ int eval(int n) {
             if (arr_rank(lv) != 0) { eval_err = 4; return -1; }
             int count = arr_get(lv, 0);
             int rrk = arr_rank(rv);
+
+            // Lazy iota shortcut: return new lazy iota for the remainder
+            if (rrk == 1 && arr_type(rv) == ARR_IOTA) {
+                int sz = arr_size(rv);
+                int abs_n = count;
+                if (abs_n < 0) abs_n = 0 - abs_n;
+                if (abs_n > sz) abs_n = sz;
+                int new_sz = sz - abs_n;
+                int origin = arr_dim1(rv);
+                if (count >= 0) origin = origin + abs_n;
+                return arr_iota(new_sz, origin);
+            }
 
             if (rrk <= 1) {
                 int sz = arr_size(rv);

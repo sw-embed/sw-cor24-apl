@@ -69,7 +69,7 @@ embedded interpreter with no display hardware beyond a serial terminal.
 
 | ASCII source | APL glyph | Unicode | Meaning |
 |-------------|-----------|---------|---------|
-| `<-` | `←` | U+2190 | Assignment |
+| `assign` | `←` | U+2190 | Assignment |
 | `rho` | `⍴` | U+2374 | Shape / reshape |
 | `iota` | `⍳` | U+2373 | Index generator |
 | `take` | `↑` | U+2191 | Take first/last N |
@@ -86,6 +86,7 @@ embedded interpreter with no display hardware beyond a serial terminal.
 | `del` | `∇` | U+2207 | Function definition |
 | `roll` | `?` | U+003F | Random number |
 | `fmt` | `⍕` | U+2355 | Format (number to string) |
+| `comment` | `⍝` | U+235D | Comment (rest of line) |
 | `+/` | `+/` | — | Plus-reduce |
 | `-/` | `-/` | — | Minus-reduce |
 | `*/` | `×/` | — | Times-reduce |
@@ -149,9 +150,9 @@ any meaning to `[]` as a token sequence.
 Quad-prefixed system names use `[]` followed immediately by the name:
 
 ```
-      []IO <- 0       set index origin
-      []RL <- 12345   set random seed
-      [] <- 42        bare quad output (print 42)
+      []IO assign 0       set index origin
+      []RL assign 12345   set random seed
+      [] assign 42        bare quad output (print 42)
 ```
 
 The tokenizer handles this naturally: `[]IO` tokenizes as `TOK_QUAD`
@@ -182,7 +183,8 @@ The recommended approach for human-readable APL display is an Emacs
           ("pick"  . ?⊃)
           ("del"   . ?∇)
           ("roll"  . ??)
-          ("<-"    . ?←)
+          ("assign" . ?←)
+          ("comment" . ?⍝)
           ("[]"    . ?⎕)))
   (prettify-symbols-mode 1))
 ```
@@ -190,8 +192,8 @@ The recommended approach for human-readable APL display is an Emacs
 With this mode active, the source:
 
 ```
-A <- 3 4 rho iota 12
-[] <- +/ A
+A assign 3 4 rho iota 12
+[] assign +/ A
 ```
 
 Displays as:

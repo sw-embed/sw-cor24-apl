@@ -68,7 +68,7 @@ Scans input buffer left-to-right, producing a token stream.
 | Identifier     | `[A-Z][A-Z0-9_]*`  | `A`, `FOO`, `MAT1`   |
 | Reserved word  | `[a-z][a-z]*`       | `rho`, `iota`, `take` |
 | Operator       | single char         | `+`, `-`, `*`, `/`   |
-| Assignment     | `<-`                | `A <- 5`              |
+| Assignment     | `assign`            | `A assign 5`          |
 | Parens         | `(`, `)`            | grouping              |
 | Slash-op       | `+/`, `*/`, etc.    | reduce operators      |
 | Separator      | newline / EOL       | end of expression     |
@@ -221,7 +221,7 @@ Maximum ~64 variables initially. Sufficient for interactive use.
 ## Data Flow
 
 ```
-Input: "A <- 2 3 rho iota 6"
+Input: "A assign 2 3 rho iota 6"
 
 1. Tokenize: [IDENT:A] [ASSIGN] [NUM:2] [NUM:3] [RHO] [IOTA] [NUM:6]
 

@@ -33,9 +33,9 @@ for user identifiers.
 
 **Examples:**
 ```
-A <- iota 10
-B <- 2 5 rho A
-C <- +/ B
+A assign iota 10
+B assign 2 5 rho A
+C assign +/ B
 ```
 
 ### D3: Right-to-Left Evaluation (No Precedence)

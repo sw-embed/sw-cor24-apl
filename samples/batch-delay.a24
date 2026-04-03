@@ -1,15 +1,15 @@
-qout <- 'start'
+qout assign 'start'
 qdl 100
-qout <- 'after 100ms'
+qout assign 'after 100ms'
 qdl 50
-qout <- 'after 50ms'
-N <- 200
+qout assign 'after 50ms'
+N assign 200
 qdl N
-qout <- 'after 200ms'
-del R <- PAUSE X
+qout assign 'after 200ms'
+del R assign PAUSE X
 qdl X
-R <- 0
+R assign 0
 del
-qout <- 'fn delay'
+qout assign 'fn delay'
 PAUSE 100
-qout <- 'done'
+qout assign 'done'

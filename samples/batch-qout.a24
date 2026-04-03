@@ -1,13 +1,13 @@
-qout <- 42
-qout <- 1 2 3
-qout <- 'hello'
-A <- 10
-qout <- A + 5
-qout <- iota 5
-[] <- 99
-del R <- SHOW X
-R <- X
-qout <- 'value:'
-qout <- X
+qout assign 42
+qout assign 1 2 3
+qout assign 'hello'
+A assign 10
+qout assign A + 5
+qout assign iota 5
+[] assign 99
+del R assign SHOW X
+R assign X
+qout assign 'value:'
+qout assign X
 del
 SHOW 7

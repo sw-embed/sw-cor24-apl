@@ -1,11 +1,11 @@
-qrl <- 42
+qrl assign 42
 roll 6
 roll 6
 roll 6
 roll 10
 roll 100
 roll 6 6 6 6
-qrl <- 42
+qrl assign 42
 roll 6
 roll 6
 roll 6

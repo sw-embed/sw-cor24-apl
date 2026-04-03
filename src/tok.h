@@ -13,7 +13,7 @@
 #define TOK_SLASH   6   // /
 #define TOK_LPAREN  7   // (
 #define TOK_RPAREN  8   // )
-#define TOK_ASSIGN  9   // <-
+#define TOK_ASSIGN  9   // assign (APL ←)
 #define TOK_RES    10   // reserved word (ID in tok_val)
 #define TOK_QUAD   11   // quad ([] — bare quad for I/O)
 #define TOK_QLED   12   // qled — LED D2 hardware I/O
@@ -165,10 +165,7 @@ int tokenize(char *line) {
             continue;
         }
 
-        // Comment: # skips to end of line
-        if (line[i] == 35) {
-            break;
-        }
+        // Comment handled below as reserved word "comment"
 
         // Number: digits, or underscore followed by digit (APL negative)
         if (is_digit(line[i]) || (line[i] == 95 && is_digit(line[i + 1]))) {
@@ -253,6 +250,23 @@ int tokenize(char *line) {
                 t++;
                 i = i + 3;
                 continue;
+            }
+
+            // Assignment: "assign" (APL ←)
+            len = str_match(line, i, "assign");
+            if (len == 6 && !is_alnum(line[i + 6])) {
+                tok_type[t] = TOK_ASSIGN;
+                tok_pos[t] = i;
+                tok_val[t] = 0;
+                t++;
+                i = i + 6;
+                continue;
+            }
+
+            // Comment: "comment" skips to end of line (APL ⍝)
+            len = str_match(line, i, "comment");
+            if (len == 7 && !is_alnum(line[i + 7])) {
+                break;
             }
 
             len = str_match(line, i, "goto");
@@ -340,16 +354,6 @@ int tokenize(char *line) {
             continue;
         }
 
-        // Assignment: <-
-        if (line[i] == 60 && line[i + 1] == 45) {
-            tok_type[t] = TOK_ASSIGN;
-            tok_pos[t] = i;
-            tok_val[t] = 0;
-            t++;
-            i = i + 2;
-            continue;
-        }
-
         // Comparison operators: = != >= <= > <
         // 61 '='  33 '!'  62 '>'  60 '<'
         if (line[i] == 61) { tok_type[t] = TOK_EQ; tok_pos[t] = i; tok_val[t] = 0; t++; i++; continue; }
@@ -405,7 +409,7 @@ void tok_dump(char *line) {
           else if (ty == TOK_SLASH)  { putchar(47); }
           else if (ty == TOK_LPAREN) { putchar(40); }
           else if (ty == TOK_RPAREN) { putchar(41); }
-          else if (ty == TOK_ASSIGN) { io_print("<-"); }
+          else if (ty == TOK_ASSIGN) { io_print("assign"); }
 
         if (tok_type[i + 1] != TOK_EOL || ty == TOK_EOL) {
             // nothing

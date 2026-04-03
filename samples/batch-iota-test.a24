@@ -1,0 +1,5 @@
+comment Lazy iota: iota N uses only 4 heap words regardless of N
+comment No WS FULL even with huge arguments
+rho iota 999999
+5 take iota 999999
+5 take 5 drop iota 999999

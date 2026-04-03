@@ -2,7 +2,7 @@
 'world'
 'A'
 ''
-A <- 'test'
+A assign 'test'
 A
 rho 'hello'
 rho 'A'

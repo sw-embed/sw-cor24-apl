@@ -94,10 +94,11 @@ int parse_fn_header(char *s, int fi) {
     int result_sym = sym_lookup(s, result_pos);
     if (result_sym < 0) return 0;
 
-    // Skip spaces, expect <-
+    // Skip spaces, expect "assign"
     while (s[i] == 32) i++;
-    if (s[i] != 60 || s[i + 1] != 45) return 0;  // '<' '-'
-    i = i + 2;
+    if (str_match(s, i, "assign") != 6) return 0;
+    if (is_alnum(s[i + 6])) return 0;
+    i = i + 6;
     while (s[i] == 32) i++;
 
     // Read remaining identifiers (2 = monadic, 3 = dyadic)

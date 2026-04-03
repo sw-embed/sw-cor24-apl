@@ -1,5 +1,5 @@
-del R <- DOUBLE X
-R <- X + X
+del R assign DOUBLE X
+R assign X + X
 del
 DOUBLE 7
 DOUBLE iota 4

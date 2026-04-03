@@ -1,4 +1,4 @@
-A <- 10
+A assign 10
 A + 1
 @bad
 X

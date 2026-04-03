@@ -1,15 +1,15 @@
-# or/ reduce tests
-qout <- or/ 0 0 1 0
-qout <- or/ 0 0 0 0
-qout <- or/ 1 1 1 1
-# and/ reduce tests
-qout <- and/ 1 1 1 1
-qout <- and/ 1 1 0 1
-qout <- and/ 0 0 0 0
-# mixed with expressions
-A <- 0 1 0 1
-qout <- or/ A
-qout <- and/ A
-# single element
-qout <- or/ 1
-qout <- and/ 0
+comment or/ reduce tests
+qout assign or/ 0 0 1 0
+qout assign or/ 0 0 0 0
+qout assign or/ 1 1 1 1
+comment and/ reduce tests
+qout assign and/ 1 1 1 1
+qout assign and/ 1 1 0 1
+qout assign and/ 0 0 0 0
+comment mixed with expressions
+A assign 0 1 0 1
+qout assign or/ A
+qout assign and/ A
+comment single element
+qout assign or/ 1
+qout assign and/ 0

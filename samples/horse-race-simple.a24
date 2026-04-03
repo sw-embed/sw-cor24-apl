@@ -1,28 +1,28 @@
-# Horse Race -- Simple Version
-# 4 horses race to a finish line
-# Demonstrates: roll, fmt, cat, qout, comparisons, or/, goto, labels
-#
-qio <- 0
-qrl <- 42
-NH <- 4
-GOAL <- 10
-POS <- NH rho 0
-RND <- 0
-#
-del R <- RACE X
-R <- 0
-NEXT: RND <- RND + 1
-qout <- 'Round ' cat fmt RND
-POS <- POS + roll NH rho 3
-qout <- POS
-DONE <- or/ POS >= GOAL
+comment Horse Race -- Simple Version
+comment 4 horses race to a finish line
+comment Demonstrates: roll, fmt, cat, qout, comparisons, or/, goto, labels
+comment
+qio assign 0
+qrl assign 42
+NH assign 4
+GOAL assign 10
+POS assign NH rho 0
+RND assign 0
+comment
+del R assign RACE X
+R assign 0
+NEXT: RND assign RND + 1
+qout assign 'Round ' cat fmt RND
+POS assign POS + roll NH rho 3
+qout assign POS
+DONE assign or/ POS >= GOAL
 goto (DONE = 0)/NEXT
-WIN <- (POS >= GOAL) compress iota NH
-qout <- 'Winner: horse ' cat fmt (1 + 0 pick WIN)
+WIN assign (POS >= GOAL) compress iota NH
+qout assign 'Winner: horse ' cat fmt (1 + 0 pick WIN)
 del
-#
-qout <- '--- Horse Race ---'
-Z <- RACE 0
-qout <- 'Final positions:'
-qout <- POS
+comment
+qout assign '--- Horse Race ---'
+Z assign RACE 0
+qout assign 'Final positions:'
+qout assign POS
 )OFF

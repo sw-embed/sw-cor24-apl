@@ -17,6 +17,7 @@
 #define ARR_NUM   0
 #define ARR_CHAR  1
 #define ARR_BOXED 2
+#define ARR_IOTA  3
 
 int heap[HEAP_SIZE];
 int heap_top;
@@ -71,6 +72,7 @@ int arr_size(int idx) {
 
 // Get/set data element by flat index
 int arr_get(int idx, int i) {
+    if (heap[idx + 3] == ARR_IOTA) return heap[idx + 2] + i;
     return heap[idx + ARR_HDR + i];
 }
 
@@ -89,4 +91,17 @@ int arr_scalar(int val) {
 // Create a vector from inline values (up to count elements)
 int arr_vector(int count) {
     return arr_new(1, count, 0);
+}
+
+// Create a lazy iota vector: stores only (count, origin), no data.
+// arr_get computes elements on-the-fly as origin + i.
+int arr_iota(int count, int origin) {
+    if (heap_top + ARR_HDR > HEAP_SIZE) return -1;
+    int idx = heap_top;
+    heap[idx]     = 1;
+    heap[idx + 1] = count;
+    heap[idx + 2] = origin;
+    heap[idx + 3] = ARR_IOTA;
+    heap_top = heap_top + ARR_HDR;
+    return idx;
 }
