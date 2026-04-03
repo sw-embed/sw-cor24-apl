@@ -1,0 +1,9 @@
+comment quad-seed: PRNG seed system variable (APL quad-RL)
+quad-seed assign 42
+quad assign quad-seed
+quad assign roll 6
+quad assign roll 6
+comment reseed to same value gives same sequence
+quad-seed assign 42
+quad assign roll 6
+quad assign roll 6

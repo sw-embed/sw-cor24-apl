@@ -1,0 +1,11 @@
+comment quad-origin: index origin system variable (APL quad-IO)
+comment default is 1-origin
+quad assign quad-origin
+quad assign iota 5
+comment switch to 0-origin
+quad-origin assign 0
+quad assign quad-origin
+quad assign iota 5
+comment restore 1-origin
+quad-origin assign 1
+quad assign iota 5
