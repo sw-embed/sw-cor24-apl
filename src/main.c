@@ -400,14 +400,8 @@ int main() {
                             result < heap_save) {
                             heap_top = heap_save;
                         }
-                    } else if (node_type[root] == NODE_QLED_ASSIGN) {
-                        // Quad LED assignment: no output
-                        heap_top = heap_save;
                     } else if (node_type[root] == NODE_SVO_WRITE) {
                         // Shared variable indexed write: no output
-                        heap_top = heap_save;
-                    } else if (node_type[root] == NODE_QDL) {
-                        // Delay: no output
                         heap_top = heap_save;
                     } else if (node_type[root] == NODE_QRL_ASSIGN) {
                         // Quad RL assignment: no output

@@ -1,15 +1,2 @@
-qout assign 'start'
-qdl 100
-qout assign 'after 100ms'
-qdl 50
-qout assign 'after 50ms'
-N assign 200
-qdl N
-qout assign 'after 200ms'
-del R assign PAUSE X
-qdl X
-R assign 0
-del
-qout assign 'fn delay'
-PAUSE 100
-qout assign 'done'
+comment Delay (quad-dl) removed: COR24-TB has no hardware clock
+comment This sample will be restored when timer hardware is available

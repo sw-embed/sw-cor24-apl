@@ -1,35 +1,46 @@
-────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-❯ why does RACE take an argument (that it does not use) I expect "RACE" enter to work.  Why does the example require "RACE 0" to work?
-  Don't we support nilidac, monadic, and dyadic functions?  Also the original uses ;POS when declaring which is a local var, right?
-  why do we not support that?  Are these issues addressed by pending steps in the saga?
-─
-Here's the answer:
+# Missing Features and Deferred Work
 
-  Why RACE 0 instead of just RACE?
+## Planned (in saga)
 
-  The COR24 interpreter only supports monadic (del R <- FN X) and dyadic (del R <- X FN Y) functions. Niladic functions are not
-  implemented. The function header parser in fn.h expects exactly 2 or 3 uppercase identifiers after <- — 1 identifier (function name
-  alone) is rejected. So the horse race demos use Z <- RACE 0 as a workaround, passing a dummy argument.
+### Step 058: Niladic Functions
+The interpreter only supports monadic (`del R assign FN X`) and dyadic
+(`del R assign X FN Y`) functions. Niladic functions (`del R assign FN`
+with no argument) are not implemented. Horse race demos use
+`Z assign RACE 0` as a workaround.
 
-  Why no ;POS local variables?
+### Step 059: Local Variables
+The semicolon local-variable syntax (`del R assign FN X;LOCAL1;LOCAL2`)
+is not implemented. All variables inside functions are currently global.
+Only result, right arg, and left arg are saved/restored on the call stack.
 
-  The semicolon local-variable syntax (∇ R ← RACE;POS;RND) is also not implemented. The header parser stops at the first non-uppercase
-  character — it doesn't look for or handle semicolons. All variables inside functions are currently global — only the result, right
-  arg, and left arg are saved/restored on the call stack.
+## Deferred (requires hardware or library support)
 
-  This means the horse race programs pollute the global workspace with POS, RND, LEAD, etc. It works, but it's not proper APL scoping.
+### Domino (⌹) — Matrix Divide / Inverse
+APL's domino operator provides:
+- **Monadic**: matrix inverse (`⌹M`)
+- **Dyadic**: linear equation solver (`B⌹A` solves Ax=B)
+- Over-determined systems use least-squares fitting
 
-  Is this in the saga?
+**Requirements:**
+- Floating-point arithmetic (software float library or FPU)
+- Gaussian elimination or Householder transformation algorithm
+- Inner product operator (`+.×`) for matrix multiplication
+- Matrix transpose
 
-  The sw-cor24-apl saga plan mentions "Local variables" and "Recursive calls" as planned features under the function definition phase,
-  but both were left unimplemented — the saga completed without them. Niladic functions aren't mentioned at all in the plan. Both sagas
-  (sw-cor24-apl and web-sw-cor24-apl) are marked complete.
+**Status:** Deferred until a software floating-point library is available
+for COR24. Integer-only matrix operations are insufficient for meaningful
+linear algebra — domino results are almost always non-integer.
 
-  These would need new saga steps in sw-cor24-apl to address:
-  1. Niladic functions — allow del R <- FN with no argument, callable as just FN
-  2. Local variables — parse ;VAR1;VAR2 in headers, save/restore them on the call stack
+### Delay (⎕DL)
+APL's `⎕DL N` pauses execution for N seconds. Previously implemented as
+`qdl` using a calibrated spin loop, but removed because COR24-TB has no
+hardware clock or timer. Will be re-added when the next hardware revision
+(or emulator mode) provides a timer peripheral.
 
-  Want me to add these as planned steps to the sw-cor24-apl saga?
+### Matrix Transpose
+Monadic `⍉` (circle-backslash) transposes rows and columns. Not yet
+implemented. Prerequisite for domino.
 
-✻ Baked for 1m 47s
-
+### Inner Product
+The `f.g` operator (e.g., `+.×` for matrix multiplication) is needed
+for linear algebra. Not yet implemented. Prerequisite for domino.

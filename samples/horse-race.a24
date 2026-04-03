@@ -1,10 +1,10 @@
 comment Horse Race -- Full Version
 comment 4 named horses race with track visualization
 comment Demonstrates: nested arrays, pick, roll, fmt, cat, rho on chars,
-comment   qout, ceil/, compress, comparisons, or/, and/, goto, labels
+comment   quad, ceil/, compress, comparisons, or/, and/, goto, labels
 comment
-qio assign 0
-qrl assign 42
+quad-origin assign 0
+quad-seed assign 42
 NH assign 4
 GOAL assign 15
 POS assign NH rho 0
@@ -16,7 +16,7 @@ del R assign TRACK X
 R assign 0
 I assign 0
 SHOW: R assign (I pick NAMES) cat '|' cat (X[I] rho '#')
-qout assign R
+quad assign R
 I assign I + 1
 goto (I < NH)/SHOW
 del
@@ -25,22 +25,22 @@ comment Main race function
 del R assign RACE X
 R assign 0
 NEXT: RND assign RND + 1
-qout assign '=== Round ' cat fmt RND
+quad assign '=== Round ' cat fmt RND
 POS assign POS + roll NH rho 3
 TRACK POS
 LEAD assign ceil/ POS
-qout assign 'Leader at ' cat fmt LEAD
+quad assign 'Leader at ' cat fmt LEAD
 DONE assign or/ POS >= GOAL
 goto (DONE = 0)/NEXT
 WIN assign (POS >= GOAL) compress iota NH
 NW assign rho WIN
-qout assign 'Race over!'
+quad assign 'Race over!'
 goto (NW > 1)/TIE
-qout assign 'Winner: ' cat ((0 pick WIN) pick NAMES)
+quad assign 'Winner: ' cat ((0 pick WIN) pick NAMES)
 goto 0
-TIE: qout assign (fmt NW) cat '-way tie!'
+TIE: quad assign (fmt NW) cat '-way tie!'
 del
 comment
-qout assign '*** HORSE RACE ***'
+quad assign '*** HORSE RACE ***'
 Z assign RACE 0
 )OFF

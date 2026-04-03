@@ -1,9 +1,9 @@
 comment Horse Race -- Simple Version
 comment 4 horses race to a finish line
-comment Demonstrates: roll, fmt, cat, qout, comparisons, or/, goto, labels
+comment Demonstrates: roll, fmt, cat, quad, comparisons, or/, goto, labels
 comment
-qio assign 0
-qrl assign 42
+quad-origin assign 0
+quad-seed assign 42
 NH assign 4
 GOAL assign 10
 POS assign NH rho 0
@@ -12,17 +12,17 @@ comment
 del R assign RACE X
 R assign 0
 NEXT: RND assign RND + 1
-qout assign 'Round ' cat fmt RND
+quad assign 'Round ' cat fmt RND
 POS assign POS + roll NH rho 3
-qout assign POS
+quad assign POS
 DONE assign or/ POS >= GOAL
 goto (DONE = 0)/NEXT
 WIN assign (POS >= GOAL) compress iota NH
-qout assign 'Winner: horse ' cat fmt (1 + 0 pick WIN)
+quad assign 'Winner: horse ' cat fmt (1 + 0 pick WIN)
 del
 comment
-qout assign '--- Horse Race ---'
+quad assign '--- Horse Race ---'
 Z assign RACE 0
-qout assign 'Final positions:'
-qout assign POS
+quad assign 'Final positions:'
+quad assign POS
 )OFF

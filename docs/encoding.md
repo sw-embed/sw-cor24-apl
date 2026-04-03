@@ -95,11 +95,10 @@ embedded interpreter with no display hardware beyond a serial terminal.
 
 | ASCII source | APL glyph | Unicode | Meaning |
 |-------------|-----------|---------|---------|
-| `[]` | `⎕` | U+2395 | Bare quad (I/O) |
-| `[]IO` | `⎕IO` | — | Index origin |
-| `[]RL` | `⎕RL` | — | Random link (seed) |
-| `qdl` | `⎕DL` | — | Delay N milliseconds |
-| `[]SVO` | `⎕SVO` | — | Shared variable offer |
+| `quad` | `⎕` | U+2395 | Bare quad (I/O) |
+| `quad-origin` | `⎕IO` | — | Index origin |
+| `quad-seed` | `⎕RL` | — | Random link (seed) |
+| `qsvo` | `⎕SVO` | — | Shared variable offer |
 
 ### Identifiers
 
@@ -138,26 +137,19 @@ In standard APL, bracket indexing always contains an expression:
 **Empty brackets `[]` have no meaning in standard APL indexing.**
 The parser distinguishes them trivially:
 
-- `[]` : tokenizer sees `[` immediately followed by `]` -> `TOK_QUAD`
-- `[expr]` : tokenizer sees `[` followed by non-`]` -> `TOK_LBRACKET`
-  (future, for bracket indexing step 033)
-
-GNU APL uses the Unicode `⎕` character directly and does not assign
-any meaning to `[]` as a token sequence.
-
 ### Quad variable syntax
 
-Quad-prefixed system names use `[]` followed immediately by the name:
+Quad and its system variables are lowercase keywords:
 
 ```
-      []IO assign 0       set index origin
-      []RL assign 12345   set random seed
-      [] assign 42        bare quad output (print 42)
+      quad-origin assign 0       set index origin
+      quad-seed assign 12345     set random seed
+      quad assign 42             bare quad output (print 42)
 ```
 
-The tokenizer handles this naturally: `[]IO` tokenizes as `TOK_QUAD`
-followed by `TOK_IDENT(IO)`. The parser combines them into a system
-variable reference.
+The tokenizer matches compound keywords (`quad-origin`, `quad-seed`)
+before the bare `quad` keyword, using longest-match-first ordering.
+The hyphen is part of the keyword, not the minus operator.
 
 ---
 
@@ -185,7 +177,9 @@ The recommended approach for human-readable APL display is an Emacs
           ("roll"  . ??)
           ("assign" . ?←)
           ("comment" . ?⍝)
-          ("[]"    . ?⎕)))
+          ("quad"  . ?⎕)
+          ("quad-origin" . ?⎕IO)
+          ("quad-seed" . ?⎕RL)))
   (prettify-symbols-mode 1))
 ```
 
@@ -193,7 +187,7 @@ With this mode active, the source:
 
 ```
 A assign 3 4 rho iota 12
-[] assign +/ A
+quad assign +/ A
 ```
 
 Displays as:

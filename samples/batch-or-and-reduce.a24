@@ -1,15 +1,15 @@
 comment or/ reduce tests
-qout assign or/ 0 0 1 0
-qout assign or/ 0 0 0 0
-qout assign or/ 1 1 1 1
+quad assign or/ 0 0 1 0
+quad assign or/ 0 0 0 0
+quad assign or/ 1 1 1 1
 comment and/ reduce tests
-qout assign and/ 1 1 1 1
-qout assign and/ 1 1 0 1
-qout assign and/ 0 0 0 0
+quad assign and/ 1 1 1 1
+quad assign and/ 1 1 0 1
+quad assign and/ 0 0 0 0
 comment mixed with expressions
 A assign 0 1 0 1
-qout assign or/ A
-qout assign and/ A
+quad assign or/ A
+quad assign and/ A
 comment single element
-qout assign or/ 1
-qout assign and/ 0
+quad assign or/ 1
+quad assign and/ 0

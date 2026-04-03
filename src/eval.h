@@ -13,7 +13,6 @@ int branch_target;
 
 // Shadow register for LED D2 (0xFF0000 is write-only for LEDs)
 // Stores the user-visible value (1=on, 0=off), not the raw active-low bit
-int qled_shadow;
 
 // Index origin (□IO): 0 or 1, affects iota generation
 // Default 1 = standard APL (iota N → 1 2 ... N)
@@ -415,33 +414,6 @@ int eval(int n) {
         return v;
     }
 
-    if (ty == NODE_QLED) {
-        // Read LED D2 from shadow register (1=on, 0=off)
-        int r = arr_scalar(qled_shadow);
-        if (r < 0) { eval_err = 5; return -1; }
-        return r;
-    }
-
-    if (ty == NODE_QSW) {
-        // Read switch S2: bit 0 of 0xFF0000, inverted (1=pressed, 0=released)
-        int raw = *(char *)0xFF0000;
-        int val = (raw ^ 1) & 1;
-        int r = arr_scalar(val);
-        if (r < 0) { eval_err = 5; return -1; }
-        return r;
-    }
-
-    if (ty == NODE_QLED_ASSIGN) {
-        int v = eval(node_right[n]);
-        if (eval_err) return -1;
-        if (arr_rank(v) != 0) { eval_err = 4; return -1; }
-        int val = arr_get(v, 0) & 1;
-        qled_shadow = val;
-        // Write LED D2: invert bit 0 (active-low: 1=on writes 0)
-        *(char *)0xFF0000 = val ^ 1;
-        return v;
-    }
-
     if (ty == NODE_QRL) {
         // Read PRNG seed
         int r = arr_scalar(lcg_seed);
@@ -471,20 +443,6 @@ int eval(int n) {
         int val = arr_get(v, 0);
         if (val != 0 && val != 1) { eval_err = 1; return -1; }
         io_origin = val;
-        return v;
-    }
-
-    if (ty == NODE_QDL) {
-        int v = eval(node_right[n]);
-        if (eval_err) return -1;
-        if (arr_rank(v) != 0) { eval_err = 4; return -1; }
-        int ms = arr_get(v, 0);
-        if (ms > 0) {
-            // Calibrated spin loop: ~100 iterations per ms on COR24 emulator
-            int loops = ms * 100;
-            int i = 0;
-            while (i < loops) { i++; }
-        }
         return v;
     }
 

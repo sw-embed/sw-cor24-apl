@@ -15,13 +15,11 @@
 #define TOK_RPAREN  8   // )
 #define TOK_ASSIGN  9   // assign (APL ←)
 #define TOK_RES    10   // reserved word (ID in tok_val)
-#define TOK_QUAD   11   // quad ([] — bare quad for I/O)
-#define TOK_QLED   12   // qled — LED D2 hardware I/O
-#define TOK_QSW    13   // qsw — switch S2 hardware I/O (read-only)
-#define TOK_QSVO   14   // qsvo — shared variable offer (□SVO)
+#define TOK_QUAD   11   // quad — bare quad I/O (APL ⎕)
+#define TOK_QSVO   14   // qsvo — shared variable offer (APL ⎕SVO)
 #define TOK_LBRAK  15   // [ (bracket index open)
 #define TOK_RBRAK  16   // ] (bracket index close)
-#define TOK_GOTO   17   // goto — branch (→)
+#define TOK_GOTO   17   // goto — branch (APL →)
 #define TOK_STRING 18   // string literal 'ABC' (pos of first char in tok_val)
 #define TOK_EQ     19   // =
 #define TOK_NE     20   // !=
@@ -31,12 +29,10 @@
 #define TOK_GE     24   // >=
 #define TOK_CEIL   25   // ceil (max) — internal only, used in reduce nodes
 #define TOK_FLOOR  26   // floor (min) — internal only, used in reduce nodes
-#define TOK_QRL    27   // qrl — random link seed (□RL)
-#define TOK_QOUT   28   // qout — quad output (□ <- expr)
-#define TOK_QDL    29   // qdl — delay N milliseconds (□DL)
+#define TOK_QRL    27   // quad-seed — PRNG seed (APL ⎕RL)
 #define TOK_AND_OP 30   // and — internal only, used in reduce nodes
 #define TOK_OR_OP  31   // or — internal only, used in reduce nodes
-#define TOK_QIO    32   // qio — index origin (□IO)
+#define TOK_QIO    32   // quad-origin — index origin (APL ⎕IO)
 
 // Reserved word IDs
 #define RES_RHO     0
@@ -94,6 +90,11 @@ int is_digit(int ch) {
 // Check if character is alphanumeric or underscore
 int is_alnum(int ch) {
     return is_lower(ch) || is_upper(ch) || is_digit(ch);
+}
+
+// Check if character is alphanumeric or hyphen (for compound keywords like quad-origin)
+int is_alnum_h(int ch) {
+    return is_alnum(ch) || ch == 45;
 }
 
 // ---- Reserved word lookup ----
@@ -178,13 +179,35 @@ int tokenize(char *line) {
             continue;
         }
 
-        // Lowercase letter: quad variables, reserved word, or unknown
+        // Lowercase letter: keywords, quad variables, reserved words
         if (is_lower(line[i])) {
-            // Check for quad variables first
             int len;
-            len = str_match(line, i, "qled");
-            if (len == 4 && !is_alnum(line[i + 4])) {
-                tok_type[t] = TOK_QLED;
+
+            // Quad system variables (hyphenated compound keywords)
+            len = str_match(line, i, "quad-origin");
+            if (len == 11 && !is_alnum_h(line[i + 11])) {
+                tok_type[t] = TOK_QIO;
+                tok_pos[t] = i;
+                tok_val[t] = 0;
+                t++;
+                i = i + 11;
+                continue;
+            }
+
+            len = str_match(line, i, "quad-seed");
+            if (len == 9 && !is_alnum_h(line[i + 9])) {
+                tok_type[t] = TOK_QRL;
+                tok_pos[t] = i;
+                tok_val[t] = 0;
+                t++;
+                i = i + 9;
+                continue;
+            }
+
+            // Bare quad I/O (APL ⎕)
+            len = str_match(line, i, "quad");
+            if (len == 4 && !is_alnum_h(line[i + 4])) {
+                tok_type[t] = TOK_QUAD;
                 tok_pos[t] = i;
                 tok_val[t] = 0;
                 t++;
@@ -192,16 +215,7 @@ int tokenize(char *line) {
                 continue;
             }
 
-            len = str_match(line, i, "qsw");
-            if (len == 3 && !is_alnum(line[i + 3])) {
-                tok_type[t] = TOK_QSW;
-                tok_pos[t] = i;
-                tok_val[t] = 0;
-                t++;
-                i = i + 3;
-                continue;
-            }
-
+            // Shared variable offer (APL ⎕SVO)
             len = str_match(line, i, "qsvo");
             if (len == 4 && !is_alnum(line[i + 4])) {
                 tok_type[t] = TOK_QSVO;
@@ -209,46 +223,6 @@ int tokenize(char *line) {
                 tok_val[t] = 0;
                 t++;
                 i = i + 4;
-                continue;
-            }
-
-            len = str_match(line, i, "qrl");
-            if (len == 3 && !is_alnum(line[i + 3])) {
-                tok_type[t] = TOK_QRL;
-                tok_pos[t] = i;
-                tok_val[t] = 0;
-                t++;
-                i = i + 3;
-                continue;
-            }
-
-            len = str_match(line, i, "qout");
-            if (len == 4 && !is_alnum(line[i + 4])) {
-                tok_type[t] = TOK_QOUT;
-                tok_pos[t] = i;
-                tok_val[t] = 0;
-                t++;
-                i = i + 4;
-                continue;
-            }
-
-            len = str_match(line, i, "qdl");
-            if (len == 3 && !is_alnum(line[i + 3])) {
-                tok_type[t] = TOK_QDL;
-                tok_pos[t] = i;
-                tok_val[t] = 0;
-                t++;
-                i = i + 3;
-                continue;
-            }
-
-            len = str_match(line, i, "qio");
-            if (len == 3 && !is_alnum(line[i + 3])) {
-                tok_type[t] = TOK_QIO;
-                tok_pos[t] = i;
-                tok_val[t] = 0;
-                t++;
-                i = i + 3;
                 continue;
             }
 
@@ -326,23 +300,13 @@ int tokenize(char *line) {
         if (line[i] == 40) { tok_type[t] = TOK_LPAREN; tok_pos[t] = i; tok_val[t] = 0; t++; i++; continue; }
         if (line[i] == 41) { tok_type[t] = TOK_RPAREN; tok_pos[t] = i; tok_val[t] = 0; t++; i++; continue; }
 
-        // Quad: [] (IBM 5100 ASCII convention for ⎕) or bracket indexing [expr]
+        // Bracket indexing: [expr]
         if (line[i] == 91) {
-            if (line[i + 1] == 93) {
-                // [] = quad
-                tok_type[t] = TOK_QUAD;
-                tok_pos[t] = i;
-                tok_val[t] = 0;
-                t++;
-                i = i + 2;
-            } else {
-                // [ = bracket index open
-                tok_type[t] = TOK_LBRAK;
-                tok_pos[t] = i;
-                tok_val[t] = 0;
-                t++;
-                i++;
-            }
+            tok_type[t] = TOK_LBRAK;
+            tok_pos[t] = i;
+            tok_val[t] = 0;
+            t++;
+            i++;
             continue;
         }
         if (line[i] == 93) {

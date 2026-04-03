@@ -17,20 +17,16 @@
 #define NODE_DYAD   7   // dyadic primitive (val = RES_xxx, left/right = args)
 #define NODE_REDUCE 8   // reduce operator (val = op tok type, right = operand)
 #define NODE_QOUT   9   // quad output (right = expr to print)
-#define NODE_QLED  10   // qled read (no children)
-#define NODE_QLED_ASSIGN 11  // qled <- expr (right = expr)
-#define NODE_QSW   12   // qsw read (no children, read-only)
 #define NODE_QSVO  13   // shared variable offer (val = sym index, right = AP expr)
 #define NODE_SVO_READ  14   // shared var indexed read (val = sym index, right = index expr)
 #define NODE_SVO_WRITE 15  // shared var indexed write (val = sym index, left = index, right = value)
 #define NODE_GOTO  16   // unconditional branch (right = target expr)
 #define NODE_CGOTO 17   // conditional branch (left = cond, right = target)
 #define NODE_FNCALL 18  // user function call (val = fn index, left = left arg/-1, right = right arg)
-#define NODE_QRL   19   // qrl read (no children — returns PRNG seed)
-#define NODE_QRL_ASSIGN 20  // qrl <- expr (right = expr — sets PRNG seed)
-#define NODE_QDL   21   // qdl expr (right = delay ms expr)
-#define NODE_QIO   22   // qio read (no children — returns index origin)
-#define NODE_QIO_ASSIGN 23  // qio <- expr (right = expr — sets index origin)
+#define NODE_QRL   19   // quad-seed read (no children — returns PRNG seed)
+#define NODE_QRL_ASSIGN 20  // quad-seed assign expr (right = expr — sets PRNG seed)
+#define NODE_QIO   22   // quad-origin read (no children — returns index origin)
+#define NODE_QIO_ASSIGN 23  // quad-origin assign expr (right = expr — sets index origin)
 
 #define AST_MAX 64
 
@@ -147,7 +143,7 @@ int is_binop(int ty) {
 int can_start_expr(int pos) {
     int ty = tok_type[pos];
     if (ty == TOK_NUM || ty == TOK_LPAREN || ty == TOK_IDENT ||
-        ty == TOK_MINUS || ty == TOK_RES || ty == TOK_QLED || ty == TOK_QSW ||
+        ty == TOK_MINUS || ty == TOK_RES ||
         ty == TOK_QRL || ty == TOK_QIO || ty == TOK_STRING) return 1;
     if (is_binop(ty) && tok_type[pos + 1] == TOK_SLASH) return 1;  // reduce
     return 0;
@@ -195,16 +191,6 @@ int parse_node(int mode) {
             parse_err = 1;
             return 0;
         }
-        parse_pos++;
-    } else if (ty == TOK_QLED) {
-        int n = ast_new();
-        node_type[n] = NODE_QLED;
-        left = n;
-        parse_pos++;
-    } else if (ty == TOK_QSW) {
-        int n = ast_new();
-        node_type[n] = NODE_QSW;
-        left = n;
         parse_pos++;
     } else if (ty == TOK_QRL) {
         int n = ast_new();
@@ -398,24 +384,7 @@ int parse(char *line) {
     parse_err = 0;
     parse_line = line;
 
-    // Check for qled assignment: qled <- expr
-    if (tok_type[0] == TOK_QLED && tok_type[1] == TOK_ASSIGN) {
-        parse_pos = 2;
-        int expr = parse_node(0);
-        if (parse_err) return -1;
-        if (tok_type[parse_pos] != TOK_EOL) return -1;
-        int n = ast_new();
-        node_type[n] = NODE_QLED_ASSIGN;
-        node_right[n] = expr;
-        return n;
-    }
-
-    // Check for qsw assignment: qsw is read-only, reject with SYNTAX ERROR
-    if (tok_type[0] == TOK_QSW && tok_type[1] == TOK_ASSIGN) {
-        return -1;
-    }
-
-    // Check for qrl assignment: qrl <- expr (set PRNG seed)
+    // Check for quad-seed assignment: quad-seed assign expr (set PRNG seed)
     if (tok_type[0] == TOK_QRL && tok_type[1] == TOK_ASSIGN) {
         parse_pos = 2;
         int expr = parse_node(0);
@@ -427,7 +396,7 @@ int parse(char *line) {
         return n;
     }
 
-    // Check for qio assignment: qio <- expr (set index origin)
+    // Check for quad-origin assignment: quad-origin assign expr
     if (tok_type[0] == TOK_QIO && tok_type[1] == TOK_ASSIGN) {
         parse_pos = 2;
         int expr = parse_node(0);
@@ -439,8 +408,8 @@ int parse(char *line) {
         return n;
     }
 
-    // Check for quad output: [] <- expr or qout <- expr
-    if ((tok_type[0] == TOK_QUAD || tok_type[0] == TOK_QOUT) && tok_type[1] == TOK_ASSIGN) {
+    // Check for quad output: quad assign expr (APL ⎕←)
+    if (tok_type[0] == TOK_QUAD && tok_type[1] == TOK_ASSIGN) {
         parse_pos = 2;
         int expr = parse_node(0);
         if (parse_err) return -1;
@@ -451,19 +420,7 @@ int parse(char *line) {
         return n;
     }
 
-    // Check for qdl (delay): qdl expr
-    if (tok_type[0] == TOK_QDL) {
-        parse_pos = 1;
-        int expr = parse_node(0);
-        if (parse_err) return -1;
-        if (tok_type[parse_pos] != TOK_EOL) return -1;
-        int n = ast_new();
-        node_type[n] = NODE_QDL;
-        node_right[n] = expr;
-        return n;
-    }
-
-    // Check for shared variable indexed write: IDENT[expr] <- expr
+    // Check for shared variable indexed write: IDENT[expr] assign expr
     if (tok_type[0] == TOK_IDENT && tok_type[1] == TOK_LBRAK) {
         int sym_idx = sym_lookup(line, tok_val[0]);
         if (sym_idx < 0) { return -1; }

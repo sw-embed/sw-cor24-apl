@@ -1,13 +1,13 @@
-qout assign 42
-qout assign 1 2 3
-qout assign 'hello'
+quad assign 42
+quad assign 1 2 3
+quad assign 'hello'
 A assign 10
-qout assign A + 5
-qout assign iota 5
-[] assign 99
+quad assign A + 5
+quad assign iota 5
+quad assign 99
 del R assign SHOW X
 R assign X
-qout assign 'value:'
-qout assign X
+quad assign 'value:'
+quad assign X
 del
 SHOW 7

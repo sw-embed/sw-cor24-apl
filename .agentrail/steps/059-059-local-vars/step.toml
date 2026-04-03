@@ -1,0 +1,9 @@
+number = 59
+slug = "059-local-vars"
+status = "pending"
+description = """
+Implement local variables in user-defined functions:
+- Support semicolon synt..."""
+role = "production"
+context_files = []
+created_at = "2026-04-03T12:26:42"

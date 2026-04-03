@@ -1,11 +1,11 @@
-qrl assign 42
+quad-seed assign 42
 roll 6
 roll 6
 roll 6
 roll 10
 roll 100
 roll 6 6 6 6
-qrl assign 42
+quad-seed assign 42
 roll 6
 roll 6
 roll 6

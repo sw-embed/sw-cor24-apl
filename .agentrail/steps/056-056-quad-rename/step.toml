@@ -1,0 +1,9 @@
+number = 56
+slug = "056-quad-rename"
+status = "in-progress"
+description = """
+Rename quad syntax to use descriptive keyword names:
+- Replace [] and qout wi..."""
+role = "production"
+context_files = []
+created_at = "2026-04-03T12:26:21"
