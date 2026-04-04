@@ -1,9 +1,15 @@
-0 pick 'cat' 'dog' 'fish'
+comment pick respects quad-origin (default 1)
 1 pick 'cat' 'dog' 'fish'
 2 pick 'cat' 'dog' 'fish'
+3 pick 'cat' 'dog' 'fish'
 A assign 'hello' 'world' 'test'
+2 pick A
 1 pick A
-0 pick A
-1 pick 10 20 30
-0 pick iota 5
+2 pick 10 20 30
+1 pick iota 5
+comment 0-origin pick
+quad-origin assign 0
+0 pick 'cat' 'dog' 'fish'
+2 pick 'cat' 'dog' 'fish'
+quad-origin assign 1
 )OFF

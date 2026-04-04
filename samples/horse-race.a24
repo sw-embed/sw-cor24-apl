@@ -1,46 +1,34 @@
-comment Horse Race -- Full Version
-comment 4 named horses race with track visualization
-comment Demonstrates: nested arrays, pick, roll, fmt, cat, rho on chars,
-comment   quad, ceil/, compress, comparisons, or/, and/, goto, labels
+comment Horse Race A -- verbose version (from race.apl)
+comment 5 named horses race to FINISH line with track visualization.
+comment RACE defines POS and RND as locals, calls niladic SHOW which
+comment   reads POS through dynamic scoping. Track length capped at 20.
+comment Winner is horse with highest position when any horse finishes.
+comment Type RACE to run again (PRNG state changes each run).
+quad-seed assign 7
+NH assign 5
+FINISH assign 15
+NAMES assign 'Lucky  ' 'Thunder' 'Shadow ' 'Comet  ' 'Blaze  '
 comment
-quad-origin assign 0
-quad-seed assign 42
-NH assign 4
-GOAL assign 15
+del R assign SHOW;I
+R assign 0
+I assign 1
+LP: quad assign (I pick NAMES) cat ':' cat (((I pick POS) floor 20) rho '#')
+I assign I + 1
+goto (I <= NH)/LP
+del
+comment
+del R assign RACE;POS;RND
 POS assign NH rho 0
 RND assign 0
-NAMES assign 'Thunder' 'Lightning' 'Storm' 'Blaze'
-comment
-comment Display track for each horse
-del R assign TRACK X
-R assign 0
-I assign 0
-SHOW: R assign (I pick NAMES) cat '|' cat (X[I] rho '#')
-quad assign R
-I assign I + 1
-goto (I < NH)/SHOW
-del
-comment
-comment Main race function
-del R assign RACE
-R assign 0
-NEXT: RND assign RND + 1
-quad assign '=== Round ' cat fmt RND
+quad assign 'THE RACE IS ON!'
+NXT: RND assign RND + 1
+quad assign '--- Round ' cat (fmt RND) cat ' ---'
 POS assign POS + roll NH rho 3
-TRACK POS
-LEAD assign ceil/ POS
-quad assign 'Leader at ' cat fmt LEAD
-DONE assign or/ POS >= GOAL
-goto (DONE = 0)/NEXT
-WIN assign (POS >= GOAL) compress iota NH
-NW assign rho WIN
-quad assign 'Race over!'
-goto (NW > 1)/TIE
-quad assign 'Winner: ' cat ((0 pick WIN) pick NAMES)
-goto 0
-TIE: quad assign (fmt NW) cat '-way tie!'
+SHOW
+goto (or/ POS >= FINISH)/DONE
+goto NXT
+DONE: quad assign 'WINNER: ' cat ((1 pick (POS = ceil/ POS) compress iota NH) pick NAMES)
 del
 comment
-quad assign '*** HORSE RACE ***'
-Z assign RACE
+RACE
 )OFF

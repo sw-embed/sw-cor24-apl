@@ -348,12 +348,14 @@ int eval_fncall(int n) {
     }
 
     // Get result from result variable
+    // If result not set, return scalar 0 (GNU APL convention: shy/void)
     int result = -1;
     if (!eval_err) {
         if (sym_set_flag[rs]) {
             result = sym_val[rs];
         } else {
-            eval_err = 2;  // VALUE ERROR: result not set
+            result = arr_scalar(0);
+            if (result < 0) { eval_err = 5; }
         }
     }
 
@@ -1524,7 +1526,7 @@ int eval(int n) {
             // Right must be vector
             if (rrk > 1) { eval_err = 4; return -1; }
 
-            int idx = arr_get(lv, 0);
+            int idx = arr_get(lv, 0) - io_origin;
             int rsz = arr_size(rv);
 
             // Bounds check

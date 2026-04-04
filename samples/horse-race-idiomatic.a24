@@ -1,0 +1,29 @@
+comment Horse Race B -- idiomatic version (from idiomatic-race.apl)
+comment Same 5 horses, but compact APL style: no round counter, no
+comment   track cap, fewer lines. RACE calls niladic SHOW. POS is
+comment   local to RACE, visible to SHOW via dynamic scope.
+comment Type RACE to run again.
+quad-seed assign 7
+NAMES assign 'Lucky  ' 'Thunder' 'Shadow ' 'Comet  ' 'Blaze  '
+NH assign 5
+comment
+del R assign SHOW;I
+R assign 0
+I assign 1
+N: quad assign (I pick NAMES) cat ':' cat ((I pick POS) rho '#')
+I assign I + 1
+goto (I <= NH)/N
+del
+comment
+del R assign RACE;POS
+POS assign NH rho 0
+quad assign 'THE RACE IS ON!'
+L: POS assign POS + roll NH rho 3
+SHOW
+quad assign ''
+goto (0 = or/ POS >= 15)/L
+quad assign 'WINNER: ' cat (1 pick (POS = ceil/ POS) compress iota NH) pick NAMES
+del
+comment
+RACE
+)OFF
