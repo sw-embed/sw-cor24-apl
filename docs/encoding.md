@@ -91,6 +91,8 @@ embedded interpreter with no display hardware beyond a serial terminal.
 | `cap` | `∩` | U+2229 | Intersection |
 | `abs` | `\|` | U+007C | Absolute value |
 | `residue` | `\|` | U+007C | Modulo/remainder (dyadic) |
+| `iota` (dyadic) | `⍳` | U+2373 | Index-of |
+| `member` | `∊` | U+220A | Membership test |
 | `signum` | `×` | U+00D7 | Sign (-1/0/1) |
 | `factorial` | `!` | U+0021 | n! |
 | `binomial` | `!` | U+0021 | C(n,k) combinations (dyadic) |

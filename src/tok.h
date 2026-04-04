@@ -55,6 +55,7 @@
 #define RES_ABS      17
 #define RES_RESIDUE  18
 #define RES_SIGNUM   19
+#define RES_MEMBER   22
 #define RES_FACTORIAL 20
 #define RES_BINOMIAL 21
 
@@ -175,6 +176,9 @@ int lookup_reserved(char *src, int pos, int *end) {
 
     len = str_match(src, pos, "binomial");
     if (len == 8 && !is_alnum(src[pos + 8])) { *end = pos + 8; return RES_BINOMIAL; }
+
+    len = str_match(src, pos, "member");
+    if (len == 6 && !is_alnum(src[pos + 6])) { *end = pos + 6; return RES_MEMBER; }
 
     return -1;
 }

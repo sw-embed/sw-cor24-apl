@@ -1506,6 +1506,80 @@ int eval(int n) {
             return r;
         }
 
+        if (res_id == RES_IOTA) {
+            // Dyadic iota (index-of): A iota B -> index of B in A
+            // Not found returns (rho A) + io_origin (past end)
+            if (arr_rank(lv) > 1 || arr_rank(rv) > 1) { eval_err = 4; return -1; }
+            int lsz = arr_size(lv);
+            int notfound = lsz + io_origin;
+            int rrk = arr_rank(rv);
+            if (rrk == 0) {
+                // Scalar right: return scalar index
+                int b = arr_get(rv, 0);
+                int idx = notfound;
+                int j = 0;
+                while (j < lsz) {
+                    if (arr_get(lv, j) == b) { idx = j + io_origin; j = lsz; }
+                    j++;
+                }
+                int r = arr_scalar(idx);
+                if (r < 0) { eval_err = 5; return -1; }
+                return r;
+            }
+            // Vector right: return vector of indices
+            int rsz = arr_size(rv);
+            int r = arr_vector(rsz);
+            if (r < 0) { eval_err = 5; return -1; }
+            int i = 0;
+            while (i < rsz) {
+                int b = arr_get(rv, i);
+                int idx = notfound;
+                int j = 0;
+                while (j < lsz) {
+                    if (arr_get(lv, j) == b) { idx = j + io_origin; j = lsz; }
+                    j++;
+                }
+                arr_set(r, i, idx);
+                i++;
+            }
+            return r;
+        }
+
+        if (res_id == RES_MEMBER) {
+            // A member B: 1 where elements of A appear in B
+            if (arr_rank(lv) > 1 || arr_rank(rv) > 1) { eval_err = 4; return -1; }
+            int lsz = arr_size(lv);
+            int rsz = arr_size(rv);
+            int lrk = arr_rank(lv);
+            if (lrk == 0) {
+                int a = arr_get(lv, 0);
+                int found = 0;
+                int j = 0;
+                while (j < rsz) {
+                    if (arr_get(rv, j) == a) { found = 1; j = rsz; }
+                    j++;
+                }
+                int r = arr_scalar(found);
+                if (r < 0) { eval_err = 5; return -1; }
+                return r;
+            }
+            int r = arr_vector(lsz);
+            if (r < 0) { eval_err = 5; return -1; }
+            int i = 0;
+            while (i < lsz) {
+                int a = arr_get(lv, i);
+                int found = 0;
+                int j = 0;
+                while (j < rsz) {
+                    if (arr_get(rv, j) == a) { found = 1; j = rsz; }
+                    j++;
+                }
+                arr_set(r, i, found);
+                i++;
+            }
+            return r;
+        }
+
         if (res_id == RES_BINOMIAL) {
             // K binomial N: C(N,K) combinations
             int lrk = arr_rank(lv);

@@ -404,7 +404,10 @@ int main() {
                         // Shared variable indexed write: no output
                         heap_top = heap_save;
                     } else if (node_type[root] == NODE_QRL_ASSIGN) {
-                        // Quad RL assignment: no output
+                        // Quad seed assignment: no output
+                        heap_top = heap_save;
+                    } else if (node_type[root] == NODE_QIO_ASSIGN) {
+                        // Quad origin assignment: no output
                         heap_top = heap_save;
                     } else if (node_type[root] == NODE_GOTO || node_type[root] == NODE_CGOTO) {
                         // Branch: no output
