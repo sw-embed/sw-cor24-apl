@@ -1,0 +1,10 @@
+number = 60
+slug = "060-abs-residue"
+status = "completed"
+description = """
+Implement absolute value and residue (APL |):
+- Monadic | (abs): absolute val..."""
+role = "production"
+context_files = []
+created_at = "2026-04-03T20:45:22"
+completed_at = "2026-04-04T14:48:31"

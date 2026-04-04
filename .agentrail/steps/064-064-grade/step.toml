@@ -1,0 +1,10 @@
+number = 64
+slug = "064-grade"
+status = "completed"
+description = """
+Implement grade up and grade down (APL ⍋/⍒):
+- Monadic ⍋ (grade up): re..."""
+role = "production"
+context_files = []
+created_at = "2026-04-03T20:45:22"
+completed_at = "2026-04-04T15:21:31"

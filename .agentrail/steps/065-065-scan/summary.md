@@ -1,0 +1,1 @@
+Implemented scan operator (f\). Added TOK_BSLASH, NODE_SCAN. Supports +\ *\ ceil\ floor\ and\ or\. Worked around tc24r codegen bug where RES-to-TOK conversion produced wrong values for scan nodes — solved by encoding RES_* ids as negative node_val and handling inline in eval. All scan types verified correct.

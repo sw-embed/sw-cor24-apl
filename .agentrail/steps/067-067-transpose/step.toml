@@ -1,0 +1,9 @@
+number = 67
+slug = "067-transpose"
+status = "pending"
+description = """
+Implement monadic transpose (APL ⍉):
+- Monadic ⍉: swap rows and columns o..."""
+role = "production"
+context_files = []
+created_at = "2026-04-03T20:45:22"

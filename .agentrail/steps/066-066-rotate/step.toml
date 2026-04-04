@@ -1,0 +1,9 @@
+number = 66
+slug = "066-rotate"
+status = "pending"
+description = """
+Implement dyadic rotate (APL ⌽ with left argument):
+- Dyadic ⌽: N rotate ..."""
+role = "production"
+context_files = []
+created_at = "2026-04-03T20:45:22"

@@ -1,0 +1,9 @@
+number = 69
+slug = "069-enclose"
+status = "pending"
+description = """
+Implement monadic enclose (APL ⊂):
+- Monadic ⊂: wrap a value in a scalar ..."""
+role = "production"
+context_files = []
+created_at = "2026-04-03T20:45:22"

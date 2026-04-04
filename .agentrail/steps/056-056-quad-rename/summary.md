@@ -1,0 +1,1 @@
+Renamed all quad syntax to keyword-only form: quad (bare I/O), quad-origin (index origin), quad-seed (PRNG seed). Removed qled, qsw (replaced by qsvo AP 242), and qdl (no hardware clock). Removed [] as quad token. Updated tokenizer with longest-match-first for hyphenated compound keywords. Updated all 16 .a24 samples and docs. Reopened saga with steps 057-059.

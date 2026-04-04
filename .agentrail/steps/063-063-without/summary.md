@@ -1,0 +1,1 @@
+Implemented without (dyadic ~, set difference). A without B removes elements of A that appear in B. Works on integer and character vectors. Added batch and GNU APL test files, updated encoding.md.

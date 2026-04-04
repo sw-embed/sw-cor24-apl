@@ -1,0 +1,1 @@
+Implemented signum (monadic sign _1/0/1), factorial (n!), and binomial (C(n,k) combinations). Signum is element-wise on vectors/matrices. Factorial is scalar-only. Binomial uses overflow-safe incremental multiply/divide. Added int_factorial and int_binomial helpers. Batch and GNU APL test files, encoding.md updated.

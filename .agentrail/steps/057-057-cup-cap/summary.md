@@ -1,0 +1,1 @@
+Implemented cup (∪) and cap (∩) set operations. Monadic cup removes duplicates. Dyadic cup is set union. Dyadic cap is intersection. Works on integer and character vectors. Added batch and GNU APL test files.

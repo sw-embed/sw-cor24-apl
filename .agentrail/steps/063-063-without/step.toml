@@ -1,0 +1,10 @@
+number = 63
+slug = "063-without"
+status = "completed"
+description = """
+Implement dyadic without/except (APL ~ dyadic):
+- Dyadic ~: A without B remov..."""
+role = "production"
+context_files = []
+created_at = "2026-04-03T20:45:22"
+completed_at = "2026-04-04T15:20:02"

@@ -1,9 +1,10 @@
 number = 58
 slug = "058-niladic-fns"
-status = "pending"
+status = "completed"
 description = """
 Implement niladic (zero-argument) user-defined functions:
 - Allow 'del R assi..."""
 role = "production"
 context_files = []
 created_at = "2026-04-03T12:26:35"
+completed_at = "2026-04-03T21:17:59"

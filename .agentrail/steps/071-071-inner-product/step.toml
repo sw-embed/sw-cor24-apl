@@ -1,0 +1,9 @@
+number = 71
+slug = "071-inner-product"
+status = "pending"
+description = """
+Implement inner product operator (APL f.g):
+- Inner product: A f.g B generali..."""
+role = "production"
+context_files = []
+created_at = "2026-04-03T20:45:22"

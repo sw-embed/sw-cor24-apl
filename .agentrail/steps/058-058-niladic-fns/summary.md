@@ -1,0 +1,1 @@
+Implemented niladic functions (del R assign FN with no argument). Updated fn.h parser, parse.h call detection, eval.h save/restore. Horse race demos now use niladic RACE. Added batch-niladic.a24 test. Removed from missing.md.

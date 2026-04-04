@@ -1,0 +1,9 @@
+number = 73
+slug = "073-deal-replicate"
+status = "pending"
+description = """
+Implement deal and replicate:
+- Dyadic ? (deal): N deal M returns N random in..."""
+role = "production"
+context_files = []
+created_at = "2026-04-03T20:45:22"

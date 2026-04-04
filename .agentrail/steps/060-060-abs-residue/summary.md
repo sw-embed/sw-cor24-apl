@@ -1,0 +1,1 @@
+Implemented abs (monadic |, absolute value) and residue (dyadic |, modulo). Element-wise on vectors with scalar extension. Added int_residue() helper that avoids COR24's broken negative division by working with absolute values. Handles negative right args correctly per APL spec (3|¯7=2). Added batch and GNU APL test files, updated encoding.md.

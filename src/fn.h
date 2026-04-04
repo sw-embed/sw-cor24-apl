@@ -7,7 +7,7 @@
 #pragma once
 
 #define FN_MAX      8    // max user functions
-#define FN_BODY_MAX 16   // max body lines per function
+#define FN_BODY_MAX 25   // max body lines per function
 #define FN_BLINE    120  // max chars per body line
 #define CALL_MAX    8    // max recursion depth
 #define FN_LOCAL_MAX 8   // max local variables per function
@@ -22,7 +22,7 @@ int fn_count;               // number of defined functions
 int fn_local_count[FN_MAX]; // number of local variables
 int fn_local_sym[64];       // FN_MAX * FN_LOCAL_MAX local var sym indices
 
-char fn_body[15360];        // FN_MAX * FN_BODY_MAX * FN_BLINE
+char fn_body[24000];        // FN_MAX * FN_BODY_MAX * FN_BLINE
 
 // Definition mode state
 int fn_def_mode;    // 1 = collecting body lines

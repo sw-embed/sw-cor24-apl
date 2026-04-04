@@ -1,0 +1,1 @@
+Implemented dyadic iota (index-of) and member (membership test). Dyadic iota reuses RES_IOTA, returns position of B in A (not-found = rho+origin). Member returns 0/1 vector. Both work on integer and character vectors. Fixed NODE_QIO_ASSIGN output suppression bug from step 056. Added batch and GNU APL test files, updated encoding.md.

@@ -1,0 +1,9 @@
+number = 68
+slug = "068-encode-decode"
+status = "pending"
+description = """
+Implement encode and decode (APL ⊤/⊥):
+- Dyadic ⊤ (encode): represent n..."""
+role = "production"
+context_files = []
+created_at = "2026-04-03T20:45:22"

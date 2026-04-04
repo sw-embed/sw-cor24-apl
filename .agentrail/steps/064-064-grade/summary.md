@@ -1,0 +1,1 @@
+Implemented gradeup (⍋) and gradedown (⍒). Return indices that would sort ascending/descending. O(n²) selection sort. Respects quad-origin. Added batch and GNU APL test files, updated encoding.md.

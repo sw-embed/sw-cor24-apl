@@ -1,0 +1,1 @@
+Implemented local variables with ;VAR syntax in function headers. fn.h parses semicolons, stores up to 8 local sym indices per function. eval.h saves/restores locals on call stack (extended from 3 to 11 slots per frame). Locals start undefined, restored on return. Also documented pre-existing recursion depth limit (3 levels max due to 8KB EBR stack).
