@@ -1725,6 +1725,45 @@ int eval(int n) {
             return r;
         }
 
+        if (res_id == RES_WITHOUT) {
+            // A without B: elements of A not in B (APL dyadic ~)
+            if (arr_rank(lv) > 1 || arr_rank(rv) > 1) { eval_err = 4; return -1; }
+            int lsz = arr_size(lv);
+            int rsz = arr_size(rv);
+            // Count elements to keep
+            int count = 0;
+            int i = 0;
+            int j;
+            while (i < lsz) {
+                int val = arr_get(lv, i);
+                int found = 0;
+                j = 0;
+                while (j < rsz) {
+                    if (arr_get(rv, j) == val) { found = 1; j = rsz; }
+                    j++;
+                }
+                if (!found) count++;
+                i++;
+            }
+            int r = arr_vector(count);
+            if (r < 0) { eval_err = 5; return -1; }
+            if (arr_type(lv) == ARR_CHAR) arr_set_type(r, ARR_CHAR);
+            int ri = 0;
+            i = 0;
+            while (i < lsz) {
+                int val = arr_get(lv, i);
+                int found = 0;
+                j = 0;
+                while (j < rsz) {
+                    if (arr_get(rv, j) == val) { found = 1; j = rsz; }
+                    j++;
+                }
+                if (!found) { arr_set(r, ri, val); ri++; }
+                i++;
+            }
+            return r;
+        }
+
         // Unknown dyadic function
         eval_err = 1;
         return -1;

@@ -1,0 +1,7 @@
+comment without: set difference (APL dyadic ~)
+quad assign 1 2 3 4 5 without 2 4
+quad assign 1 2 3 without 4 5 6
+quad assign 1 2 3 without 1 2 3
+quad assign (iota 10) without 2 4 6 8 10
+comment character without
+quad assign 'hello world' without 'aeiou'
