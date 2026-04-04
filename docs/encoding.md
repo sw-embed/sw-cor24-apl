@@ -102,6 +102,10 @@ embedded interpreter with no display hardware beyond a serial terminal.
 | `+/` | `+/` | — | Plus-reduce |
 | `-/` | `-/` | — | Minus-reduce |
 | `*/` | `×/` | — | Times-reduce |
+| `+\` | `+\` | — | Plus-scan (running sum) |
+| `*\` | `×\` | — | Times-scan |
+| `ceil\` | `⌈\` | — | Max-scan |
+| `floor\` | `⌊\` | — | Min-scan |
 
 ### Quad (System) Variables and Functions
 

@@ -27,6 +27,7 @@
 #define NODE_QRL_ASSIGN 20  // quad-seed assign expr (right = expr — sets PRNG seed)
 #define NODE_QIO   22   // quad-origin read (no children — returns index origin)
 #define NODE_QIO_ASSIGN 23  // quad-origin assign expr (right = expr — sets index origin)
+#define NODE_SCAN  24   // scan operator (val = op tok type, right = operand)
 
 #define AST_MAX 64
 
@@ -125,6 +126,14 @@ int ast_reduce(int op, int operand) {
     return n;
 }
 
+int ast_scan(int op, int operand) {
+    int n = ast_new();
+    node_type[n] = NODE_SCAN;
+    node_val[n] = op;
+    node_right[n] = operand;
+    return n;
+}
+
 // Check if a reserved word can be used dyadically
 int is_dyadic_res(int res_id) {
     return res_id == RES_RHO || res_id == RES_TAKE || res_id == RES_DROP || res_id == RES_CAT || res_id == RES_AND || res_id == RES_OR || res_id == RES_CEIL || res_id == RES_FLOOR || res_id == RES_COMPRESS || res_id == RES_PICK || res_id == RES_CUP || res_id == RES_CAP || res_id == RES_RESIDUE || res_id == RES_BINOMIAL || res_id == RES_IOTA || res_id == RES_MEMBER || res_id == RES_WITHOUT;
@@ -146,6 +155,7 @@ int can_start_expr(int pos) {
         ty == TOK_MINUS || ty == TOK_RES ||
         ty == TOK_QRL || ty == TOK_QIO || ty == TOK_STRING) return 1;
     if (is_binop(ty) && tok_type[pos + 1] == TOK_SLASH) return 1;  // reduce
+    if (is_binop(ty) && tok_type[pos + 1] == TOK_BSLASH) return 1;  // scan
     return 0;
 }
 
@@ -313,6 +323,21 @@ int parse_node(int mode) {
         int operand = parse_node(0);
         if (parse_err) return 0;
         left = ast_reduce(op, operand);
+    } else if (is_binop(ty) && tok_type[parse_pos + 1] == TOK_BSLASH) {
+        // Scan operator: +\ -\ *\ (op followed by backslash)
+        int op = ty;
+        parse_pos = parse_pos + 2;
+        int operand = parse_node(0);
+        if (parse_err) return 0;
+        left = ast_scan(op, operand);
+    } else if (ty == TOK_RES && (tok_val[parse_pos] == RES_CEIL || tok_val[parse_pos] == RES_FLOOR || tok_val[parse_pos] == RES_AND || tok_val[parse_pos] == RES_OR) && tok_type[parse_pos + 1] == TOK_BSLASH) {
+        // Scan with ceil\ floor\ and\ or\
+        // Store negative RES_* id to distinguish from TOK_* ops
+        int op = 0 - tok_val[parse_pos] - 1;
+        parse_pos = parse_pos + 2;
+        int operand = parse_node(0);
+        if (parse_err) return 0;
+        left = ast_scan(op, operand);
     } else if (ty == TOK_RES) {
         // Monadic primitive function (e.g. iota expr)
         int res_id = tok_val[parse_pos];

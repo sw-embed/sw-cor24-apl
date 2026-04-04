@@ -33,6 +33,7 @@
 #define TOK_AND_OP 30   // and — internal only, used in reduce nodes
 #define TOK_OR_OP  31   // or — internal only, used in reduce nodes
 #define TOK_QIO    32   // quad-origin — index origin (APL ⎕IO)
+#define TOK_BSLASH 33   // \ (backslash — scan operator)
 
 // Reserved word IDs
 #define RES_RHO     0
@@ -341,6 +342,7 @@ int tokenize(char *line) {
         if (line[i] == 45) { tok_type[t] = TOK_MINUS;  tok_pos[t] = i; tok_val[t] = 0; t++; i++; continue; }
         if (line[i] == 42) { tok_type[t] = TOK_STAR;   tok_pos[t] = i; tok_val[t] = 0; t++; i++; continue; }
         if (line[i] == 47) { tok_type[t] = TOK_SLASH;  tok_pos[t] = i; tok_val[t] = 0; t++; i++; continue; }
+        if (line[i] == 92) { tok_type[t] = TOK_BSLASH; tok_pos[t] = i; tok_val[t] = 0; t++; i++; continue; }
         if (line[i] == 40) { tok_type[t] = TOK_LPAREN; tok_pos[t] = i; tok_val[t] = 0; t++; i++; continue; }
         if (line[i] == 41) { tok_type[t] = TOK_RPAREN; tok_pos[t] = i; tok_val[t] = 0; t++; i++; continue; }
 

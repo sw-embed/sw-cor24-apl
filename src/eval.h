@@ -1092,6 +1092,49 @@ int eval(int n) {
         return -1;
     }
 
+    if (ty == NODE_SCAN) {
+        int v = eval(node_right[n]);
+        if (eval_err) return -1;
+        int scan_op = node_val[n];
+        int rk = arr_rank(v);
+
+        if (rk == 0) return v;
+
+        if (rk == 1) {
+            int sz = arr_size(v);
+            if (sz == 0) {
+                int r = arr_vector(0);
+                if (r < 0) { eval_err = 5; return -1; }
+                return r;
+            }
+            int r = arr_vector(sz);
+            if (r < 0) { eval_err = 5; return -1; }
+            int acc = arr_get(v, 0);
+            arr_set(r, 0, acc);
+            int i = 1;
+            while (i < sz) {
+                int b = arr_get(v, i);
+                if (scan_op >= 0) {
+                    acc = eval_binop_scalar(scan_op, acc, b);
+                    if (eval_err) return -1;
+                } else {
+                    // Encoded RES_* id: decode as -(op+1)
+                    int rid = 0 - scan_op - 1;
+                    if (rid == RES_CEIL) { if (b > acc) acc = b; }
+                    else if (rid == RES_FLOOR) { if (b < acc) acc = b; }
+                    else if (rid == RES_AND) { acc = acc & b; }
+                    else { acc = acc | b; }
+                }
+                arr_set(r, i, acc);
+                i++;
+            }
+            return r;
+        }
+
+        eval_err = 4;
+        return -1;
+    }
+
     if (ty == NODE_DYAD) {
         int lv = eval(node_left[n]);
         if (eval_err) return -1;
