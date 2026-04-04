@@ -1,0 +1,14 @@
+comment abs (absolute value) and residue (modulo)
+comment monadic abs
+quad assign abs _5
+quad assign abs 3
+quad assign abs 0
+quad assign abs _1 2 _3 4
+comment dyadic residue (APL |): A residue B = B mod A
+quad assign 3 residue 7
+quad assign 5 residue 13
+quad assign 4 residue 12
+quad assign 3 residue _7
+comment scalar extension
+quad assign 10 residue 23 45 67
+quad assign 2 residue iota 8

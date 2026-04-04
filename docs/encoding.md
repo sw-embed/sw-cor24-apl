@@ -89,6 +89,8 @@ embedded interpreter with no display hardware beyond a serial terminal.
 | `comment` | `⍝` | U+235D | Comment (rest of line) |
 | `cup` | `∪` | U+222A | Unique / union |
 | `cap` | `∩` | U+2229 | Intersection |
+| `abs` | `\|` | U+007C | Absolute value |
+| `residue` | `\|` | U+007C | Modulo/remainder (dyadic) |
 | `+/` | `+/` | — | Plus-reduce |
 | `-/` | `-/` | — | Minus-reduce |
 | `*/` | `×/` | — | Times-reduce |

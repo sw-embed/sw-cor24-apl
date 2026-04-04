@@ -14,6 +14,19 @@ int branch_target;
 // Shadow register for LED D2 (0xFF0000 is write-only for LEDs)
 // Stores the user-visible value (1=on, 0=off), not the raw active-low bit
 
+// Integer residue (APL |): B mod A, result has same sign as A.
+// Avoids negative division (COR24 software div handles only positive).
+int int_residue(int a, int b) {
+    int aa = a;
+    int bb = b;
+    if (aa < 0) aa = 0 - aa;
+    if (bb < 0) bb = 0 - bb;
+    int rem = bb - aa * (bb / aa);  // positive / positive is safe
+    // APL residue: result is always 0 <= result < |A|
+    if (b < 0 && rem > 0) rem = aa - rem;
+    return rem;
+}
+
 // Index origin (□IO): 0 or 1, affects iota generation
 // Default 1 = standard APL (iota N → 1 2 ... N)
 int io_origin = 1;
@@ -907,6 +920,35 @@ int eval(int n) {
             return r;
         }
 
+        if (res_id == RES_ABS) {
+            // abs A: absolute value, element-wise
+            int rk = arr_rank(v);
+            if (rk == 0) {
+                int val = arr_get(v, 0);
+                if (val < 0) val = 0 - val;
+                int r = arr_scalar(val);
+                if (r < 0) { eval_err = 5; return -1; }
+                return r;
+            }
+            if (rk <= 2) {
+                int sz = arr_size(v);
+                int r;
+                if (rk == 1) { r = arr_vector(sz); }
+                else { r = arr_new(2, arr_dim0(v), arr_dim1(v)); }
+                if (r < 0) { eval_err = 5; return -1; }
+                int i = 0;
+                while (i < sz) {
+                    int val = arr_get(v, i);
+                    if (val < 0) val = 0 - val;
+                    arr_set(r, i, val);
+                    i++;
+                }
+                return r;
+            }
+            eval_err = 4;
+            return -1;
+        }
+
         // Unknown monadic function
         eval_err = 1;
         return -1;
@@ -1400,6 +1442,66 @@ int eval(int n) {
                 i++;
             }
             return r;
+        }
+
+        if (res_id == RES_RESIDUE) {
+            // A residue B: modulo (APL |). B mod A. 3 residue 7 -> 1
+            // Avoids negative division (COR24 software div is unsigned-only)
+            int lrk = arr_rank(lv);
+            int rrk = arr_rank(rv);
+            if (lrk == 0 && rrk == 0) {
+                int a = arr_get(lv, 0);
+                int b = arr_get(rv, 0);
+                if (a == 0) { eval_err = 1; return -1; }
+                int r = arr_scalar(int_residue(a, b));
+                if (r < 0) { eval_err = 5; return -1; }
+                return r;
+            }
+            if (lrk == 0 && rrk == 1) {
+                int a = arr_get(lv, 0);
+                if (a == 0) { eval_err = 1; return -1; }
+                int rsz = arr_size(rv);
+                int r = arr_vector(rsz);
+                if (r < 0) { eval_err = 5; return -1; }
+                int i = 0;
+                while (i < rsz) {
+                    arr_set(r, i, int_residue(a, arr_get(rv, i)));
+                    i++;
+                }
+                return r;
+            }
+            if (lrk == 1 && rrk == 0) {
+                int b = arr_get(rv, 0);
+                int lsz = arr_size(lv);
+                int r = arr_vector(lsz);
+                if (r < 0) { eval_err = 5; return -1; }
+                int i = 0;
+                while (i < lsz) {
+                    int a = arr_get(lv, i);
+                    if (a == 0) { eval_err = 1; return -1; }
+                    arr_set(r, i, int_residue(a, b));
+                    i++;
+                }
+                return r;
+            }
+            if (lrk == 1 && rrk == 1) {
+                int lsz = arr_size(lv);
+                int rsz = arr_size(rv);
+                if (lsz != rsz) { eval_err = 3; return -1; }
+                int r = arr_vector(lsz);
+                if (r < 0) { eval_err = 5; return -1; }
+                int i = 0;
+                while (i < lsz) {
+                    int a = arr_get(lv, i);
+                    int b = arr_get(rv, i);
+                    if (a == 0) { eval_err = 1; return -1; }
+                    arr_set(r, i, int_residue(a, b));
+                    i++;
+                }
+                return r;
+            }
+            eval_err = 4;
+            return -1;
         }
 
         if (res_id == RES_CAP) {
