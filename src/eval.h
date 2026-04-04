@@ -945,6 +945,39 @@ int eval(int n) {
             return r;
         }
 
+        if (res_id == RES_GRADEUP || res_id == RES_GRADEDN) {
+            // gradeup/gradedown: return indices that sort ascending/descending
+            if (arr_rank(v) != 1) { eval_err = 4; return -1; }
+            int sz = arr_size(v);
+            int r = arr_vector(sz);
+            if (r < 0) { eval_err = 5; return -1; }
+            // Initialize indices
+            int i = 0;
+            while (i < sz) { arr_set(r, i, i + io_origin); i++; }
+            // Selection sort on indices by comparing v[idx] values
+            int up = (res_id == RES_GRADEUP);
+            i = 0;
+            while (i < sz - 1) {
+                int best = i;
+                int j = i + 1;
+                while (j < sz) {
+                    int bi = arr_get(r, best) - io_origin;
+                    int ji = arr_get(r, j) - io_origin;
+                    int bv = arr_get(v, bi);
+                    int jv = arr_get(v, ji);
+                    if (up ? (jv < bv) : (jv > bv)) best = j;
+                    j++;
+                }
+                if (best != i) {
+                    int tmp = arr_get(r, i);
+                    arr_set(r, i, arr_get(r, best));
+                    arr_set(r, best, tmp);
+                }
+                i++;
+            }
+            return r;
+        }
+
         if (res_id == RES_SIGNUM) {
             // signum A: returns _1, 0, or 1
             int rk = arr_rank(v);

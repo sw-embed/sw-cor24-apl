@@ -57,6 +57,8 @@
 #define RES_SIGNUM   19
 #define RES_MEMBER   22
 #define RES_WITHOUT  23
+#define RES_GRADEUP  24
+#define RES_GRADEDN  25
 #define RES_FACTORIAL 20
 #define RES_BINOMIAL 21
 
@@ -183,6 +185,12 @@ int lookup_reserved(char *src, int pos, int *end) {
 
     len = str_match(src, pos, "without");
     if (len == 7 && !is_alnum(src[pos + 7])) { *end = pos + 7; return RES_WITHOUT; }
+
+    len = str_match(src, pos, "gradeup");
+    if (len == 7 && !is_alnum(src[pos + 7])) { *end = pos + 7; return RES_GRADEUP; }
+
+    len = str_match(src, pos, "gradedown");
+    if (len == 9 && !is_alnum(src[pos + 9])) { *end = pos + 9; return RES_GRADEDN; }
 
     return -1;
 }

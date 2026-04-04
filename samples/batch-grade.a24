@@ -1,0 +1,11 @@
+comment gradeup and gradedown (sort indices)
+quad assign gradeup 30 10 20
+quad assign gradedown 30 10 20
+quad assign gradeup 5 3 1 4 2
+comment use grade to sort: V[gradeup V]
+V assign 30 10 50 20 40
+quad assign gradeup V
+comment with 0-origin
+quad-origin assign 0
+quad assign gradeup 30 10 20
+quad-origin assign 1
