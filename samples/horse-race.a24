@@ -9,7 +9,7 @@ NH assign 4
 GOAL assign 15
 POS assign NH rho 0
 RND assign 0
-NAMES assign 'Thndr' 'Lghtn' 'Storm' 'Blaze'
+NAMES assign 'Thunder' 'Lightning' 'Storm' 'Blaze'
 comment
 comment Display track for each horse
 del R assign TRACK X
