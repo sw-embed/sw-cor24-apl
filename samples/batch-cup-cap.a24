@@ -1,0 +1,16 @@
+comment cup (unique/union) and cap (intersection) set operations
+comment monadic cup: unique (remove duplicates)
+quad assign cup 1 2 3 2 1 4
+quad assign cup 5 5 5
+comment dyadic cup: union
+quad assign 1 2 3 cup 3 4 5
+quad assign 1 2 cup 1 2
+comment dyadic cap: intersection
+quad assign 1 2 3 4 cap 2 4 6
+quad assign 1 2 3 cap 4 5 6
+comment character unique
+quad assign cup 'mississippi'
+comment character union
+quad assign 'abc' cup 'cde'
+comment character intersection
+quad assign 'abcabc' cap 'bcd'

@@ -839,6 +839,45 @@ int eval(int n) {
             return -1;
         }
 
+        if (res_id == RES_CUP) {
+            // Monadic cup (unique): remove duplicates, keep first occurrence
+            if (arr_rank(v) > 1) { eval_err = 4; return -1; }
+            int sz = arr_size(v);
+            if (sz == 0) return v;
+            // First pass: count unique elements
+            int uniq = 0;
+            int j;
+            int i = 0;
+            while (i < sz) {
+                int val = arr_get(v, i);
+                int dup = 0;
+                j = 0;
+                while (j < i) {
+                    if (arr_get(v, j) == val) { dup = 1; j = i; }
+                    j++;
+                }
+                if (!dup) uniq++;
+                i++;
+            }
+            int r = arr_vector(uniq);
+            if (r < 0) { eval_err = 5; return -1; }
+            if (arr_type(v) == ARR_CHAR) arr_set_type(r, ARR_CHAR);
+            int ri = 0;
+            i = 0;
+            while (i < sz) {
+                int val = arr_get(v, i);
+                int dup = 0;
+                j = 0;
+                while (j < i) {
+                    if (arr_get(v, j) == val) { dup = 1; j = i; }
+                    j++;
+                }
+                if (!dup) { arr_set(r, ri, val); ri++; }
+                i++;
+            }
+            return r;
+        }
+
         // Unknown monadic function
         eval_err = 1;
         return -1;
@@ -1290,6 +1329,82 @@ int eval(int n) {
             int r = arr_scalar(arr_get(rv, idx));
             if (r < 0) { eval_err = 5; return -1; }
             arr_set_type(r, arr_type(rv));
+            return r;
+        }
+
+        if (res_id == RES_CUP) {
+            // Dyadic cup (union): left unchanged, plus elements of right not in left
+            if (arr_rank(lv) > 1 || arr_rank(rv) > 1) { eval_err = 4; return -1; }
+            int lsz = arr_size(lv);
+            int rsz = arr_size(rv);
+            // Count elements in right not in left
+            int extra = 0;
+            int i = 0;
+            int j;
+            while (i < rsz) {
+                int val = arr_get(rv, i);
+                int found = 0;
+                j = 0;
+                while (j < lsz) {
+                    if (arr_get(lv, j) == val) { found = 1; j = lsz; }
+                    j++;
+                }
+                if (!found) extra++;
+                i++;
+            }
+            int r = arr_vector(lsz + extra);
+            if (r < 0) { eval_err = 5; return -1; }
+            if (arr_type(lv) == ARR_CHAR) arr_set_type(r, ARR_CHAR);
+            i = 0;
+            while (i < lsz) { arr_set(r, i, arr_get(lv, i)); i++; }
+            int ri = lsz;
+            i = 0;
+            while (i < rsz) {
+                int val = arr_get(rv, i);
+                int found = 0;
+                j = 0;
+                while (j < lsz) {
+                    if (arr_get(lv, j) == val) { found = 1; j = lsz; }
+                    j++;
+                }
+                if (!found) { arr_set(r, ri, val); ri++; }
+                i++;
+            }
+            return r;
+        }
+
+        if (res_id == RES_CAP) {
+            // Dyadic cap (intersection): elements of left that appear in right
+            if (arr_rank(lv) > 1 || arr_rank(rv) > 1) { eval_err = 4; return -1; }
+            int lsz = arr_size(lv);
+            int rsz = arr_size(rv);
+            // Count matches
+            int count = 0;
+            int i = 0;
+            int j;
+            while (i < lsz) {
+                int val = arr_get(lv, i);
+                j = 0;
+                while (j < rsz) {
+                    if (arr_get(rv, j) == val) { count++; j = rsz; }
+                    j++;
+                }
+                i++;
+            }
+            int r = arr_vector(count);
+            if (r < 0) { eval_err = 5; return -1; }
+            if (arr_type(lv) == ARR_CHAR) arr_set_type(r, ARR_CHAR);
+            int ri = 0;
+            i = 0;
+            while (i < lsz) {
+                int val = arr_get(lv, i);
+                j = 0;
+                while (j < rsz) {
+                    if (arr_get(rv, j) == val) { arr_set(r, ri, val); ri++; j = rsz; }
+                    j++;
+                }
+                i++;
+            }
             return r;
         }
 

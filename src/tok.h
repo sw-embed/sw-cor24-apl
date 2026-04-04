@@ -50,6 +50,8 @@
 #define RES_PICK    12
 #define RES_ROLL    13
 #define RES_FMT     14
+#define RES_CUP     15
+#define RES_CAP     16
 
 #define TOK_MAX    64   // max tokens per line
 
@@ -147,6 +149,12 @@ int lookup_reserved(char *src, int pos, int *end) {
 
     len = str_match(src, pos, "fmt");
     if (len == 3 && !is_alnum(src[pos + 3])) { *end = pos + 3; return RES_FMT; }
+
+    len = str_match(src, pos, "cup");
+    if (len == 3 && !is_alnum(src[pos + 3])) { *end = pos + 3; return RES_CUP; }
+
+    len = str_match(src, pos, "cap");
+    if (len == 3 && !is_alnum(src[pos + 3])) { *end = pos + 3; return RES_CAP; }
 
     return -1;
 }

@@ -87,6 +87,8 @@ embedded interpreter with no display hardware beyond a serial terminal.
 | `roll` | `?` | U+003F | Random number |
 | `fmt` | `⍕` | U+2355 | Format (number to string) |
 | `comment` | `⍝` | U+235D | Comment (rest of line) |
+| `cup` | `∪` | U+222A | Unique / union |
+| `cap` | `∩` | U+2229 | Intersection |
 | `+/` | `+/` | — | Plus-reduce |
 | `-/` | `-/` | — | Minus-reduce |
 | `*/` | `×/` | — | Times-reduce |
