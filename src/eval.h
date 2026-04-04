@@ -27,6 +27,31 @@ int int_residue(int a, int b) {
     return rem;
 }
 
+// Integer factorial (n!). Returns 0 for negative input.
+int int_factorial(int n) {
+    if (n < 0) return 0;
+    int r = 1;
+    int i = 2;
+    while (i <= n) { r = r * i; i++; }
+    return r;
+}
+
+// Integer binomial C(n,k) = n! / (k! * (n-k)!)
+// Computed without overflow using incremental multiply/divide.
+int int_binomial(int k, int n) {
+    if (k < 0 || n < 0 || k > n) return 0;
+    if (k == 0 || k == n) return 1;
+    if (k > n - k) k = n - k;  // optimization: C(n,k) = C(n,n-k)
+    int r = 1;
+    int i = 0;
+    while (i < k) {
+        r = r * (n - i);
+        r = r / (i + 1);
+        i++;
+    }
+    return r;
+}
+
 // Index origin (□IO): 0 or 1, affects iota generation
 // Default 1 = standard APL (iota N → 1 2 ... N)
 int io_origin = 1;
@@ -920,6 +945,43 @@ int eval(int n) {
             return r;
         }
 
+        if (res_id == RES_SIGNUM) {
+            // signum A: returns _1, 0, or 1
+            int rk = arr_rank(v);
+            if (rk == 0) {
+                int val = arr_get(v, 0);
+                int r = arr_scalar(val > 0 ? 1 : (val < 0 ? 0 - 1 : 0));
+                if (r < 0) { eval_err = 5; return -1; }
+                return r;
+            }
+            if (rk <= 2) {
+                int sz = arr_size(v);
+                int r;
+                if (rk == 1) { r = arr_vector(sz); }
+                else { r = arr_new(2, arr_dim0(v), arr_dim1(v)); }
+                if (r < 0) { eval_err = 5; return -1; }
+                int i = 0;
+                while (i < sz) {
+                    int val = arr_get(v, i);
+                    arr_set(r, i, val > 0 ? 1 : (val < 0 ? 0 - 1 : 0));
+                    i++;
+                }
+                return r;
+            }
+            eval_err = 4;
+            return -1;
+        }
+
+        if (res_id == RES_FACTORIAL) {
+            // factorial N: N!
+            if (arr_rank(v) != 0) { eval_err = 4; return -1; }
+            int val = arr_get(v, 0);
+            if (val < 0) { eval_err = 1; return -1; }
+            int r = arr_scalar(int_factorial(val));
+            if (r < 0) { eval_err = 5; return -1; }
+            return r;
+        }
+
         if (res_id == RES_ABS) {
             // abs A: absolute value, element-wise
             int rk = arr_rank(v);
@@ -1442,6 +1504,56 @@ int eval(int n) {
                 i++;
             }
             return r;
+        }
+
+        if (res_id == RES_BINOMIAL) {
+            // K binomial N: C(N,K) combinations
+            int lrk = arr_rank(lv);
+            int rrk = arr_rank(rv);
+            if (lrk == 0 && rrk == 0) {
+                int r = arr_scalar(int_binomial(arr_get(lv, 0), arr_get(rv, 0)));
+                if (r < 0) { eval_err = 5; return -1; }
+                return r;
+            }
+            if (lrk == 0 && rrk == 1) {
+                int k = arr_get(lv, 0);
+                int rsz = arr_size(rv);
+                int r = arr_vector(rsz);
+                if (r < 0) { eval_err = 5; return -1; }
+                int i = 0;
+                while (i < rsz) {
+                    arr_set(r, i, int_binomial(k, arr_get(rv, i)));
+                    i++;
+                }
+                return r;
+            }
+            if (lrk == 1 && rrk == 0) {
+                int n = arr_get(rv, 0);
+                int lsz = arr_size(lv);
+                int r = arr_vector(lsz);
+                if (r < 0) { eval_err = 5; return -1; }
+                int i = 0;
+                while (i < lsz) {
+                    arr_set(r, i, int_binomial(arr_get(lv, i), n));
+                    i++;
+                }
+                return r;
+            }
+            if (lrk == 1 && rrk == 1) {
+                int lsz = arr_size(lv);
+                int rsz = arr_size(rv);
+                if (lsz != rsz) { eval_err = 3; return -1; }
+                int r = arr_vector(lsz);
+                if (r < 0) { eval_err = 5; return -1; }
+                int i = 0;
+                while (i < lsz) {
+                    arr_set(r, i, int_binomial(arr_get(lv, i), arr_get(rv, i)));
+                    i++;
+                }
+                return r;
+            }
+            eval_err = 4;
+            return -1;
         }
 
         if (res_id == RES_RESIDUE) {

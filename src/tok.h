@@ -52,8 +52,11 @@
 #define RES_FMT     14
 #define RES_CUP     15
 #define RES_CAP     16
-#define RES_ABS     17
-#define RES_RESIDUE 18
+#define RES_ABS      17
+#define RES_RESIDUE  18
+#define RES_SIGNUM   19
+#define RES_FACTORIAL 20
+#define RES_BINOMIAL 21
 
 #define TOK_MAX    64   // max tokens per line
 
@@ -163,6 +166,15 @@ int lookup_reserved(char *src, int pos, int *end) {
 
     len = str_match(src, pos, "residue");
     if (len == 7 && !is_alnum(src[pos + 7])) { *end = pos + 7; return RES_RESIDUE; }
+
+    len = str_match(src, pos, "signum");
+    if (len == 6 && !is_alnum(src[pos + 6])) { *end = pos + 6; return RES_SIGNUM; }
+
+    len = str_match(src, pos, "factorial");
+    if (len == 9 && !is_alnum(src[pos + 9])) { *end = pos + 9; return RES_FACTORIAL; }
+
+    len = str_match(src, pos, "binomial");
+    if (len == 8 && !is_alnum(src[pos + 8])) { *end = pos + 8; return RES_BINOMIAL; }
 
     return -1;
 }

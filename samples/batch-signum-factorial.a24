@@ -1,0 +1,18 @@
+comment signum, factorial, binomial
+comment monadic signum: _1, 0, or 1
+quad assign signum _5
+quad assign signum 0
+quad assign signum 7
+quad assign signum _3 0 4 _1
+comment monadic factorial
+quad assign factorial 0
+quad assign factorial 1
+quad assign factorial 5
+quad assign factorial 7
+comment dyadic binomial: K binomial N = C(N,K)
+quad assign 2 binomial 5
+quad assign 0 binomial 7
+quad assign 3 binomial 3
+quad assign 1 binomial 10
+comment scalar extension
+quad assign 2 binomial 3 4 5 6
