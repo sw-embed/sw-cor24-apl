@@ -8,4 +8,3 @@ quad assign gradeup V
 comment with 0-origin
 quad-origin assign 0
 quad assign gradeup 30 10 20
-quad-origin assign 1

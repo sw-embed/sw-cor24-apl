@@ -11,5 +11,4 @@ comment 0-origin pick
 quad-origin assign 0
 0 pick 'cat' 'dog' 'fish'
 2 pick 'cat' 'dog' 'fish'
-quad-origin assign 1
 )OFF

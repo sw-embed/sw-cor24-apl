@@ -8,7 +8,7 @@ quad-origin assign 0
 quad assign 10 20 30 iota 20
 quad assign 10 20 30 iota 40
 quad-origin assign 1
-comment monadic iota still works
+comment monadic iota still works (back to default 1-origin)
 quad assign iota 5
 comment member: A member B -> 1 where A elements in B
 quad assign 1 2 3 4 member 2 4 6
