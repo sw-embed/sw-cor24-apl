@@ -169,9 +169,12 @@ int eval_fncall(int n);
 int eval_fncall(int n) {
     int fi = node_val[n];
 
-    // Evaluate right argument
-    int ra = eval(node_right[n]);
-    if (eval_err) return -1;
+    // Evaluate right argument (monadic/dyadic only, not niladic)
+    int ra = -1;
+    if (node_right[n] >= 0) {
+        ra = eval(node_right[n]);
+        if (eval_err) return -1;
+    }
 
     // Evaluate left argument (dyadic only)
     int la = -1;
@@ -212,17 +215,21 @@ int eval_fncall(int n) {
     int xs = fn_right_sym[fi];
     save_lval[lbase] = sym_val[rs];
     save_lset[lbase] = sym_set_flag[rs];
-    save_lval[lbase + 1] = sym_val[xs];
-    save_lset[lbase + 1] = sym_set_flag[xs];
+    if (xs >= 0) {
+        save_lval[lbase + 1] = sym_val[xs];
+        save_lset[lbase + 1] = sym_set_flag[xs];
+    }
     if (fn_left_sym[fi] >= 0) {
         int ys = fn_left_sym[fi];
         save_lval[lbase + 2] = sym_val[ys];
         save_lset[lbase + 2] = sym_set_flag[ys];
     }
 
-    // Set arguments
-    sym_val[xs] = ra;
-    sym_set_flag[xs] = 1;
+    // Set arguments (skip for niladic)
+    if (xs >= 0) {
+        sym_val[xs] = ra;
+        sym_set_flag[xs] = 1;
+    }
     if (fn_left_sym[fi] >= 0 && la >= 0) {
         sym_val[fn_left_sym[fi]] = la;
         sym_set_flag[fn_left_sym[fi]] = 1;
@@ -303,8 +310,10 @@ int eval_fncall(int n) {
     // Restore local variables
     sym_val[rs] = save_lval[lbase];
     sym_set_flag[rs] = save_lset[lbase];
-    sym_val[xs] = save_lval[lbase + 1];
-    sym_set_flag[xs] = save_lset[lbase + 1];
+    if (xs >= 0) {
+        sym_val[xs] = save_lval[lbase + 1];
+        sym_set_flag[xs] = save_lset[lbase + 1];
+    }
     if (fn_left_sym[fi] >= 0) {
         int ys = fn_left_sym[fi];
         sym_val[ys] = save_lval[lbase + 2];

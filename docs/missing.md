@@ -2,12 +2,6 @@
 
 ## Planned (in saga)
 
-### Step 058: Niladic Functions
-The interpreter only supports monadic (`del R assign FN X`) and dyadic
-(`del R assign X FN Y`) functions. Niladic functions (`del R assign FN`
-with no argument) are not implemented. Horse race demos use
-`Z assign RACE 0` as a workaround.
-
 ### Step 059: Local Variables
 The semicolon local-variable syntax (`del R assign FN X;LOCAL1;LOCAL2`)
 is not implemented. All variables inside functions are currently global.

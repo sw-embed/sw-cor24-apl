@@ -22,7 +22,7 @@ goto (I < NH)/SHOW
 del
 comment
 comment Main race function
-del R assign RACE X
+del R assign RACE
 R assign 0
 NEXT: RND assign RND + 1
 quad assign '=== Round ' cat fmt RND
@@ -42,5 +42,5 @@ TIE: quad assign (fmt NW) cat '-way tie!'
 del
 comment
 quad assign '*** HORSE RACE ***'
-Z assign RACE 0
+Z assign RACE
 )OFF

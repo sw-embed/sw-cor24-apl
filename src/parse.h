@@ -264,9 +264,17 @@ int parse_node(int mode) {
         int sym_idx = sym_lookup(parse_line, tok_val[parse_pos]);
         if (sym_idx < 0) { parse_err = 1; return 0; }
         parse_pos++;
-        // Check for monadic function call
+        // Check for function call (niladic or monadic)
         int fi = fn_lookup(sym_idx);
-        if (fi >= 0 && fn_left_sym[fi] < 0 && can_start_expr(parse_pos)) {
+        if (fi >= 0 && fn_left_sym[fi] < 0 && fn_right_sym[fi] < 0) {
+            // Niladic user function call: FN (no arguments)
+            int nd = ast_new();
+            node_type[nd] = NODE_FNCALL;
+            node_val[nd] = fi;
+            node_right[nd] = -1;
+            node_left[nd] = -1;
+            left = nd;
+        } else if (fi >= 0 && fn_left_sym[fi] < 0 && can_start_expr(parse_pos)) {
             // Monadic user function call: FN expr
             int arg = parse_node(0);
             if (parse_err) return 0;

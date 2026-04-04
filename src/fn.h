@@ -1,6 +1,7 @@
 // COR24 APL Interpreter -- User-Defined Functions
 // Function definition, storage, and call stack management.
-// Supports monadic (del R <- FN X) and dyadic (del R <- X FN Y).
+// Supports niladic (del R assign FN), monadic (del R assign FN X),
+// and dyadic (del R assign X FN Y).
 // Uses del (ASCII for nabla) to open/close function definitions.
 
 #pragma once
@@ -113,7 +114,12 @@ int parse_fn_header(char *s, int fi) {
         while (s[i] == 32) i++;
     }
 
-    if (nids == 2) {
+    if (nids == 1) {
+        // Niladic: FN (no arguments)
+        fn_name_sym[fi] = ids[0];
+        fn_right_sym[fi] = -1;
+        fn_left_sym[fi] = -1;
+    } else if (nids == 2) {
         // Monadic: FN X
         fn_name_sym[fi] = ids[0];
         fn_right_sym[fi] = ids[1];

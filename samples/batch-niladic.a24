@@ -1,0 +1,16 @@
+comment Niladic function test
+del R assign HELLO
+R assign 42
+del
+quad assign HELLO
+comment Niladic with quad output inside
+del R assign GREET
+quad assign 'hello world'
+R assign 0
+del
+quad assign GREET
+comment Monadic still works
+del R assign DOUBLE X
+R assign X + X
+del
+quad assign DOUBLE 5
