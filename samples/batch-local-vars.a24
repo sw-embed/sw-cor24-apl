@@ -1,0 +1,31 @@
+comment Local variables in functions (;VAR syntax)
+comment Local does not pollute global scope
+G assign 99
+del R assign TEST X;L
+L assign X * 2
+R assign L + 1
+del
+quad assign TEST 5
+quad assign G
+comment G is still 99
+
+comment Recursive with local state (depth 3 max due to stack)
+del R assign FACT X;T
+goto (X <= 1)/BASE
+T assign X - 1
+R assign X * FACT T
+goto 0
+BASE: R assign 1
+del
+quad assign FACT 1
+quad assign FACT 2
+quad assign FACT 3
+
+comment Multiple locals
+del R assign MULTI X;A;B;C
+A assign X + 1
+B assign X + 2
+C assign A * B
+R assign C
+del
+quad assign MULTI 3

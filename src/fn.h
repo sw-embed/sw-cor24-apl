@@ -10,6 +10,7 @@
 #define FN_BODY_MAX 16   // max body lines per function
 #define FN_BLINE    120  // max chars per body line
 #define CALL_MAX    8    // max recursion depth
+#define FN_LOCAL_MAX 8   // max local variables per function
 
 // Function table
 int fn_name_sym[FN_MAX];    // symbol index of function name
@@ -18,6 +19,8 @@ int fn_right_sym[FN_MAX];   // symbol index of right argument
 int fn_left_sym[FN_MAX];    // symbol index of left arg (-1 = monadic)
 int fn_lines[FN_MAX];       // number of body lines
 int fn_count;               // number of defined functions
+int fn_local_count[FN_MAX]; // number of local variables
+int fn_local_sym[64];       // FN_MAX * FN_LOCAL_MAX local var sym indices
 
 char fn_body[15360];        // FN_MAX * FN_BODY_MAX * FN_BLINE
 
@@ -135,5 +138,23 @@ int parse_fn_header(char *s, int fi) {
 
     fn_result_sym[fi] = result_sym;
     fn_lines[fi] = 0;
+
+    // Parse local variables: ;VAR1;VAR2 ...
+    int lbase = fi * FN_LOCAL_MAX;
+    int lcount = 0;
+    while (s[i] == 59 && lcount < FN_LOCAL_MAX) {  // 59 = ';'
+        i++;
+        while (s[i] == 32) i++;
+        if (!is_upper(s[i])) return 0;
+        int lpos = i;
+        while (is_alnum(s[i])) i++;
+        int lsym = sym_lookup(s, lpos);
+        if (lsym < 0) return 0;
+        fn_local_sym[lbase + lcount] = lsym;
+        lcount++;
+        while (s[i] == 32) i++;
+    }
+    fn_local_count[fi] = lcount;
+
     return 1;
 }

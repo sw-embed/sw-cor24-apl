@@ -65,8 +65,9 @@ int save_tcount[CALL_MAX];
 int save_btarget[CALL_MAX];
 
 // Save local variables per call frame (result, right, left = 3 per frame)
-int save_lval[24];   // CALL_MAX * 3
-int save_lset[24];   // CALL_MAX * 3
+// Per-frame: 3 (result, right, left) + FN_LOCAL_MAX (8) = 11
+int save_lval[88];   // CALL_MAX * 11
+int save_lset[88];   // CALL_MAX * 11
 
 int call_depth;
 
@@ -209,8 +210,8 @@ int eval_fncall(int n) {
     save_tcount[d] = tok_count;
     save_btarget[d] = branch_target;
 
-    // Save local variables (result, right, left)
-    int lbase = d * 3;
+    // Save local variables (result, right, left, then locals)
+    int lbase = d * 11;
     int rs = fn_result_sym[fi];
     int xs = fn_right_sym[fi];
     save_lval[lbase] = sym_val[rs];
@@ -223,6 +224,17 @@ int eval_fncall(int n) {
         int ys = fn_left_sym[fi];
         save_lval[lbase + 2] = sym_val[ys];
         save_lset[lbase + 2] = sym_set_flag[ys];
+    }
+    // Save and clear local variables
+    int nloc = fn_local_count[fi];
+    int flocbase = fi * FN_LOCAL_MAX;
+    int li = 0;
+    while (li < nloc) {
+        int ls = fn_local_sym[flocbase + li];
+        save_lval[lbase + 3 + li] = sym_val[ls];
+        save_lset[lbase + 3 + li] = sym_set_flag[ls];
+        sym_set_flag[ls] = 0;  // local starts undefined
+        li++;
     }
 
     // Set arguments (skip for niladic)
@@ -318,6 +330,14 @@ int eval_fncall(int n) {
         int ys = fn_left_sym[fi];
         sym_val[ys] = save_lval[lbase + 2];
         sym_set_flag[ys] = save_lset[lbase + 2];
+    }
+    // Restore local variables
+    li = 0;
+    while (li < nloc) {
+        int ls = fn_local_sym[flocbase + li];
+        sym_val[ls] = save_lval[lbase + 3 + li];
+        sym_set_flag[ls] = save_lset[lbase + 3 + li];
+        li++;
     }
 
     // Restore AST + token state

@@ -1,11 +1,14 @@
 # Missing Features and Deferred Work
 
-## Planned (in saga)
+## Known Limitations
 
-### Step 059: Local Variables
-The semicolon local-variable syntax (`del R assign FN X;LOCAL1;LOCAL2`)
-is not implemented. All variables inside functions are currently global.
-Only result, right arg, and left arg are saved/restored on the call stack.
+### Recursion Depth
+Maximum effective recursion depth is 3 levels due to C stack size
+(8 KB EBR). The `eval` and `eval_fncall` functions have large stack
+frames (~530 and ~594 bytes). Each recursion level uses ~2 KB.
+Exceeding depth 3 causes unpredictable errors. A future optimization
+could split `eval` into smaller per-node-type functions to reduce
+frame sizes.
 
 ## Deferred (requires hardware or library support)
 
