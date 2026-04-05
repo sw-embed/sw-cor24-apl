@@ -3,12 +3,10 @@
 ## Known Limitations
 
 ### Recursion Depth
-Maximum effective recursion depth is 3 levels due to C stack size
-(8 KB EBR). The `eval` and `eval_fncall` functions have large stack
-frames (~530 and ~594 bytes). Each recursion level uses ~2 KB.
-Exceeding depth 3 causes unpredictable errors. A future optimization
-could split `eval` into smaller per-node-type functions to reduce
-frame sizes.
+Maximum effective recursion depth is 6 levels due to C stack size
+(8 KB EBR). The `eval` dispatch function uses ~141 words (~423 bytes)
+and `eval_fncall` uses ~198 words (~594 bytes). Exceeding depth 6
+causes unpredictable errors (stack overflow).
 
 ## Deferred (requires hardware or library support)
 

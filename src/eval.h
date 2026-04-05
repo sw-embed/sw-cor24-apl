@@ -206,6 +206,11 @@ void print_array(int result) {
 // ---- Forward declarations for mutual recursion ----
 int eval(int n);
 int eval_fncall(int n);
+int eval_monad(int n);
+int eval_dyad(int n);
+int eval_binop_node(int n);
+int eval_inner_node(int n);
+int eval_outer_node(int n);
 
 // ---- User function call execution ----
 // Separated from eval() to reduce stack frame size for recursion.
@@ -430,6 +435,1510 @@ int eval_binop_scalar(int op, int a, int b) {
     if (op == TOK_OR_OP)      return a | b;
     eval_err = 1;
     return 0;
+}
+
+// ---- Extracted node-type handlers (reduce eval() stack frame) ----
+
+int eval_monad(int n) {
+    int v = eval(node_right[n]);
+    if (eval_err) return -1;
+    int res_id = node_val[n];
+
+    if (res_id == RES_IOTA) {
+        // iota N: lazy vector io_origin .. io_origin+N-1
+        // Only allocates header (4 words), elements computed on access.
+        if (arr_rank(v) != 0) { eval_err = 4; return -1; }
+        int count = arr_get(v, 0);
+        if (count < 0) { eval_err = 1; return -1; }
+        int r = arr_iota(count, io_origin);
+        if (r < 0) { eval_err = 5; return -1; }
+        return r;
+    }
+
+    if (res_id == RES_RHO) {
+        // rho A: return shape of A
+        int rk = arr_rank(v);
+        if (rk == 0) {
+            // Scalar: shape is empty vector
+            int r = arr_vector(0);
+            if (r < 0) { eval_err = 5; return -1; }
+            return r;
+        }
+        if (rk == 1) {
+            // Vector: shape is 1-element vector with length
+            int r = arr_scalar(arr_dim0(v));
+            if (r < 0) { eval_err = 5; return -1; }
+            return r;
+        }
+        if (rk == 2) {
+            // Matrix: shape is 2-element vector (rows cols)
+            int r = arr_vector(2);
+            if (r < 0) { eval_err = 5; return -1; }
+            arr_set(r, 0, arr_dim0(v));
+            arr_set(r, 1, arr_dim1(v));
+            return r;
+        }
+        eval_err = 4;
+        return -1;
+    }
+
+    if (res_id == RES_REV) {
+        // rev A: reverse a vector
+        int rk = arr_rank(v);
+        if (rk == 0) {
+            // Scalar: reverse is identity
+            return v;
+        }
+        if (rk == 1) {
+            int sz = arr_size(v);
+            int r = arr_vector(sz);
+            if (r < 0) { eval_err = 5; return -1; }
+            int i = 0;
+            while (i < sz) {
+                arr_set(r, i, arr_get(v, sz - 1 - i));
+                i++;
+            }
+            return r;
+        }
+        eval_err = 4;
+        return -1;
+    }
+
+    if (res_id == RES_CAT) {
+        // Monadic cat: ravel (flatten to 1D vector)
+        int rk = arr_rank(v);
+        if (rk == 0) {
+            // Scalar -> 1-element vector
+            int r = arr_vector(1);
+            if (r < 0) { eval_err = 5; return -1; }
+            arr_set(r, 0, arr_get(v, 0));
+            arr_set_type(r, arr_type(v));
+            return r;
+        }
+        if (rk == 1) {
+            // Vector: already 1D, return as-is
+            return v;
+        }
+        if (rk == 2) {
+            // Matrix -> vector of all elements
+            int sz = arr_size(v);
+            int r = arr_vector(sz);
+            if (r < 0) { eval_err = 5; return -1; }
+            arr_set_type(r, arr_type(v));
+            int i = 0;
+            while (i < sz) {
+                arr_set(r, i, arr_get(v, i));
+                i++;
+            }
+            return r;
+        }
+        eval_err = 4;
+        return -1;
+    }
+
+    if (res_id == RES_NOT) {
+        // not A: bitwise NOT (complement)
+        int rk = arr_rank(v);
+        if (rk == 0) {
+            int r = arr_scalar(~arr_get(v, 0));
+            if (r < 0) { eval_err = 5; return -1; }
+            return r;
+        }
+        if (rk == 1) {
+            int sz = arr_size(v);
+            int r = arr_vector(sz);
+            if (r < 0) { eval_err = 5; return -1; }
+            int i = 0;
+            while (i < sz) {
+                arr_set(r, i, ~arr_get(v, i));
+                i++;
+            }
+            return r;
+        }
+        if (rk == 2) {
+            int d0 = arr_dim0(v);
+            int d1 = arr_dim1(v);
+            int r = arr_new(2, d0, d1);
+            if (r < 0) { eval_err = 5; return -1; }
+            int sz = d0 * d1;
+            int i = 0;
+            while (i < sz) {
+                arr_set(r, i, ~arr_get(v, i));
+                i++;
+            }
+            return r;
+        }
+        eval_err = 4;
+        return -1;
+    }
+
+    if (res_id == RES_ROLL) {
+        // roll N: random integer 1..N (element-wise on vectors)
+        int rk = arr_rank(v);
+        if (rk == 0) {
+            int n_val = arr_get(v, 0);
+            if (n_val <= 0) { eval_err = 1; return -1; }
+            int r = arr_scalar(lcg_roll(n_val));
+            if (r < 0) { eval_err = 5; return -1; }
+            return r;
+        }
+        if (rk == 1) {
+            int sz = arr_size(v);
+            int r = arr_vector(sz);
+            if (r < 0) { eval_err = 5; return -1; }
+            int i = 0;
+            while (i < sz) {
+                int n_val = arr_get(v, i);
+                if (n_val <= 0) { eval_err = 1; return -1; }
+                arr_set(r, i, lcg_roll(n_val));
+                i++;
+            }
+            return r;
+        }
+        eval_err = 4;
+        return -1;
+    }
+
+    if (res_id == RES_FMT) {
+        // fmt N: convert integer to character vector
+        // fmt V: convert vector to space-separated character vector
+        int rk = arr_rank(v);
+        if (rk == 0) {
+            // Scalar: format single integer
+            int val = arr_get(v, 0);
+            int w = num_width(val);
+            int r = arr_vector(w);
+            if (r < 0) { eval_err = 5; return -1; }
+            arr_set_type(r, ARR_CHAR);
+            // Fill digits from right to left
+            int pos = w - 1;
+            int n_abs = val;
+            if (val < 0) { n_abs = 0 - val; }
+            if (n_abs == 0) {
+                arr_set(r, pos, 48);
+            } else {
+                while (n_abs > 0) {
+                    arr_set(r, pos, 48 + n_abs % 10);
+                    n_abs = n_abs / 10;
+                    pos--;
+                }
+            }
+            if (val < 0) { arr_set(r, 0, 95); } // underscore for negative
+            return r;
+        }
+        if (rk == 1) {
+            // Vector: format each element, space-separated
+            int sz = arr_size(v);
+            // Calculate total length
+            int total = 0;
+            int i = 0;
+            while (i < sz) {
+                if (i > 0) total++; // space separator
+                total = total + num_width(arr_get(v, i));
+                i++;
+            }
+            int r = arr_vector(total);
+            if (r < 0) { eval_err = 5; return -1; }
+            arr_set_type(r, ARR_CHAR);
+            int dp = 0; // destination position
+            i = 0;
+            while (i < sz) {
+                if (i > 0) { arr_set(r, dp, 32); dp++; } // space
+                int val = arr_get(v, i);
+                int w = num_width(val);
+                int n_abs = val;
+                if (val < 0) { n_abs = 0 - val; }
+                // Fill this number right-to-left within its field
+                int ep = dp + w - 1; // end position
+                if (n_abs == 0) {
+                    arr_set(r, ep, 48);
+                } else {
+                    int p = ep;
+                    while (n_abs > 0) {
+                        arr_set(r, p, 48 + n_abs % 10);
+                        n_abs = n_abs / 10;
+                        p--;
+                    }
+                }
+                if (val < 0) { arr_set(r, dp, 95); }
+                dp = dp + w;
+                i++;
+            }
+            return r;
+        }
+        eval_err = 4;
+        return -1;
+    }
+
+    if (res_id == RES_CUP) {
+        // Monadic cup (unique): remove duplicates, keep first occurrence
+        if (arr_rank(v) > 1) { eval_err = 4; return -1; }
+        int sz = arr_size(v);
+        if (sz == 0) return v;
+        // First pass: count unique elements
+        int uniq = 0;
+        int j;
+        int i = 0;
+        while (i < sz) {
+            int val = arr_get(v, i);
+            int dup = 0;
+            j = 0;
+            while (j < i) {
+                if (arr_get(v, j) == val) { dup = 1; j = i; }
+                j++;
+            }
+            if (!dup) uniq++;
+            i++;
+        }
+        int r = arr_vector(uniq);
+        if (r < 0) { eval_err = 5; return -1; }
+        if (arr_type(v) == ARR_CHAR) arr_set_type(r, ARR_CHAR);
+        int ri = 0;
+        i = 0;
+        while (i < sz) {
+            int val = arr_get(v, i);
+            int dup = 0;
+            j = 0;
+            while (j < i) {
+                if (arr_get(v, j) == val) { dup = 1; j = i; }
+                j++;
+            }
+            if (!dup) { arr_set(r, ri, val); ri++; }
+            i++;
+        }
+        return r;
+    }
+
+    if (res_id == RES_ENCLOSE) {
+        // enclose A: wrap value in a scalar box
+        // Creates a 1-element boxed vector containing A
+        int r = arr_vector(1);
+        if (r < 0) { eval_err = 5; return -1; }
+        arr_set_type(r, ARR_BOXED);
+        arr_set(r, 0, v);
+        return r;
+    }
+
+    if (res_id == RES_TRANSPOSE) {
+        // transpose M: swap rows and columns
+        int rk = arr_rank(v);
+        if (rk <= 1) return v;  // scalar/vector: no-op
+        if (rk == 2) {
+            int rows = arr_dim0(v);
+            int cols = arr_dim1(v);
+            int r = arr_new(2, cols, rows);
+            if (r < 0) { eval_err = 5; return -1; }
+            int row = 0;
+            while (row < rows) {
+                int col = 0;
+                while (col < cols) {
+                    arr_set(r, col * rows + row, arr_get(v, row * cols + col));
+                    col++;
+                }
+                row++;
+            }
+            return r;
+        }
+        eval_err = 4;
+        return -1;
+    }
+
+    if (res_id == RES_GRADEUP || res_id == RES_GRADEDN) {
+        // gradeup/gradedown: return indices that sort ascending/descending
+        if (arr_rank(v) != 1) { eval_err = 4; return -1; }
+        int sz = arr_size(v);
+        int r = arr_vector(sz);
+        if (r < 0) { eval_err = 5; return -1; }
+        // Initialize indices
+        int i = 0;
+        while (i < sz) { arr_set(r, i, i + io_origin); i++; }
+        // Selection sort on indices by comparing v[idx] values
+        int up = (res_id == RES_GRADEUP);
+        i = 0;
+        while (i < sz - 1) {
+            int best = i;
+            int j = i + 1;
+            while (j < sz) {
+                int bi = arr_get(r, best) - io_origin;
+                int ji = arr_get(r, j) - io_origin;
+                int bv = arr_get(v, bi);
+                int jv = arr_get(v, ji);
+                if (up ? (jv < bv) : (jv > bv)) best = j;
+                j++;
+            }
+            if (best != i) {
+                int tmp = arr_get(r, i);
+                arr_set(r, i, arr_get(r, best));
+                arr_set(r, best, tmp);
+            }
+            i++;
+        }
+        return r;
+    }
+
+    if (res_id == RES_SIGNUM) {
+        // signum A: returns _1, 0, or 1
+        int rk = arr_rank(v);
+        if (rk == 0) {
+            int val = arr_get(v, 0);
+            int r = arr_scalar(val > 0 ? 1 : (val < 0 ? 0 - 1 : 0));
+            if (r < 0) { eval_err = 5; return -1; }
+            return r;
+        }
+        if (rk <= 2) {
+            int sz = arr_size(v);
+            int r;
+            if (rk == 1) { r = arr_vector(sz); }
+            else { r = arr_new(2, arr_dim0(v), arr_dim1(v)); }
+            if (r < 0) { eval_err = 5; return -1; }
+            int i = 0;
+            while (i < sz) {
+                int val = arr_get(v, i);
+                arr_set(r, i, val > 0 ? 1 : (val < 0 ? 0 - 1 : 0));
+                i++;
+            }
+            return r;
+        }
+        eval_err = 4;
+        return -1;
+    }
+
+    if (res_id == RES_FACTORIAL) {
+        // factorial N: N!
+        if (arr_rank(v) != 0) { eval_err = 4; return -1; }
+        int val = arr_get(v, 0);
+        if (val < 0) { eval_err = 1; return -1; }
+        int r = arr_scalar(int_factorial(val));
+        if (r < 0) { eval_err = 5; return -1; }
+        return r;
+    }
+
+    if (res_id == RES_ABS) {
+        // abs A: absolute value, element-wise
+        int rk = arr_rank(v);
+        if (rk == 0) {
+            int val = arr_get(v, 0);
+            if (val < 0) val = 0 - val;
+            int r = arr_scalar(val);
+            if (r < 0) { eval_err = 5; return -1; }
+            return r;
+        }
+        if (rk <= 2) {
+            int sz = arr_size(v);
+            int r;
+            if (rk == 1) { r = arr_vector(sz); }
+            else { r = arr_new(2, arr_dim0(v), arr_dim1(v)); }
+            if (r < 0) { eval_err = 5; return -1; }
+            int i = 0;
+            while (i < sz) {
+                int val = arr_get(v, i);
+                if (val < 0) val = 0 - val;
+                arr_set(r, i, val);
+                i++;
+            }
+            return r;
+        }
+        eval_err = 4;
+        return -1;
+    }
+
+    // Unknown monadic function
+    eval_err = 1;
+    return -1;
+}
+
+int eval_inner_node(int n) {
+    int lv = eval(node_left[n]);
+    if (eval_err) return -1;
+    int rv = eval(node_right[n]);
+    if (eval_err) return -1;
+    int f_op = node_val[n] & 255;
+    int g_op = (node_val[n] / 256) & 255;
+    int lrk = arr_rank(lv);
+    int rrk = arr_rank(rv);
+
+    // Vector . Vector: f/ (A g B)
+    if (lrk <= 1 && rrk <= 1) {
+        int lsz = arr_size(lv);
+        int rsz = arr_size(rv);
+        if (lsz != rsz) { eval_err = 3; return -1; }
+        // Apply g element-wise, then reduce with f
+        int acc = eval_binop_scalar(g_op, arr_get(lv, lsz - 1), arr_get(rv, lsz - 1));
+        if (eval_err) return -1;
+        int i = lsz - 2;
+        while (i >= 0) {
+            int gi = eval_binop_scalar(g_op, arr_get(lv, i), arr_get(rv, i));
+            if (eval_err) return -1;
+            acc = eval_binop_scalar(f_op, gi, acc);
+            if (eval_err) return -1;
+            i--;
+        }
+        int r = arr_scalar(acc);
+        if (r < 0) { eval_err = 5; return -1; }
+        return r;
+    }
+
+    // Matrix . Vector: each row inner-product with vector
+    if (lrk == 2 && rrk <= 1) {
+        int rows = arr_dim0(lv);
+        int cols = arr_dim1(lv);
+        int rsz = arr_size(rv);
+        if (cols != rsz) { eval_err = 3; return -1; }
+        int r = arr_vector(rows);
+        if (r < 0) { eval_err = 5; return -1; }
+        int row = 0;
+        while (row < rows) {
+            int acc = eval_binop_scalar(g_op, arr_get(lv, row * cols + cols - 1), arr_get(rv, cols - 1));
+            if (eval_err) return -1;
+            int k = cols - 2;
+            while (k >= 0) {
+                int gi = eval_binop_scalar(g_op, arr_get(lv, row * cols + k), arr_get(rv, k));
+                if (eval_err) return -1;
+                acc = eval_binop_scalar(f_op, gi, acc);
+                if (eval_err) return -1;
+                k--;
+            }
+            arr_set(r, row, acc);
+            row++;
+        }
+        return r;
+    }
+
+    // Matrix . Matrix: standard matrix multiply generalization
+    if (lrk == 2 && rrk == 2) {
+        int lrows = arr_dim0(lv);
+        int inner = arr_dim1(lv);
+        int rcols = arr_dim1(rv);
+        if (inner != arr_dim0(rv)) { eval_err = 3; return -1; }
+        int r = arr_new(2, lrows, rcols);
+        if (r < 0) { eval_err = 5; return -1; }
+        int row = 0;
+        while (row < lrows) {
+            int col = 0;
+            while (col < rcols) {
+                int acc = eval_binop_scalar(g_op, arr_get(lv, row * inner + inner - 1), arr_get(rv, (inner - 1) * rcols + col));
+                if (eval_err) return -1;
+                int k = inner - 2;
+                while (k >= 0) {
+                    int gi = eval_binop_scalar(g_op, arr_get(lv, row * inner + k), arr_get(rv, k * rcols + col));
+                    if (eval_err) return -1;
+                    acc = eval_binop_scalar(f_op, gi, acc);
+                    if (eval_err) return -1;
+                    k--;
+                }
+                arr_set(r, row * rcols + col, acc);
+                col++;
+            }
+            row++;
+        }
+        return r;
+    }
+
+    eval_err = 4;
+    return -1;
+}
+
+int eval_outer_node(int n) {
+    int lv = eval(node_left[n]);
+    if (eval_err) return -1;
+    int rv = eval(node_right[n]);
+    if (eval_err) return -1;
+    int op = node_val[n];
+    // Both args must be vectors (or scalars treated as 1-element)
+    int lrk = arr_rank(lv);
+    int rrk = arr_rank(rv);
+    if (lrk > 1 || rrk > 1) { eval_err = 4; return -1; }
+    int lsz = arr_size(lv);
+    int rsz = arr_size(rv);
+    int r = arr_new(2, lsz, rsz);
+    if (r < 0) { eval_err = 5; return -1; }
+    int i = 0;
+    while (i < lsz) {
+        int a = arr_get(lv, i);
+        int j = 0;
+        while (j < rsz) {
+            int b = arr_get(rv, j);
+            int val = eval_binop_scalar(op, a, b);
+            if (eval_err) return -1;
+            arr_set(r, i * rsz + j, val);
+            j++;
+        }
+        i++;
+    }
+    return r;
+}
+
+int eval_dyad(int n) {
+    int lv = eval(node_left[n]);
+    if (eval_err) return -1;
+    int rv = eval(node_right[n]);
+    if (eval_err) return -1;
+    int res_id = node_val[n];
+
+    if (res_id == RES_RHO) {
+        // S rho A: reshape A to shape S with cyclic fill
+        // S is scalar -> result is vector of that length
+        // S is 2-element vector -> result is matrix
+        int lrk = arr_rank(lv);
+        int new_rank;
+        int d0;
+        int d1;
+
+        if (lrk == 0) {
+            // Scalar shape -> vector
+            new_rank = 1;
+            d0 = arr_get(lv, 0);
+            d1 = 0;
+            if (d0 < 0) { eval_err = 1; return -1; }
+        } else if (lrk == 1) {
+            int lsz = arr_size(lv);
+            if (lsz == 1) {
+                new_rank = 1;
+                d0 = arr_get(lv, 0);
+                d1 = 0;
+                if (d0 < 0) { eval_err = 1; return -1; }
+            } else if (lsz == 2) {
+                new_rank = 2;
+                d0 = arr_get(lv, 0);
+                d1 = arr_get(lv, 1);
+                if (d0 < 0 || d1 < 0) { eval_err = 1; return -1; }
+            } else {
+                // Only rank 1 and 2 supported
+                eval_err = 4;
+                return -1;
+            }
+        } else {
+            eval_err = 4;
+            return -1;
+        }
+
+        int r = arr_new(new_rank, d0, d1);
+        if (r < 0) { eval_err = 5; return -1; }
+
+        int total = arr_size(r);
+        int src_sz = arr_size(rv);
+        if (src_sz == 0) { eval_err = 3; return -1; }
+
+        // Preserve char type (but not iota — result is materialized)
+        if (arr_type(rv) == ARR_CHAR) arr_set_type(r, ARR_CHAR);
+
+        int i = 0;
+        while (i < total) {
+            arr_set(r, i, arr_get(rv, i % src_sz));
+            i++;
+        }
+        return r;
+    }
+
+    if (res_id == RES_TAKE) {
+        // N take A: take first N elements/rows (negative N = from end)
+        if (arr_rank(lv) != 0) { eval_err = 4; return -1; }
+        int count = arr_get(lv, 0);
+        int rrk = arr_rank(rv);
+
+        // Lazy iota shortcut: return new lazy iota for the slice
+        if (rrk == 1 && arr_type(rv) == ARR_IOTA) {
+            int sz = arr_size(rv);
+            int abs_n = count;
+            if (abs_n < 0) abs_n = 0 - abs_n;
+            if (abs_n > sz) { eval_err = 3; return -1; }
+            int origin = arr_dim1(rv);
+            if (count < 0) origin = origin + sz - abs_n;
+            return arr_iota(abs_n, origin);
+        }
+
+        if (rrk <= 1) {
+            int sz = arr_size(rv);
+            int abs_n = count;
+            if (abs_n < 0) abs_n = 0 - abs_n;
+            if (abs_n > sz) { eval_err = 3; return -1; }
+
+            int r = arr_vector(abs_n);
+            if (r < 0) { eval_err = 5; return -1; }
+            int start = 0;
+            if (count < 0) start = sz - abs_n;
+            int i = 0;
+            while (i < abs_n) {
+                arr_set(r, i, arr_get(rv, start + i));
+                i++;
+            }
+            return r;
+        }
+
+        if (rrk == 2) {
+            int rows = arr_dim0(rv);
+            int cols = arr_dim1(rv);
+            int abs_n = count;
+            if (abs_n < 0) abs_n = 0 - abs_n;
+            if (abs_n > rows) { eval_err = 3; return -1; }
+
+            int r = arr_new(2, abs_n, cols);
+            if (r < 0) { eval_err = 5; return -1; }
+            int start_row = 0;
+            if (count < 0) start_row = rows - abs_n;
+            int total = abs_n * cols;
+            int i = 0;
+            while (i < total) {
+                arr_set(r, i, arr_get(rv, start_row * cols + i));
+                i++;
+            }
+            return r;
+        }
+
+        eval_err = 4;
+        return -1;
+    }
+
+    if (res_id == RES_DROP) {
+        // N drop A: drop first N elements/rows (negative N = from end)
+        if (arr_rank(lv) != 0) { eval_err = 4; return -1; }
+        int count = arr_get(lv, 0);
+        int rrk = arr_rank(rv);
+
+        // Lazy iota shortcut: return new lazy iota for the remainder
+        if (rrk == 1 && arr_type(rv) == ARR_IOTA) {
+            int sz = arr_size(rv);
+            int abs_n = count;
+            if (abs_n < 0) abs_n = 0 - abs_n;
+            if (abs_n > sz) abs_n = sz;
+            int new_sz = sz - abs_n;
+            int origin = arr_dim1(rv);
+            if (count >= 0) origin = origin + abs_n;
+            return arr_iota(new_sz, origin);
+        }
+
+        if (rrk <= 1) {
+            int sz = arr_size(rv);
+            int abs_n = count;
+            if (abs_n < 0) abs_n = 0 - abs_n;
+            if (abs_n > sz) abs_n = sz;
+
+            int new_sz = sz - abs_n;
+            int r = arr_vector(new_sz);
+            if (r < 0) { eval_err = 5; return -1; }
+            int start = abs_n;
+            if (count < 0) start = 0;
+            int i = 0;
+            while (i < new_sz) {
+                arr_set(r, i, arr_get(rv, start + i));
+                i++;
+            }
+            return r;
+        }
+
+        if (rrk == 2) {
+            int rows = arr_dim0(rv);
+            int cols = arr_dim1(rv);
+            int abs_n = count;
+            if (abs_n < 0) abs_n = 0 - abs_n;
+            if (abs_n > rows) abs_n = rows;
+
+            int new_rows = rows - abs_n;
+            int r = arr_new(2, new_rows, cols);
+            if (r < 0) { eval_err = 5; return -1; }
+            int start_row = abs_n;
+            if (count < 0) start_row = 0;
+            int total = new_rows * cols;
+            int i = 0;
+            while (i < total) {
+                arr_set(r, i, arr_get(rv, start_row * cols + i));
+                i++;
+            }
+            return r;
+        }
+
+        eval_err = 4;
+        return -1;
+    }
+
+    if (res_id == RES_CAT) {
+        // Dyadic cat: catenate two arrays
+        int lrk = arr_rank(lv);
+        int rrk = arr_rank(rv);
+        int lsz = arr_size(lv);
+        int rsz = arr_size(rv);
+        int total = lsz + rsz;
+        int r = arr_vector(total);
+        if (r < 0) { eval_err = 5; return -1; }
+        // Preserve char type if both operands are char
+        if (arr_type(lv) == ARR_CHAR && arr_type(rv) == ARR_CHAR) {
+            arr_set_type(r, ARR_CHAR);
+        }
+        int i = 0;
+        while (i < lsz) {
+            arr_set(r, i, arr_get(lv, i));
+            i++;
+        }
+        i = 0;
+        while (i < rsz) {
+            arr_set(r, lsz + i, arr_get(rv, i));
+            i++;
+        }
+        return r;
+    }
+
+    if (res_id == RES_AND || res_id == RES_OR) {
+        // Bitwise AND / OR on conformable arrays
+        int lrk = arr_rank(lv);
+        int rrk = arr_rank(rv);
+
+        // Scalar op scalar
+        if (lrk == 0 && rrk == 0) {
+            int a = arr_get(lv, 0);
+            int b = arr_get(rv, 0);
+            int val = (res_id == RES_AND) ? (a & b) : (a | b);
+            int r = arr_scalar(val);
+            if (r < 0) { eval_err = 5; return -1; }
+            return r;
+        }
+
+        // Vector op vector
+        if (lrk == 1 && rrk == 1) {
+            int lsz = arr_size(lv);
+            int rsz = arr_size(rv);
+            if (lsz != rsz) { eval_err = 3; return -1; }
+            int r = arr_vector(lsz);
+            if (r < 0) { eval_err = 5; return -1; }
+            int i = 0;
+            while (i < lsz) {
+                int a = arr_get(lv, i);
+                int b = arr_get(rv, i);
+                arr_set(r, i, (res_id == RES_AND) ? (a & b) : (a | b));
+                i++;
+            }
+            return r;
+        }
+
+        // Scalar extension: scalar op vector
+        if (lrk == 0 && rrk == 1) {
+            int a = arr_get(lv, 0);
+            int rsz = arr_size(rv);
+            int r = arr_vector(rsz);
+            if (r < 0) { eval_err = 5; return -1; }
+            int i = 0;
+            while (i < rsz) {
+                int b = arr_get(rv, i);
+                arr_set(r, i, (res_id == RES_AND) ? (a & b) : (a | b));
+                i++;
+            }
+            return r;
+        }
+
+        // Scalar extension: vector op scalar
+        if (lrk == 1 && rrk == 0) {
+            int b = arr_get(rv, 0);
+            int lsz = arr_size(lv);
+            int r = arr_vector(lsz);
+            if (r < 0) { eval_err = 5; return -1; }
+            int i = 0;
+            while (i < lsz) {
+                int a = arr_get(lv, i);
+                arr_set(r, i, (res_id == RES_AND) ? (a & b) : (a | b));
+                i++;
+            }
+            return r;
+        }
+
+        eval_err = 4;
+        return -1;
+    }
+
+    if (res_id == RES_CEIL || res_id == RES_FLOOR) {
+        // Dyadic ceil (max) / floor (min) on conformable arrays
+        int op = (res_id == RES_CEIL) ? TOK_CEIL : TOK_FLOOR;
+        int lrk = arr_rank(lv);
+        int rrk = arr_rank(rv);
+
+        // Scalar op scalar
+        if (lrk == 0 && rrk == 0) {
+            int val = eval_binop_scalar(op, arr_get(lv, 0), arr_get(rv, 0));
+            if (eval_err) return -1;
+            int r = arr_scalar(val);
+            if (r < 0) { eval_err = 5; return -1; }
+            return r;
+        }
+
+        // Vector op vector
+        if (lrk == 1 && rrk == 1) {
+            int lsz = arr_size(lv);
+            int rsz = arr_size(rv);
+            if (lsz != rsz) { eval_err = 3; return -1; }
+            int r = arr_vector(lsz);
+            if (r < 0) { eval_err = 5; return -1; }
+            int i = 0;
+            while (i < lsz) {
+                arr_set(r, i, eval_binop_scalar(op, arr_get(lv, i), arr_get(rv, i)));
+                if (eval_err) return -1;
+                i++;
+            }
+            return r;
+        }
+
+        // Scalar extension: scalar op vector
+        if (lrk == 0 && rrk == 1) {
+            int a = arr_get(lv, 0);
+            int rsz = arr_size(rv);
+            int r = arr_vector(rsz);
+            if (r < 0) { eval_err = 5; return -1; }
+            int i = 0;
+            while (i < rsz) {
+                arr_set(r, i, eval_binop_scalar(op, a, arr_get(rv, i)));
+                if (eval_err) return -1;
+                i++;
+            }
+            return r;
+        }
+
+        // Scalar extension: vector op scalar
+        if (lrk == 1 && rrk == 0) {
+            int b = arr_get(rv, 0);
+            int lsz = arr_size(lv);
+            int r = arr_vector(lsz);
+            if (r < 0) { eval_err = 5; return -1; }
+            int i = 0;
+            while (i < lsz) {
+                arr_set(r, i, eval_binop_scalar(op, arr_get(lv, i), b));
+                if (eval_err) return -1;
+                i++;
+            }
+            return r;
+        }
+
+        eval_err = 4;
+        return -1;
+    }
+
+    if (res_id == RES_COMPRESS) {
+        // Compress/replicate: COUNTS compress VECTOR
+        // Boolean (0/1): select elements. Integer: replicate N times.
+        int lrk = arr_rank(lv);
+        int rrk = arr_rank(rv);
+        if (lrk > 1 || rrk > 1) { eval_err = 4; return -1; }
+
+        int lsz = arr_size(lv);
+        int rsz = arr_size(rv);
+        if (lsz != rsz) { eval_err = 3; return -1; }
+
+        // Count total output size
+        int total = 0;
+        int i = 0;
+        while (i < lsz) {
+            int c = arr_get(lv, i);
+            if (c < 0) { eval_err = 1; return -1; }
+            total = total + c;
+            i++;
+        }
+
+        int r = arr_vector(total);
+        if (r < 0) { eval_err = 5; return -1; }
+        if (arr_type(rv) == ARR_CHAR) arr_set_type(r, ARR_CHAR);
+
+        int ri = 0;
+        i = 0;
+        while (i < lsz) {
+            int c = arr_get(lv, i);
+            int val = arr_get(rv, i);
+            int j = 0;
+            while (j < c) { arr_set(r, ri, val); ri++; j++; }
+            i++;
+        }
+        return r;
+    }
+
+    if (res_id == RES_PICK) {
+        // I pick V: pick element I from nested/boxed vector V
+        // Returns the boxed element (string or sub-array)
+        // Also works on simple vectors, returning a scalar
+        int lrk = arr_rank(lv);
+        int rrk = arr_rank(rv);
+
+        // Left must be scalar (the index)
+        if (lrk > 1) { eval_err = 4; return -1; }
+        // Right must be vector
+        if (rrk > 1) { eval_err = 4; return -1; }
+
+        int idx = arr_get(lv, 0) - io_origin;
+        int rsz = arr_size(rv);
+
+        // Bounds check
+        if (idx < 0 || idx >= rsz) { eval_err = 3; return -1; }
+
+        if (arr_type(rv) == ARR_BOXED) {
+            // Return the boxed element (a heap index to another array)
+            return arr_get(rv, idx);
+        }
+        // Simple vector: return scalar
+        int r = arr_scalar(arr_get(rv, idx));
+        if (r < 0) { eval_err = 5; return -1; }
+        // Preserve char type (but not iota — value is materialized)
+        if (arr_type(rv) == ARR_CHAR) arr_set_type(r, ARR_CHAR);
+        return r;
+    }
+
+    if (res_id == RES_CUP) {
+        // Dyadic cup (union): left unchanged, plus elements of right not in left
+        if (arr_rank(lv) > 1 || arr_rank(rv) > 1) { eval_err = 4; return -1; }
+        int lsz = arr_size(lv);
+        int rsz = arr_size(rv);
+        // Count elements in right not in left
+        int extra = 0;
+        int i = 0;
+        int j;
+        while (i < rsz) {
+            int val = arr_get(rv, i);
+            int found = 0;
+            j = 0;
+            while (j < lsz) {
+                if (arr_get(lv, j) == val) { found = 1; j = lsz; }
+                j++;
+            }
+            if (!found) extra++;
+            i++;
+        }
+        int r = arr_vector(lsz + extra);
+        if (r < 0) { eval_err = 5; return -1; }
+        if (arr_type(lv) == ARR_CHAR) arr_set_type(r, ARR_CHAR);
+        i = 0;
+        while (i < lsz) { arr_set(r, i, arr_get(lv, i)); i++; }
+        int ri = lsz;
+        i = 0;
+        while (i < rsz) {
+            int val = arr_get(rv, i);
+            int found = 0;
+            j = 0;
+            while (j < lsz) {
+                if (arr_get(lv, j) == val) { found = 1; j = lsz; }
+                j++;
+            }
+            if (!found) { arr_set(r, ri, val); ri++; }
+            i++;
+        }
+        return r;
+    }
+
+    if (res_id == RES_REV) {
+        // N rev V: rotate vector V left by N positions
+        if (arr_rank(lv) != 0) { eval_err = 4; return -1; }
+        if (arr_rank(rv) != 1) { eval_err = 4; return -1; }
+        int n = arr_get(lv, 0);
+        int sz = arr_size(rv);
+        if (sz == 0) return rv;
+        // Normalize: handle negative and large N
+        int rot = ((n % sz) + sz) % sz;
+        int r = arr_vector(sz);
+        if (r < 0) { eval_err = 5; return -1; }
+        if (arr_type(rv) == ARR_CHAR) arr_set_type(r, ARR_CHAR);
+        int i = 0;
+        while (i < sz) {
+            int src = (i + rot) % sz;
+            arr_set(r, i, arr_get(rv, src));
+            i++;
+        }
+        return r;
+    }
+
+    if (res_id == RES_IOTA) {
+        // Dyadic iota (index-of): A iota B -> index of B in A
+        // Not found returns (rho A) + io_origin (past end)
+        if (arr_rank(lv) > 1 || arr_rank(rv) > 1) { eval_err = 4; return -1; }
+        int lsz = arr_size(lv);
+        int notfound = lsz + io_origin;
+        int rrk = arr_rank(rv);
+        if (rrk == 0) {
+            // Scalar right: return scalar index
+            int b = arr_get(rv, 0);
+            int idx = notfound;
+            int j = 0;
+            while (j < lsz) {
+                if (arr_get(lv, j) == b) { idx = j + io_origin; j = lsz; }
+                j++;
+            }
+            int r = arr_scalar(idx);
+            if (r < 0) { eval_err = 5; return -1; }
+            return r;
+        }
+        // Vector right: return vector of indices
+        int rsz = arr_size(rv);
+        int r = arr_vector(rsz);
+        if (r < 0) { eval_err = 5; return -1; }
+        int i = 0;
+        while (i < rsz) {
+            int b = arr_get(rv, i);
+            int idx = notfound;
+            int j = 0;
+            while (j < lsz) {
+                if (arr_get(lv, j) == b) { idx = j + io_origin; j = lsz; }
+                j++;
+            }
+            arr_set(r, i, idx);
+            i++;
+        }
+        return r;
+    }
+
+    if (res_id == RES_MEMBER) {
+        // A member B: 1 where elements of A appear in B
+        if (arr_rank(lv) > 1 || arr_rank(rv) > 1) { eval_err = 4; return -1; }
+        int lsz = arr_size(lv);
+        int rsz = arr_size(rv);
+        int lrk = arr_rank(lv);
+        if (lrk == 0) {
+            int a = arr_get(lv, 0);
+            int found = 0;
+            int j = 0;
+            while (j < rsz) {
+                if (arr_get(rv, j) == a) { found = 1; j = rsz; }
+                j++;
+            }
+            int r = arr_scalar(found);
+            if (r < 0) { eval_err = 5; return -1; }
+            return r;
+        }
+        int r = arr_vector(lsz);
+        if (r < 0) { eval_err = 5; return -1; }
+        int i = 0;
+        while (i < lsz) {
+            int a = arr_get(lv, i);
+            int found = 0;
+            int j = 0;
+            while (j < rsz) {
+                if (arr_get(rv, j) == a) { found = 1; j = rsz; }
+                j++;
+            }
+            arr_set(r, i, found);
+            i++;
+        }
+        return r;
+    }
+
+    if (res_id == RES_BINOMIAL) {
+        // K binomial N: C(N,K) combinations
+        int lrk = arr_rank(lv);
+        int rrk = arr_rank(rv);
+        if (lrk == 0 && rrk == 0) {
+            int r = arr_scalar(int_binomial(arr_get(lv, 0), arr_get(rv, 0)));
+            if (r < 0) { eval_err = 5; return -1; }
+            return r;
+        }
+        if (lrk == 0 && rrk == 1) {
+            int k = arr_get(lv, 0);
+            int rsz = arr_size(rv);
+            int r = arr_vector(rsz);
+            if (r < 0) { eval_err = 5; return -1; }
+            int i = 0;
+            while (i < rsz) {
+                arr_set(r, i, int_binomial(k, arr_get(rv, i)));
+                i++;
+            }
+            return r;
+        }
+        if (lrk == 1 && rrk == 0) {
+            int n = arr_get(rv, 0);
+            int lsz = arr_size(lv);
+            int r = arr_vector(lsz);
+            if (r < 0) { eval_err = 5; return -1; }
+            int i = 0;
+            while (i < lsz) {
+                arr_set(r, i, int_binomial(arr_get(lv, i), n));
+                i++;
+            }
+            return r;
+        }
+        if (lrk == 1 && rrk == 1) {
+            int lsz = arr_size(lv);
+            int rsz = arr_size(rv);
+            if (lsz != rsz) { eval_err = 3; return -1; }
+            int r = arr_vector(lsz);
+            if (r < 0) { eval_err = 5; return -1; }
+            int i = 0;
+            while (i < lsz) {
+                arr_set(r, i, int_binomial(arr_get(lv, i), arr_get(rv, i)));
+                i++;
+            }
+            return r;
+        }
+        eval_err = 4;
+        return -1;
+    }
+
+    if (res_id == RES_RESIDUE) {
+        // A residue B: modulo (APL |). B mod A. 3 residue 7 -> 1
+        // Avoids negative division (COR24 software div is unsigned-only)
+        int lrk = arr_rank(lv);
+        int rrk = arr_rank(rv);
+        if (lrk == 0 && rrk == 0) {
+            int a = arr_get(lv, 0);
+            int b = arr_get(rv, 0);
+            if (a == 0) { eval_err = 1; return -1; }
+            int r = arr_scalar(int_residue(a, b));
+            if (r < 0) { eval_err = 5; return -1; }
+            return r;
+        }
+        if (lrk == 0 && rrk == 1) {
+            int a = arr_get(lv, 0);
+            if (a == 0) { eval_err = 1; return -1; }
+            int rsz = arr_size(rv);
+            int r = arr_vector(rsz);
+            if (r < 0) { eval_err = 5; return -1; }
+            int i = 0;
+            while (i < rsz) {
+                arr_set(r, i, int_residue(a, arr_get(rv, i)));
+                i++;
+            }
+            return r;
+        }
+        if (lrk == 1 && rrk == 0) {
+            int b = arr_get(rv, 0);
+            int lsz = arr_size(lv);
+            int r = arr_vector(lsz);
+            if (r < 0) { eval_err = 5; return -1; }
+            int i = 0;
+            while (i < lsz) {
+                int a = arr_get(lv, i);
+                if (a == 0) { eval_err = 1; return -1; }
+                arr_set(r, i, int_residue(a, b));
+                i++;
+            }
+            return r;
+        }
+        if (lrk == 1 && rrk == 1) {
+            int lsz = arr_size(lv);
+            int rsz = arr_size(rv);
+            if (lsz != rsz) { eval_err = 3; return -1; }
+            int r = arr_vector(lsz);
+            if (r < 0) { eval_err = 5; return -1; }
+            int i = 0;
+            while (i < lsz) {
+                int a = arr_get(lv, i);
+                int b = arr_get(rv, i);
+                if (a == 0) { eval_err = 1; return -1; }
+                arr_set(r, i, int_residue(a, b));
+                i++;
+            }
+            return r;
+        }
+        eval_err = 4;
+        return -1;
+    }
+
+    if (res_id == RES_CAP) {
+        // Dyadic cap (intersection): elements of left that appear in right
+        if (arr_rank(lv) > 1 || arr_rank(rv) > 1) { eval_err = 4; return -1; }
+        int lsz = arr_size(lv);
+        int rsz = arr_size(rv);
+        // Count matches
+        int count = 0;
+        int i = 0;
+        int j;
+        while (i < lsz) {
+            int val = arr_get(lv, i);
+            j = 0;
+            while (j < rsz) {
+                if (arr_get(rv, j) == val) { count++; j = rsz; }
+                j++;
+            }
+            i++;
+        }
+        int r = arr_vector(count);
+        if (r < 0) { eval_err = 5; return -1; }
+        if (arr_type(lv) == ARR_CHAR) arr_set_type(r, ARR_CHAR);
+        int ri = 0;
+        i = 0;
+        while (i < lsz) {
+            int val = arr_get(lv, i);
+            j = 0;
+            while (j < rsz) {
+                if (arr_get(rv, j) == val) { arr_set(r, ri, val); ri++; j = rsz; }
+                j++;
+            }
+            i++;
+        }
+        return r;
+    }
+
+    if (res_id == RES_ROLL) {
+        // N deal M: N random integers from 1..M without replacement
+        if (arr_rank(lv) != 0 || arr_rank(rv) != 0) { eval_err = 4; return -1; }
+        int n = arr_get(lv, 0);
+        int m = arr_get(rv, 0);
+        if (n < 0 || m < 0 || n > m) { eval_err = 1; return -1; }
+        int r = arr_vector(n);
+        if (r < 0) { eval_err = 5; return -1; }
+        // Fisher-Yates shuffle on a pool of 1..M, take first N
+        // Use a temporary array on heap for the pool
+        int pool = arr_vector(m);
+        if (pool < 0) { eval_err = 5; return -1; }
+        int i = 0;
+        while (i < m) { arr_set(pool, i, i + io_origin); i++; }
+        i = 0;
+        while (i < n) {
+            // Random index from i..m-1
+            int rnd = lcg_next();
+            if (rnd < 0) rnd = 0 - rnd;
+            int j = i + rnd % (m - i);
+            // Swap pool[i] and pool[j]
+            int tmp = arr_get(pool, i);
+            arr_set(pool, i, arr_get(pool, j));
+            arr_set(pool, j, tmp);
+            arr_set(r, i, arr_get(pool, i));
+            i++;
+        }
+        return r;
+    }
+
+    if (res_id == RES_POWER) {
+        // A power B: integer exponentiation, element-wise
+        int lrk = arr_rank(lv);
+        int rrk = arr_rank(rv);
+        if (lrk == 0 && rrk == 0) {
+            int r = arr_scalar(int_power(arr_get(lv, 0), arr_get(rv, 0)));
+            if (r < 0) { eval_err = 5; return -1; }
+            return r;
+        }
+        if (lrk == 0 && rrk == 1) {
+            int base = arr_get(lv, 0);
+            int rsz = arr_size(rv);
+            int r = arr_vector(rsz);
+            if (r < 0) { eval_err = 5; return -1; }
+            int i = 0;
+            while (i < rsz) { arr_set(r, i, int_power(base, arr_get(rv, i))); i++; }
+            return r;
+        }
+        if (lrk == 1 && rrk == 0) {
+            int exp = arr_get(rv, 0);
+            int lsz = arr_size(lv);
+            int r = arr_vector(lsz);
+            if (r < 0) { eval_err = 5; return -1; }
+            int i = 0;
+            while (i < lsz) { arr_set(r, i, int_power(arr_get(lv, i), exp)); i++; }
+            return r;
+        }
+        if (lrk == 1 && rrk == 1) {
+            int lsz = arr_size(lv);
+            int rsz = arr_size(rv);
+            if (lsz != rsz) { eval_err = 3; return -1; }
+            int r = arr_vector(lsz);
+            if (r < 0) { eval_err = 5; return -1; }
+            int i = 0;
+            while (i < lsz) { arr_set(r, i, int_power(arr_get(lv, i), arr_get(rv, i))); i++; }
+            return r;
+        }
+        eval_err = 4;
+        return -1;
+    }
+
+    if (res_id == RES_ENCODE) {
+        // A encode B: represent B in mixed radix A
+        // Works right-to-left: last radix is least significant
+        if (arr_rank(lv) != 1) { eval_err = 4; return -1; }
+        if (arr_rank(rv) != 0) { eval_err = 4; return -1; }
+        int lsz = arr_size(lv);
+        int val = arr_get(rv, 0);
+        int r = arr_vector(lsz);
+        if (r < 0) { eval_err = 5; return -1; }
+        int i = lsz - 1;
+        while (i >= 0) {
+            int radix = arr_get(lv, i);
+            if (radix == 0) {
+                arr_set(r, i, val);
+                val = 0;
+            } else {
+                arr_set(r, i, int_residue(radix, val));
+                val = val / radix;
+            }
+            i--;
+        }
+        return r;
+    }
+
+    if (res_id == RES_DECODE) {
+        // A decode B: evaluate B in mixed radix A (Horner's method)
+        if (arr_rank(lv) != 1 || arr_rank(rv) != 1) { eval_err = 4; return -1; }
+        int lsz = arr_size(lv);
+        int rsz = arr_size(rv);
+        if (lsz != rsz) { eval_err = 3; return -1; }
+        int acc = 0;
+        int i = 0;
+        while (i < lsz) {
+            acc = acc * arr_get(lv, i) + arr_get(rv, i);
+            i++;
+        }
+        int r = arr_scalar(acc);
+        if (r < 0) { eval_err = 5; return -1; }
+        return r;
+    }
+
+    if (res_id == RES_WITHOUT) {
+        // A without B: elements of A not in B (APL dyadic ~)
+        if (arr_rank(lv) > 1 || arr_rank(rv) > 1) { eval_err = 4; return -1; }
+        int lsz = arr_size(lv);
+        int rsz = arr_size(rv);
+        // Count elements to keep
+        int count = 0;
+        int i = 0;
+        int j;
+        while (i < lsz) {
+            int val = arr_get(lv, i);
+            int found = 0;
+            j = 0;
+            while (j < rsz) {
+                if (arr_get(rv, j) == val) { found = 1; j = rsz; }
+                j++;
+            }
+            if (!found) count++;
+            i++;
+        }
+        int r = arr_vector(count);
+        if (r < 0) { eval_err = 5; return -1; }
+        if (arr_type(lv) == ARR_CHAR) arr_set_type(r, ARR_CHAR);
+        int ri = 0;
+        i = 0;
+        while (i < lsz) {
+            int val = arr_get(lv, i);
+            int found = 0;
+            j = 0;
+            while (j < rsz) {
+                if (arr_get(rv, j) == val) { found = 1; j = rsz; }
+                j++;
+            }
+            if (!found) { arr_set(r, ri, val); ri++; }
+            i++;
+        }
+        return r;
+    }
+
+    // Unknown dyadic function
+    eval_err = 1;
+    return -1;
+}
+
+int eval_binop_node(int n) {
+    int lv = eval(node_left[n]);
+    if (eval_err) return -1;
+    int rv = eval(node_right[n]);
+    if (eval_err) return -1;
+
+    int lrk = arr_rank(lv);
+    int rrk = arr_rank(rv);
+    int op = node_val[n];
+
+    // Scalar op scalar
+    if (lrk == 0 && rrk == 0) {
+        int result = eval_binop_scalar(op, arr_get(lv, 0), arr_get(rv, 0));
+        if (eval_err) return -1;
+        int r = arr_scalar(result);
+        if (r < 0) { eval_err = 5; return -1; }
+        return r;
+    }
+
+    // Vector op vector: must match length
+    if (lrk == 1 && rrk == 1) {
+        int lsz = arr_size(lv);
+        int rsz = arr_size(rv);
+        if (lsz != rsz) { eval_err = 3; return -1; }
+        int r = arr_vector(lsz);
+        if (r < 0) { eval_err = 5; return -1; }
+        int i = 0;
+        while (i < lsz) {
+            int val = eval_binop_scalar(op, arr_get(lv, i), arr_get(rv, i));
+            if (eval_err) return -1;
+            arr_set(r, i, val);
+            i++;
+        }
+        return r;
+    }
+
+    // Scalar op vector
+    if (lrk == 0 && rrk == 1) {
+        int la = arr_get(lv, 0);
+        int rsz = arr_size(rv);
+        int r = arr_vector(rsz);
+        if (r < 0) { eval_err = 5; return -1; }
+        int i = 0;
+        while (i < rsz) {
+            int val = eval_binop_scalar(op, la, arr_get(rv, i));
+            if (eval_err) return -1;
+            arr_set(r, i, val);
+            i++;
+        }
+        return r;
+    }
+
+    // Vector op scalar
+    if (lrk == 1 && rrk == 0) {
+        int ra = arr_get(rv, 0);
+        int lsz = arr_size(lv);
+        int r = arr_vector(lsz);
+        if (r < 0) { eval_err = 5; return -1; }
+        int i = 0;
+        while (i < lsz) {
+            int val = eval_binop_scalar(op, arr_get(lv, i), ra);
+            if (eval_err) return -1;
+            arr_set(r, i, val);
+            i++;
+        }
+        return r;
+    }
+
+    // Matrix op matrix: must match shape
+    if (lrk == 2 && rrk == 2) {
+        if (arr_dim0(lv) != arr_dim0(rv) || arr_dim1(lv) != arr_dim1(rv)) {
+            eval_err = 3; return -1;
+        }
+        int d0 = arr_dim0(lv);
+        int d1 = arr_dim1(lv);
+        int r = arr_new(2, d0, d1);
+        if (r < 0) { eval_err = 5; return -1; }
+        int sz = d0 * d1;
+        int i = 0;
+        while (i < sz) {
+            int val = eval_binop_scalar(op, arr_get(lv, i), arr_get(rv, i));
+            if (eval_err) return -1;
+            arr_set(r, i, val);
+            i++;
+        }
+        return r;
+    }
+
+    // Scalar op matrix
+    if (lrk == 0 && rrk == 2) {
+        int la = arr_get(lv, 0);
+        int d0 = arr_dim0(rv);
+        int d1 = arr_dim1(rv);
+        int r = arr_new(2, d0, d1);
+        if (r < 0) { eval_err = 5; return -1; }
+        int sz = d0 * d1;
+        int i = 0;
+        while (i < sz) {
+            int val = eval_binop_scalar(op, la, arr_get(rv, i));
+            if (eval_err) return -1;
+            arr_set(r, i, val);
+            i++;
+        }
+        return r;
+    }
+
+    // Matrix op scalar
+    if (lrk == 2 && rrk == 0) {
+        int ra = arr_get(rv, 0);
+        int d0 = arr_dim0(lv);
+        int d1 = arr_dim1(lv);
+        int r = arr_new(2, d0, d1);
+        if (r < 0) { eval_err = 5; return -1; }
+        int sz = d0 * d1;
+        int i = 0;
+        while (i < sz) {
+            int val = eval_binop_scalar(op, arr_get(lv, i), ra);
+            if (eval_err) return -1;
+            arr_set(r, i, val);
+            i++;
+        }
+        return r;
+    }
+
+    // Unsupported rank combination
+    eval_err = 4;
+    return -1;
 }
 
 // Evaluate AST node, return heap index of result array.
@@ -682,413 +2191,7 @@ int eval(int n) {
         return -1;
     }
 
-    if (ty == NODE_MONAD) {
-        int v = eval(node_right[n]);
-        if (eval_err) return -1;
-        int res_id = node_val[n];
-
-        if (res_id == RES_IOTA) {
-            // iota N: lazy vector io_origin .. io_origin+N-1
-            // Only allocates header (4 words), elements computed on access.
-            if (arr_rank(v) != 0) { eval_err = 4; return -1; }
-            int count = arr_get(v, 0);
-            if (count < 0) { eval_err = 1; return -1; }
-            int r = arr_iota(count, io_origin);
-            if (r < 0) { eval_err = 5; return -1; }
-            return r;
-        }
-
-        if (res_id == RES_RHO) {
-            // rho A: return shape of A
-            int rk = arr_rank(v);
-            if (rk == 0) {
-                // Scalar: shape is empty vector
-                int r = arr_vector(0);
-                if (r < 0) { eval_err = 5; return -1; }
-                return r;
-            }
-            if (rk == 1) {
-                // Vector: shape is 1-element vector with length
-                int r = arr_scalar(arr_dim0(v));
-                if (r < 0) { eval_err = 5; return -1; }
-                return r;
-            }
-            if (rk == 2) {
-                // Matrix: shape is 2-element vector (rows cols)
-                int r = arr_vector(2);
-                if (r < 0) { eval_err = 5; return -1; }
-                arr_set(r, 0, arr_dim0(v));
-                arr_set(r, 1, arr_dim1(v));
-                return r;
-            }
-            eval_err = 4;
-            return -1;
-        }
-
-        if (res_id == RES_REV) {
-            // rev A: reverse a vector
-            int rk = arr_rank(v);
-            if (rk == 0) {
-                // Scalar: reverse is identity
-                return v;
-            }
-            if (rk == 1) {
-                int sz = arr_size(v);
-                int r = arr_vector(sz);
-                if (r < 0) { eval_err = 5; return -1; }
-                int i = 0;
-                while (i < sz) {
-                    arr_set(r, i, arr_get(v, sz - 1 - i));
-                    i++;
-                }
-                return r;
-            }
-            eval_err = 4;
-            return -1;
-        }
-
-        if (res_id == RES_CAT) {
-            // Monadic cat: ravel (flatten to 1D vector)
-            int rk = arr_rank(v);
-            if (rk == 0) {
-                // Scalar -> 1-element vector
-                int r = arr_vector(1);
-                if (r < 0) { eval_err = 5; return -1; }
-                arr_set(r, 0, arr_get(v, 0));
-                arr_set_type(r, arr_type(v));
-                return r;
-            }
-            if (rk == 1) {
-                // Vector: already 1D, return as-is
-                return v;
-            }
-            if (rk == 2) {
-                // Matrix -> vector of all elements
-                int sz = arr_size(v);
-                int r = arr_vector(sz);
-                if (r < 0) { eval_err = 5; return -1; }
-                arr_set_type(r, arr_type(v));
-                int i = 0;
-                while (i < sz) {
-                    arr_set(r, i, arr_get(v, i));
-                    i++;
-                }
-                return r;
-            }
-            eval_err = 4;
-            return -1;
-        }
-
-        if (res_id == RES_NOT) {
-            // not A: bitwise NOT (complement)
-            int rk = arr_rank(v);
-            if (rk == 0) {
-                int r = arr_scalar(~arr_get(v, 0));
-                if (r < 0) { eval_err = 5; return -1; }
-                return r;
-            }
-            if (rk == 1) {
-                int sz = arr_size(v);
-                int r = arr_vector(sz);
-                if (r < 0) { eval_err = 5; return -1; }
-                int i = 0;
-                while (i < sz) {
-                    arr_set(r, i, ~arr_get(v, i));
-                    i++;
-                }
-                return r;
-            }
-            if (rk == 2) {
-                int d0 = arr_dim0(v);
-                int d1 = arr_dim1(v);
-                int r = arr_new(2, d0, d1);
-                if (r < 0) { eval_err = 5; return -1; }
-                int sz = d0 * d1;
-                int i = 0;
-                while (i < sz) {
-                    arr_set(r, i, ~arr_get(v, i));
-                    i++;
-                }
-                return r;
-            }
-            eval_err = 4;
-            return -1;
-        }
-
-        if (res_id == RES_ROLL) {
-            // roll N: random integer 1..N (element-wise on vectors)
-            int rk = arr_rank(v);
-            if (rk == 0) {
-                int n_val = arr_get(v, 0);
-                if (n_val <= 0) { eval_err = 1; return -1; }
-                int r = arr_scalar(lcg_roll(n_val));
-                if (r < 0) { eval_err = 5; return -1; }
-                return r;
-            }
-            if (rk == 1) {
-                int sz = arr_size(v);
-                int r = arr_vector(sz);
-                if (r < 0) { eval_err = 5; return -1; }
-                int i = 0;
-                while (i < sz) {
-                    int n_val = arr_get(v, i);
-                    if (n_val <= 0) { eval_err = 1; return -1; }
-                    arr_set(r, i, lcg_roll(n_val));
-                    i++;
-                }
-                return r;
-            }
-            eval_err = 4;
-            return -1;
-        }
-
-        if (res_id == RES_FMT) {
-            // fmt N: convert integer to character vector
-            // fmt V: convert vector to space-separated character vector
-            int rk = arr_rank(v);
-            if (rk == 0) {
-                // Scalar: format single integer
-                int val = arr_get(v, 0);
-                int w = num_width(val);
-                int r = arr_vector(w);
-                if (r < 0) { eval_err = 5; return -1; }
-                arr_set_type(r, ARR_CHAR);
-                // Fill digits from right to left
-                int pos = w - 1;
-                int n_abs = val;
-                if (val < 0) { n_abs = 0 - val; }
-                if (n_abs == 0) {
-                    arr_set(r, pos, 48);
-                } else {
-                    while (n_abs > 0) {
-                        arr_set(r, pos, 48 + n_abs % 10);
-                        n_abs = n_abs / 10;
-                        pos--;
-                    }
-                }
-                if (val < 0) { arr_set(r, 0, 95); } // underscore for negative
-                return r;
-            }
-            if (rk == 1) {
-                // Vector: format each element, space-separated
-                int sz = arr_size(v);
-                // Calculate total length
-                int total = 0;
-                int i = 0;
-                while (i < sz) {
-                    if (i > 0) total++; // space separator
-                    total = total + num_width(arr_get(v, i));
-                    i++;
-                }
-                int r = arr_vector(total);
-                if (r < 0) { eval_err = 5; return -1; }
-                arr_set_type(r, ARR_CHAR);
-                int dp = 0; // destination position
-                i = 0;
-                while (i < sz) {
-                    if (i > 0) { arr_set(r, dp, 32); dp++; } // space
-                    int val = arr_get(v, i);
-                    int w = num_width(val);
-                    int n_abs = val;
-                    if (val < 0) { n_abs = 0 - val; }
-                    // Fill this number right-to-left within its field
-                    int ep = dp + w - 1; // end position
-                    if (n_abs == 0) {
-                        arr_set(r, ep, 48);
-                    } else {
-                        int p = ep;
-                        while (n_abs > 0) {
-                            arr_set(r, p, 48 + n_abs % 10);
-                            n_abs = n_abs / 10;
-                            p--;
-                        }
-                    }
-                    if (val < 0) { arr_set(r, dp, 95); }
-                    dp = dp + w;
-                    i++;
-                }
-                return r;
-            }
-            eval_err = 4;
-            return -1;
-        }
-
-        if (res_id == RES_CUP) {
-            // Monadic cup (unique): remove duplicates, keep first occurrence
-            if (arr_rank(v) > 1) { eval_err = 4; return -1; }
-            int sz = arr_size(v);
-            if (sz == 0) return v;
-            // First pass: count unique elements
-            int uniq = 0;
-            int j;
-            int i = 0;
-            while (i < sz) {
-                int val = arr_get(v, i);
-                int dup = 0;
-                j = 0;
-                while (j < i) {
-                    if (arr_get(v, j) == val) { dup = 1; j = i; }
-                    j++;
-                }
-                if (!dup) uniq++;
-                i++;
-            }
-            int r = arr_vector(uniq);
-            if (r < 0) { eval_err = 5; return -1; }
-            if (arr_type(v) == ARR_CHAR) arr_set_type(r, ARR_CHAR);
-            int ri = 0;
-            i = 0;
-            while (i < sz) {
-                int val = arr_get(v, i);
-                int dup = 0;
-                j = 0;
-                while (j < i) {
-                    if (arr_get(v, j) == val) { dup = 1; j = i; }
-                    j++;
-                }
-                if (!dup) { arr_set(r, ri, val); ri++; }
-                i++;
-            }
-            return r;
-        }
-
-        if (res_id == RES_ENCLOSE) {
-            // enclose A: wrap value in a scalar box
-            // Creates a 1-element boxed vector containing A
-            int r = arr_vector(1);
-            if (r < 0) { eval_err = 5; return -1; }
-            arr_set_type(r, ARR_BOXED);
-            arr_set(r, 0, v);
-            return r;
-        }
-
-        if (res_id == RES_TRANSPOSE) {
-            // transpose M: swap rows and columns
-            int rk = arr_rank(v);
-            if (rk <= 1) return v;  // scalar/vector: no-op
-            if (rk == 2) {
-                int rows = arr_dim0(v);
-                int cols = arr_dim1(v);
-                int r = arr_new(2, cols, rows);
-                if (r < 0) { eval_err = 5; return -1; }
-                int row = 0;
-                while (row < rows) {
-                    int col = 0;
-                    while (col < cols) {
-                        arr_set(r, col * rows + row, arr_get(v, row * cols + col));
-                        col++;
-                    }
-                    row++;
-                }
-                return r;
-            }
-            eval_err = 4;
-            return -1;
-        }
-
-        if (res_id == RES_GRADEUP || res_id == RES_GRADEDN) {
-            // gradeup/gradedown: return indices that sort ascending/descending
-            if (arr_rank(v) != 1) { eval_err = 4; return -1; }
-            int sz = arr_size(v);
-            int r = arr_vector(sz);
-            if (r < 0) { eval_err = 5; return -1; }
-            // Initialize indices
-            int i = 0;
-            while (i < sz) { arr_set(r, i, i + io_origin); i++; }
-            // Selection sort on indices by comparing v[idx] values
-            int up = (res_id == RES_GRADEUP);
-            i = 0;
-            while (i < sz - 1) {
-                int best = i;
-                int j = i + 1;
-                while (j < sz) {
-                    int bi = arr_get(r, best) - io_origin;
-                    int ji = arr_get(r, j) - io_origin;
-                    int bv = arr_get(v, bi);
-                    int jv = arr_get(v, ji);
-                    if (up ? (jv < bv) : (jv > bv)) best = j;
-                    j++;
-                }
-                if (best != i) {
-                    int tmp = arr_get(r, i);
-                    arr_set(r, i, arr_get(r, best));
-                    arr_set(r, best, tmp);
-                }
-                i++;
-            }
-            return r;
-        }
-
-        if (res_id == RES_SIGNUM) {
-            // signum A: returns _1, 0, or 1
-            int rk = arr_rank(v);
-            if (rk == 0) {
-                int val = arr_get(v, 0);
-                int r = arr_scalar(val > 0 ? 1 : (val < 0 ? 0 - 1 : 0));
-                if (r < 0) { eval_err = 5; return -1; }
-                return r;
-            }
-            if (rk <= 2) {
-                int sz = arr_size(v);
-                int r;
-                if (rk == 1) { r = arr_vector(sz); }
-                else { r = arr_new(2, arr_dim0(v), arr_dim1(v)); }
-                if (r < 0) { eval_err = 5; return -1; }
-                int i = 0;
-                while (i < sz) {
-                    int val = arr_get(v, i);
-                    arr_set(r, i, val > 0 ? 1 : (val < 0 ? 0 - 1 : 0));
-                    i++;
-                }
-                return r;
-            }
-            eval_err = 4;
-            return -1;
-        }
-
-        if (res_id == RES_FACTORIAL) {
-            // factorial N: N!
-            if (arr_rank(v) != 0) { eval_err = 4; return -1; }
-            int val = arr_get(v, 0);
-            if (val < 0) { eval_err = 1; return -1; }
-            int r = arr_scalar(int_factorial(val));
-            if (r < 0) { eval_err = 5; return -1; }
-            return r;
-        }
-
-        if (res_id == RES_ABS) {
-            // abs A: absolute value, element-wise
-            int rk = arr_rank(v);
-            if (rk == 0) {
-                int val = arr_get(v, 0);
-                if (val < 0) val = 0 - val;
-                int r = arr_scalar(val);
-                if (r < 0) { eval_err = 5; return -1; }
-                return r;
-            }
-            if (rk <= 2) {
-                int sz = arr_size(v);
-                int r;
-                if (rk == 1) { r = arr_vector(sz); }
-                else { r = arr_new(2, arr_dim0(v), arr_dim1(v)); }
-                if (r < 0) { eval_err = 5; return -1; }
-                int i = 0;
-                while (i < sz) {
-                    int val = arr_get(v, i);
-                    if (val < 0) val = 0 - val;
-                    arr_set(r, i, val);
-                    i++;
-                }
-                return r;
-            }
-            eval_err = 4;
-            return -1;
-        }
-
-        // Unknown monadic function
-        eval_err = 1;
-        return -1;
-    }
+    if (ty == NODE_MONAD) return eval_monad(n);
 
     if (ty == NODE_REDUCE) {
         int v = eval(node_right[n]);
@@ -1167,1099 +2270,13 @@ int eval(int n) {
         return -1;
     }
 
-    if (ty == NODE_INNER) {
-        int lv = eval(node_left[n]);
-        if (eval_err) return -1;
-        int rv = eval(node_right[n]);
-        if (eval_err) return -1;
-        int f_op = node_val[n] & 255;
-        int g_op = (node_val[n] / 256) & 255;
-        int lrk = arr_rank(lv);
-        int rrk = arr_rank(rv);
+    if (ty == NODE_INNER) return eval_inner_node(n);
 
-        // Vector . Vector: f/ (A g B)
-        if (lrk <= 1 && rrk <= 1) {
-            int lsz = arr_size(lv);
-            int rsz = arr_size(rv);
-            if (lsz != rsz) { eval_err = 3; return -1; }
-            // Apply g element-wise, then reduce with f
-            int acc = eval_binop_scalar(g_op, arr_get(lv, lsz - 1), arr_get(rv, lsz - 1));
-            if (eval_err) return -1;
-            int i = lsz - 2;
-            while (i >= 0) {
-                int gi = eval_binop_scalar(g_op, arr_get(lv, i), arr_get(rv, i));
-                if (eval_err) return -1;
-                acc = eval_binop_scalar(f_op, gi, acc);
-                if (eval_err) return -1;
-                i--;
-            }
-            int r = arr_scalar(acc);
-            if (r < 0) { eval_err = 5; return -1; }
-            return r;
-        }
+    if (ty == NODE_OUTER) return eval_outer_node(n);
 
-        // Matrix . Vector: each row inner-product with vector
-        if (lrk == 2 && rrk <= 1) {
-            int rows = arr_dim0(lv);
-            int cols = arr_dim1(lv);
-            int rsz = arr_size(rv);
-            if (cols != rsz) { eval_err = 3; return -1; }
-            int r = arr_vector(rows);
-            if (r < 0) { eval_err = 5; return -1; }
-            int row = 0;
-            while (row < rows) {
-                int acc = eval_binop_scalar(g_op, arr_get(lv, row * cols + cols - 1), arr_get(rv, cols - 1));
-                if (eval_err) return -1;
-                int k = cols - 2;
-                while (k >= 0) {
-                    int gi = eval_binop_scalar(g_op, arr_get(lv, row * cols + k), arr_get(rv, k));
-                    if (eval_err) return -1;
-                    acc = eval_binop_scalar(f_op, gi, acc);
-                    if (eval_err) return -1;
-                    k--;
-                }
-                arr_set(r, row, acc);
-                row++;
-            }
-            return r;
-        }
+    if (ty == NODE_DYAD) return eval_dyad(n);
 
-        // Matrix . Matrix: standard matrix multiply generalization
-        if (lrk == 2 && rrk == 2) {
-            int lrows = arr_dim0(lv);
-            int inner = arr_dim1(lv);
-            int rcols = arr_dim1(rv);
-            if (inner != arr_dim0(rv)) { eval_err = 3; return -1; }
-            int r = arr_new(2, lrows, rcols);
-            if (r < 0) { eval_err = 5; return -1; }
-            int row = 0;
-            while (row < lrows) {
-                int col = 0;
-                while (col < rcols) {
-                    int acc = eval_binop_scalar(g_op, arr_get(lv, row * inner + inner - 1), arr_get(rv, (inner - 1) * rcols + col));
-                    if (eval_err) return -1;
-                    int k = inner - 2;
-                    while (k >= 0) {
-                        int gi = eval_binop_scalar(g_op, arr_get(lv, row * inner + k), arr_get(rv, k * rcols + col));
-                        if (eval_err) return -1;
-                        acc = eval_binop_scalar(f_op, gi, acc);
-                        if (eval_err) return -1;
-                        k--;
-                    }
-                    arr_set(r, row * rcols + col, acc);
-                    col++;
-                }
-                row++;
-            }
-            return r;
-        }
-
-        eval_err = 4;
-        return -1;
-    }
-
-    if (ty == NODE_OUTER) {
-        int lv = eval(node_left[n]);
-        if (eval_err) return -1;
-        int rv = eval(node_right[n]);
-        if (eval_err) return -1;
-        int op = node_val[n];
-        // Both args must be vectors (or scalars treated as 1-element)
-        int lrk = arr_rank(lv);
-        int rrk = arr_rank(rv);
-        if (lrk > 1 || rrk > 1) { eval_err = 4; return -1; }
-        int lsz = arr_size(lv);
-        int rsz = arr_size(rv);
-        int r = arr_new(2, lsz, rsz);
-        if (r < 0) { eval_err = 5; return -1; }
-        int i = 0;
-        while (i < lsz) {
-            int a = arr_get(lv, i);
-            int j = 0;
-            while (j < rsz) {
-                int b = arr_get(rv, j);
-                int val = eval_binop_scalar(op, a, b);
-                if (eval_err) return -1;
-                arr_set(r, i * rsz + j, val);
-                j++;
-            }
-            i++;
-        }
-        return r;
-    }
-
-    if (ty == NODE_DYAD) {
-        int lv = eval(node_left[n]);
-        if (eval_err) return -1;
-        int rv = eval(node_right[n]);
-        if (eval_err) return -1;
-        int res_id = node_val[n];
-
-        if (res_id == RES_RHO) {
-            // S rho A: reshape A to shape S with cyclic fill
-            // S is scalar -> result is vector of that length
-            // S is 2-element vector -> result is matrix
-            int lrk = arr_rank(lv);
-            int new_rank;
-            int d0;
-            int d1;
-
-            if (lrk == 0) {
-                // Scalar shape -> vector
-                new_rank = 1;
-                d0 = arr_get(lv, 0);
-                d1 = 0;
-                if (d0 < 0) { eval_err = 1; return -1; }
-            } else if (lrk == 1) {
-                int lsz = arr_size(lv);
-                if (lsz == 1) {
-                    new_rank = 1;
-                    d0 = arr_get(lv, 0);
-                    d1 = 0;
-                    if (d0 < 0) { eval_err = 1; return -1; }
-                } else if (lsz == 2) {
-                    new_rank = 2;
-                    d0 = arr_get(lv, 0);
-                    d1 = arr_get(lv, 1);
-                    if (d0 < 0 || d1 < 0) { eval_err = 1; return -1; }
-                } else {
-                    // Only rank 1 and 2 supported
-                    eval_err = 4;
-                    return -1;
-                }
-            } else {
-                eval_err = 4;
-                return -1;
-            }
-
-            int r = arr_new(new_rank, d0, d1);
-            if (r < 0) { eval_err = 5; return -1; }
-
-            int total = arr_size(r);
-            int src_sz = arr_size(rv);
-            if (src_sz == 0) { eval_err = 3; return -1; }
-
-            // Preserve char type (but not iota — result is materialized)
-            if (arr_type(rv) == ARR_CHAR) arr_set_type(r, ARR_CHAR);
-
-            int i = 0;
-            while (i < total) {
-                arr_set(r, i, arr_get(rv, i % src_sz));
-                i++;
-            }
-            return r;
-        }
-
-        if (res_id == RES_TAKE) {
-            // N take A: take first N elements/rows (negative N = from end)
-            if (arr_rank(lv) != 0) { eval_err = 4; return -1; }
-            int count = arr_get(lv, 0);
-            int rrk = arr_rank(rv);
-
-            // Lazy iota shortcut: return new lazy iota for the slice
-            if (rrk == 1 && arr_type(rv) == ARR_IOTA) {
-                int sz = arr_size(rv);
-                int abs_n = count;
-                if (abs_n < 0) abs_n = 0 - abs_n;
-                if (abs_n > sz) { eval_err = 3; return -1; }
-                int origin = arr_dim1(rv);
-                if (count < 0) origin = origin + sz - abs_n;
-                return arr_iota(abs_n, origin);
-            }
-
-            if (rrk <= 1) {
-                int sz = arr_size(rv);
-                int abs_n = count;
-                if (abs_n < 0) abs_n = 0 - abs_n;
-                if (abs_n > sz) { eval_err = 3; return -1; }
-
-                int r = arr_vector(abs_n);
-                if (r < 0) { eval_err = 5; return -1; }
-                int start = 0;
-                if (count < 0) start = sz - abs_n;
-                int i = 0;
-                while (i < abs_n) {
-                    arr_set(r, i, arr_get(rv, start + i));
-                    i++;
-                }
-                return r;
-            }
-
-            if (rrk == 2) {
-                int rows = arr_dim0(rv);
-                int cols = arr_dim1(rv);
-                int abs_n = count;
-                if (abs_n < 0) abs_n = 0 - abs_n;
-                if (abs_n > rows) { eval_err = 3; return -1; }
-
-                int r = arr_new(2, abs_n, cols);
-                if (r < 0) { eval_err = 5; return -1; }
-                int start_row = 0;
-                if (count < 0) start_row = rows - abs_n;
-                int total = abs_n * cols;
-                int i = 0;
-                while (i < total) {
-                    arr_set(r, i, arr_get(rv, start_row * cols + i));
-                    i++;
-                }
-                return r;
-            }
-
-            eval_err = 4;
-            return -1;
-        }
-
-        if (res_id == RES_DROP) {
-            // N drop A: drop first N elements/rows (negative N = from end)
-            if (arr_rank(lv) != 0) { eval_err = 4; return -1; }
-            int count = arr_get(lv, 0);
-            int rrk = arr_rank(rv);
-
-            // Lazy iota shortcut: return new lazy iota for the remainder
-            if (rrk == 1 && arr_type(rv) == ARR_IOTA) {
-                int sz = arr_size(rv);
-                int abs_n = count;
-                if (abs_n < 0) abs_n = 0 - abs_n;
-                if (abs_n > sz) abs_n = sz;
-                int new_sz = sz - abs_n;
-                int origin = arr_dim1(rv);
-                if (count >= 0) origin = origin + abs_n;
-                return arr_iota(new_sz, origin);
-            }
-
-            if (rrk <= 1) {
-                int sz = arr_size(rv);
-                int abs_n = count;
-                if (abs_n < 0) abs_n = 0 - abs_n;
-                if (abs_n > sz) abs_n = sz;
-
-                int new_sz = sz - abs_n;
-                int r = arr_vector(new_sz);
-                if (r < 0) { eval_err = 5; return -1; }
-                int start = abs_n;
-                if (count < 0) start = 0;
-                int i = 0;
-                while (i < new_sz) {
-                    arr_set(r, i, arr_get(rv, start + i));
-                    i++;
-                }
-                return r;
-            }
-
-            if (rrk == 2) {
-                int rows = arr_dim0(rv);
-                int cols = arr_dim1(rv);
-                int abs_n = count;
-                if (abs_n < 0) abs_n = 0 - abs_n;
-                if (abs_n > rows) abs_n = rows;
-
-                int new_rows = rows - abs_n;
-                int r = arr_new(2, new_rows, cols);
-                if (r < 0) { eval_err = 5; return -1; }
-                int start_row = abs_n;
-                if (count < 0) start_row = 0;
-                int total = new_rows * cols;
-                int i = 0;
-                while (i < total) {
-                    arr_set(r, i, arr_get(rv, start_row * cols + i));
-                    i++;
-                }
-                return r;
-            }
-
-            eval_err = 4;
-            return -1;
-        }
-
-        if (res_id == RES_CAT) {
-            // Dyadic cat: catenate two arrays
-            int lrk = arr_rank(lv);
-            int rrk = arr_rank(rv);
-            int lsz = arr_size(lv);
-            int rsz = arr_size(rv);
-            int total = lsz + rsz;
-            int r = arr_vector(total);
-            if (r < 0) { eval_err = 5; return -1; }
-            // Preserve char type if both operands are char
-            if (arr_type(lv) == ARR_CHAR && arr_type(rv) == ARR_CHAR) {
-                arr_set_type(r, ARR_CHAR);
-            }
-            int i = 0;
-            while (i < lsz) {
-                arr_set(r, i, arr_get(lv, i));
-                i++;
-            }
-            i = 0;
-            while (i < rsz) {
-                arr_set(r, lsz + i, arr_get(rv, i));
-                i++;
-            }
-            return r;
-        }
-
-        if (res_id == RES_AND || res_id == RES_OR) {
-            // Bitwise AND / OR on conformable arrays
-            int lrk = arr_rank(lv);
-            int rrk = arr_rank(rv);
-
-            // Scalar op scalar
-            if (lrk == 0 && rrk == 0) {
-                int a = arr_get(lv, 0);
-                int b = arr_get(rv, 0);
-                int val = (res_id == RES_AND) ? (a & b) : (a | b);
-                int r = arr_scalar(val);
-                if (r < 0) { eval_err = 5; return -1; }
-                return r;
-            }
-
-            // Vector op vector
-            if (lrk == 1 && rrk == 1) {
-                int lsz = arr_size(lv);
-                int rsz = arr_size(rv);
-                if (lsz != rsz) { eval_err = 3; return -1; }
-                int r = arr_vector(lsz);
-                if (r < 0) { eval_err = 5; return -1; }
-                int i = 0;
-                while (i < lsz) {
-                    int a = arr_get(lv, i);
-                    int b = arr_get(rv, i);
-                    arr_set(r, i, (res_id == RES_AND) ? (a & b) : (a | b));
-                    i++;
-                }
-                return r;
-            }
-
-            // Scalar extension: scalar op vector
-            if (lrk == 0 && rrk == 1) {
-                int a = arr_get(lv, 0);
-                int rsz = arr_size(rv);
-                int r = arr_vector(rsz);
-                if (r < 0) { eval_err = 5; return -1; }
-                int i = 0;
-                while (i < rsz) {
-                    int b = arr_get(rv, i);
-                    arr_set(r, i, (res_id == RES_AND) ? (a & b) : (a | b));
-                    i++;
-                }
-                return r;
-            }
-
-            // Scalar extension: vector op scalar
-            if (lrk == 1 && rrk == 0) {
-                int b = arr_get(rv, 0);
-                int lsz = arr_size(lv);
-                int r = arr_vector(lsz);
-                if (r < 0) { eval_err = 5; return -1; }
-                int i = 0;
-                while (i < lsz) {
-                    int a = arr_get(lv, i);
-                    arr_set(r, i, (res_id == RES_AND) ? (a & b) : (a | b));
-                    i++;
-                }
-                return r;
-            }
-
-            eval_err = 4;
-            return -1;
-        }
-
-        if (res_id == RES_CEIL || res_id == RES_FLOOR) {
-            // Dyadic ceil (max) / floor (min) on conformable arrays
-            int op = (res_id == RES_CEIL) ? TOK_CEIL : TOK_FLOOR;
-            int lrk = arr_rank(lv);
-            int rrk = arr_rank(rv);
-
-            // Scalar op scalar
-            if (lrk == 0 && rrk == 0) {
-                int val = eval_binop_scalar(op, arr_get(lv, 0), arr_get(rv, 0));
-                if (eval_err) return -1;
-                int r = arr_scalar(val);
-                if (r < 0) { eval_err = 5; return -1; }
-                return r;
-            }
-
-            // Vector op vector
-            if (lrk == 1 && rrk == 1) {
-                int lsz = arr_size(lv);
-                int rsz = arr_size(rv);
-                if (lsz != rsz) { eval_err = 3; return -1; }
-                int r = arr_vector(lsz);
-                if (r < 0) { eval_err = 5; return -1; }
-                int i = 0;
-                while (i < lsz) {
-                    arr_set(r, i, eval_binop_scalar(op, arr_get(lv, i), arr_get(rv, i)));
-                    if (eval_err) return -1;
-                    i++;
-                }
-                return r;
-            }
-
-            // Scalar extension: scalar op vector
-            if (lrk == 0 && rrk == 1) {
-                int a = arr_get(lv, 0);
-                int rsz = arr_size(rv);
-                int r = arr_vector(rsz);
-                if (r < 0) { eval_err = 5; return -1; }
-                int i = 0;
-                while (i < rsz) {
-                    arr_set(r, i, eval_binop_scalar(op, a, arr_get(rv, i)));
-                    if (eval_err) return -1;
-                    i++;
-                }
-                return r;
-            }
-
-            // Scalar extension: vector op scalar
-            if (lrk == 1 && rrk == 0) {
-                int b = arr_get(rv, 0);
-                int lsz = arr_size(lv);
-                int r = arr_vector(lsz);
-                if (r < 0) { eval_err = 5; return -1; }
-                int i = 0;
-                while (i < lsz) {
-                    arr_set(r, i, eval_binop_scalar(op, arr_get(lv, i), b));
-                    if (eval_err) return -1;
-                    i++;
-                }
-                return r;
-            }
-
-            eval_err = 4;
-            return -1;
-        }
-
-        if (res_id == RES_COMPRESS) {
-            // Compress/replicate: COUNTS compress VECTOR
-            // Boolean (0/1): select elements. Integer: replicate N times.
-            int lrk = arr_rank(lv);
-            int rrk = arr_rank(rv);
-            if (lrk > 1 || rrk > 1) { eval_err = 4; return -1; }
-
-            int lsz = arr_size(lv);
-            int rsz = arr_size(rv);
-            if (lsz != rsz) { eval_err = 3; return -1; }
-
-            // Count total output size
-            int total = 0;
-            int i = 0;
-            while (i < lsz) {
-                int c = arr_get(lv, i);
-                if (c < 0) { eval_err = 1; return -1; }
-                total = total + c;
-                i++;
-            }
-
-            int r = arr_vector(total);
-            if (r < 0) { eval_err = 5; return -1; }
-            if (arr_type(rv) == ARR_CHAR) arr_set_type(r, ARR_CHAR);
-
-            int ri = 0;
-            i = 0;
-            while (i < lsz) {
-                int c = arr_get(lv, i);
-                int val = arr_get(rv, i);
-                int j = 0;
-                while (j < c) { arr_set(r, ri, val); ri++; j++; }
-                i++;
-            }
-            return r;
-        }
-
-        if (res_id == RES_PICK) {
-            // I pick V: pick element I from nested/boxed vector V
-            // Returns the boxed element (string or sub-array)
-            // Also works on simple vectors, returning a scalar
-            int lrk = arr_rank(lv);
-            int rrk = arr_rank(rv);
-
-            // Left must be scalar (the index)
-            if (lrk > 1) { eval_err = 4; return -1; }
-            // Right must be vector
-            if (rrk > 1) { eval_err = 4; return -1; }
-
-            int idx = arr_get(lv, 0) - io_origin;
-            int rsz = arr_size(rv);
-
-            // Bounds check
-            if (idx < 0 || idx >= rsz) { eval_err = 3; return -1; }
-
-            if (arr_type(rv) == ARR_BOXED) {
-                // Return the boxed element (a heap index to another array)
-                return arr_get(rv, idx);
-            }
-            // Simple vector: return scalar
-            int r = arr_scalar(arr_get(rv, idx));
-            if (r < 0) { eval_err = 5; return -1; }
-            // Preserve char type (but not iota — value is materialized)
-            if (arr_type(rv) == ARR_CHAR) arr_set_type(r, ARR_CHAR);
-            return r;
-        }
-
-        if (res_id == RES_CUP) {
-            // Dyadic cup (union): left unchanged, plus elements of right not in left
-            if (arr_rank(lv) > 1 || arr_rank(rv) > 1) { eval_err = 4; return -1; }
-            int lsz = arr_size(lv);
-            int rsz = arr_size(rv);
-            // Count elements in right not in left
-            int extra = 0;
-            int i = 0;
-            int j;
-            while (i < rsz) {
-                int val = arr_get(rv, i);
-                int found = 0;
-                j = 0;
-                while (j < lsz) {
-                    if (arr_get(lv, j) == val) { found = 1; j = lsz; }
-                    j++;
-                }
-                if (!found) extra++;
-                i++;
-            }
-            int r = arr_vector(lsz + extra);
-            if (r < 0) { eval_err = 5; return -1; }
-            if (arr_type(lv) == ARR_CHAR) arr_set_type(r, ARR_CHAR);
-            i = 0;
-            while (i < lsz) { arr_set(r, i, arr_get(lv, i)); i++; }
-            int ri = lsz;
-            i = 0;
-            while (i < rsz) {
-                int val = arr_get(rv, i);
-                int found = 0;
-                j = 0;
-                while (j < lsz) {
-                    if (arr_get(lv, j) == val) { found = 1; j = lsz; }
-                    j++;
-                }
-                if (!found) { arr_set(r, ri, val); ri++; }
-                i++;
-            }
-            return r;
-        }
-
-        if (res_id == RES_REV) {
-            // N rev V: rotate vector V left by N positions
-            if (arr_rank(lv) != 0) { eval_err = 4; return -1; }
-            if (arr_rank(rv) != 1) { eval_err = 4; return -1; }
-            int n = arr_get(lv, 0);
-            int sz = arr_size(rv);
-            if (sz == 0) return rv;
-            // Normalize: handle negative and large N
-            int rot = ((n % sz) + sz) % sz;
-            int r = arr_vector(sz);
-            if (r < 0) { eval_err = 5; return -1; }
-            if (arr_type(rv) == ARR_CHAR) arr_set_type(r, ARR_CHAR);
-            int i = 0;
-            while (i < sz) {
-                int src = (i + rot) % sz;
-                arr_set(r, i, arr_get(rv, src));
-                i++;
-            }
-            return r;
-        }
-
-        if (res_id == RES_IOTA) {
-            // Dyadic iota (index-of): A iota B -> index of B in A
-            // Not found returns (rho A) + io_origin (past end)
-            if (arr_rank(lv) > 1 || arr_rank(rv) > 1) { eval_err = 4; return -1; }
-            int lsz = arr_size(lv);
-            int notfound = lsz + io_origin;
-            int rrk = arr_rank(rv);
-            if (rrk == 0) {
-                // Scalar right: return scalar index
-                int b = arr_get(rv, 0);
-                int idx = notfound;
-                int j = 0;
-                while (j < lsz) {
-                    if (arr_get(lv, j) == b) { idx = j + io_origin; j = lsz; }
-                    j++;
-                }
-                int r = arr_scalar(idx);
-                if (r < 0) { eval_err = 5; return -1; }
-                return r;
-            }
-            // Vector right: return vector of indices
-            int rsz = arr_size(rv);
-            int r = arr_vector(rsz);
-            if (r < 0) { eval_err = 5; return -1; }
-            int i = 0;
-            while (i < rsz) {
-                int b = arr_get(rv, i);
-                int idx = notfound;
-                int j = 0;
-                while (j < lsz) {
-                    if (arr_get(lv, j) == b) { idx = j + io_origin; j = lsz; }
-                    j++;
-                }
-                arr_set(r, i, idx);
-                i++;
-            }
-            return r;
-        }
-
-        if (res_id == RES_MEMBER) {
-            // A member B: 1 where elements of A appear in B
-            if (arr_rank(lv) > 1 || arr_rank(rv) > 1) { eval_err = 4; return -1; }
-            int lsz = arr_size(lv);
-            int rsz = arr_size(rv);
-            int lrk = arr_rank(lv);
-            if (lrk == 0) {
-                int a = arr_get(lv, 0);
-                int found = 0;
-                int j = 0;
-                while (j < rsz) {
-                    if (arr_get(rv, j) == a) { found = 1; j = rsz; }
-                    j++;
-                }
-                int r = arr_scalar(found);
-                if (r < 0) { eval_err = 5; return -1; }
-                return r;
-            }
-            int r = arr_vector(lsz);
-            if (r < 0) { eval_err = 5; return -1; }
-            int i = 0;
-            while (i < lsz) {
-                int a = arr_get(lv, i);
-                int found = 0;
-                int j = 0;
-                while (j < rsz) {
-                    if (arr_get(rv, j) == a) { found = 1; j = rsz; }
-                    j++;
-                }
-                arr_set(r, i, found);
-                i++;
-            }
-            return r;
-        }
-
-        if (res_id == RES_BINOMIAL) {
-            // K binomial N: C(N,K) combinations
-            int lrk = arr_rank(lv);
-            int rrk = arr_rank(rv);
-            if (lrk == 0 && rrk == 0) {
-                int r = arr_scalar(int_binomial(arr_get(lv, 0), arr_get(rv, 0)));
-                if (r < 0) { eval_err = 5; return -1; }
-                return r;
-            }
-            if (lrk == 0 && rrk == 1) {
-                int k = arr_get(lv, 0);
-                int rsz = arr_size(rv);
-                int r = arr_vector(rsz);
-                if (r < 0) { eval_err = 5; return -1; }
-                int i = 0;
-                while (i < rsz) {
-                    arr_set(r, i, int_binomial(k, arr_get(rv, i)));
-                    i++;
-                }
-                return r;
-            }
-            if (lrk == 1 && rrk == 0) {
-                int n = arr_get(rv, 0);
-                int lsz = arr_size(lv);
-                int r = arr_vector(lsz);
-                if (r < 0) { eval_err = 5; return -1; }
-                int i = 0;
-                while (i < lsz) {
-                    arr_set(r, i, int_binomial(arr_get(lv, i), n));
-                    i++;
-                }
-                return r;
-            }
-            if (lrk == 1 && rrk == 1) {
-                int lsz = arr_size(lv);
-                int rsz = arr_size(rv);
-                if (lsz != rsz) { eval_err = 3; return -1; }
-                int r = arr_vector(lsz);
-                if (r < 0) { eval_err = 5; return -1; }
-                int i = 0;
-                while (i < lsz) {
-                    arr_set(r, i, int_binomial(arr_get(lv, i), arr_get(rv, i)));
-                    i++;
-                }
-                return r;
-            }
-            eval_err = 4;
-            return -1;
-        }
-
-        if (res_id == RES_RESIDUE) {
-            // A residue B: modulo (APL |). B mod A. 3 residue 7 -> 1
-            // Avoids negative division (COR24 software div is unsigned-only)
-            int lrk = arr_rank(lv);
-            int rrk = arr_rank(rv);
-            if (lrk == 0 && rrk == 0) {
-                int a = arr_get(lv, 0);
-                int b = arr_get(rv, 0);
-                if (a == 0) { eval_err = 1; return -1; }
-                int r = arr_scalar(int_residue(a, b));
-                if (r < 0) { eval_err = 5; return -1; }
-                return r;
-            }
-            if (lrk == 0 && rrk == 1) {
-                int a = arr_get(lv, 0);
-                if (a == 0) { eval_err = 1; return -1; }
-                int rsz = arr_size(rv);
-                int r = arr_vector(rsz);
-                if (r < 0) { eval_err = 5; return -1; }
-                int i = 0;
-                while (i < rsz) {
-                    arr_set(r, i, int_residue(a, arr_get(rv, i)));
-                    i++;
-                }
-                return r;
-            }
-            if (lrk == 1 && rrk == 0) {
-                int b = arr_get(rv, 0);
-                int lsz = arr_size(lv);
-                int r = arr_vector(lsz);
-                if (r < 0) { eval_err = 5; return -1; }
-                int i = 0;
-                while (i < lsz) {
-                    int a = arr_get(lv, i);
-                    if (a == 0) { eval_err = 1; return -1; }
-                    arr_set(r, i, int_residue(a, b));
-                    i++;
-                }
-                return r;
-            }
-            if (lrk == 1 && rrk == 1) {
-                int lsz = arr_size(lv);
-                int rsz = arr_size(rv);
-                if (lsz != rsz) { eval_err = 3; return -1; }
-                int r = arr_vector(lsz);
-                if (r < 0) { eval_err = 5; return -1; }
-                int i = 0;
-                while (i < lsz) {
-                    int a = arr_get(lv, i);
-                    int b = arr_get(rv, i);
-                    if (a == 0) { eval_err = 1; return -1; }
-                    arr_set(r, i, int_residue(a, b));
-                    i++;
-                }
-                return r;
-            }
-            eval_err = 4;
-            return -1;
-        }
-
-        if (res_id == RES_CAP) {
-            // Dyadic cap (intersection): elements of left that appear in right
-            if (arr_rank(lv) > 1 || arr_rank(rv) > 1) { eval_err = 4; return -1; }
-            int lsz = arr_size(lv);
-            int rsz = arr_size(rv);
-            // Count matches
-            int count = 0;
-            int i = 0;
-            int j;
-            while (i < lsz) {
-                int val = arr_get(lv, i);
-                j = 0;
-                while (j < rsz) {
-                    if (arr_get(rv, j) == val) { count++; j = rsz; }
-                    j++;
-                }
-                i++;
-            }
-            int r = arr_vector(count);
-            if (r < 0) { eval_err = 5; return -1; }
-            if (arr_type(lv) == ARR_CHAR) arr_set_type(r, ARR_CHAR);
-            int ri = 0;
-            i = 0;
-            while (i < lsz) {
-                int val = arr_get(lv, i);
-                j = 0;
-                while (j < rsz) {
-                    if (arr_get(rv, j) == val) { arr_set(r, ri, val); ri++; j = rsz; }
-                    j++;
-                }
-                i++;
-            }
-            return r;
-        }
-
-        if (res_id == RES_ROLL) {
-            // N deal M: N random integers from 1..M without replacement
-            if (arr_rank(lv) != 0 || arr_rank(rv) != 0) { eval_err = 4; return -1; }
-            int n = arr_get(lv, 0);
-            int m = arr_get(rv, 0);
-            if (n < 0 || m < 0 || n > m) { eval_err = 1; return -1; }
-            int r = arr_vector(n);
-            if (r < 0) { eval_err = 5; return -1; }
-            // Fisher-Yates shuffle on a pool of 1..M, take first N
-            // Use a temporary array on heap for the pool
-            int pool = arr_vector(m);
-            if (pool < 0) { eval_err = 5; return -1; }
-            int i = 0;
-            while (i < m) { arr_set(pool, i, i + io_origin); i++; }
-            i = 0;
-            while (i < n) {
-                // Random index from i..m-1
-                int rnd = lcg_next();
-                if (rnd < 0) rnd = 0 - rnd;
-                int j = i + rnd % (m - i);
-                // Swap pool[i] and pool[j]
-                int tmp = arr_get(pool, i);
-                arr_set(pool, i, arr_get(pool, j));
-                arr_set(pool, j, tmp);
-                arr_set(r, i, arr_get(pool, i));
-                i++;
-            }
-            return r;
-        }
-
-        if (res_id == RES_POWER) {
-            // A power B: integer exponentiation, element-wise
-            int lrk = arr_rank(lv);
-            int rrk = arr_rank(rv);
-            if (lrk == 0 && rrk == 0) {
-                int r = arr_scalar(int_power(arr_get(lv, 0), arr_get(rv, 0)));
-                if (r < 0) { eval_err = 5; return -1; }
-                return r;
-            }
-            if (lrk == 0 && rrk == 1) {
-                int base = arr_get(lv, 0);
-                int rsz = arr_size(rv);
-                int r = arr_vector(rsz);
-                if (r < 0) { eval_err = 5; return -1; }
-                int i = 0;
-                while (i < rsz) { arr_set(r, i, int_power(base, arr_get(rv, i))); i++; }
-                return r;
-            }
-            if (lrk == 1 && rrk == 0) {
-                int exp = arr_get(rv, 0);
-                int lsz = arr_size(lv);
-                int r = arr_vector(lsz);
-                if (r < 0) { eval_err = 5; return -1; }
-                int i = 0;
-                while (i < lsz) { arr_set(r, i, int_power(arr_get(lv, i), exp)); i++; }
-                return r;
-            }
-            if (lrk == 1 && rrk == 1) {
-                int lsz = arr_size(lv);
-                int rsz = arr_size(rv);
-                if (lsz != rsz) { eval_err = 3; return -1; }
-                int r = arr_vector(lsz);
-                if (r < 0) { eval_err = 5; return -1; }
-                int i = 0;
-                while (i < lsz) { arr_set(r, i, int_power(arr_get(lv, i), arr_get(rv, i))); i++; }
-                return r;
-            }
-            eval_err = 4;
-            return -1;
-        }
-
-        if (res_id == RES_ENCODE) {
-            // A encode B: represent B in mixed radix A
-            // Works right-to-left: last radix is least significant
-            if (arr_rank(lv) != 1) { eval_err = 4; return -1; }
-            if (arr_rank(rv) != 0) { eval_err = 4; return -1; }
-            int lsz = arr_size(lv);
-            int val = arr_get(rv, 0);
-            int r = arr_vector(lsz);
-            if (r < 0) { eval_err = 5; return -1; }
-            int i = lsz - 1;
-            while (i >= 0) {
-                int radix = arr_get(lv, i);
-                if (radix == 0) {
-                    arr_set(r, i, val);
-                    val = 0;
-                } else {
-                    arr_set(r, i, int_residue(radix, val));
-                    val = val / radix;
-                }
-                i--;
-            }
-            return r;
-        }
-
-        if (res_id == RES_DECODE) {
-            // A decode B: evaluate B in mixed radix A (Horner's method)
-            if (arr_rank(lv) != 1 || arr_rank(rv) != 1) { eval_err = 4; return -1; }
-            int lsz = arr_size(lv);
-            int rsz = arr_size(rv);
-            if (lsz != rsz) { eval_err = 3; return -1; }
-            int acc = 0;
-            int i = 0;
-            while (i < lsz) {
-                acc = acc * arr_get(lv, i) + arr_get(rv, i);
-                i++;
-            }
-            int r = arr_scalar(acc);
-            if (r < 0) { eval_err = 5; return -1; }
-            return r;
-        }
-
-        if (res_id == RES_WITHOUT) {
-            // A without B: elements of A not in B (APL dyadic ~)
-            if (arr_rank(lv) > 1 || arr_rank(rv) > 1) { eval_err = 4; return -1; }
-            int lsz = arr_size(lv);
-            int rsz = arr_size(rv);
-            // Count elements to keep
-            int count = 0;
-            int i = 0;
-            int j;
-            while (i < lsz) {
-                int val = arr_get(lv, i);
-                int found = 0;
-                j = 0;
-                while (j < rsz) {
-                    if (arr_get(rv, j) == val) { found = 1; j = rsz; }
-                    j++;
-                }
-                if (!found) count++;
-                i++;
-            }
-            int r = arr_vector(count);
-            if (r < 0) { eval_err = 5; return -1; }
-            if (arr_type(lv) == ARR_CHAR) arr_set_type(r, ARR_CHAR);
-            int ri = 0;
-            i = 0;
-            while (i < lsz) {
-                int val = arr_get(lv, i);
-                int found = 0;
-                j = 0;
-                while (j < rsz) {
-                    if (arr_get(rv, j) == val) { found = 1; j = rsz; }
-                    j++;
-                }
-                if (!found) { arr_set(r, ri, val); ri++; }
-                i++;
-            }
-            return r;
-        }
-
-        // Unknown dyadic function
-        eval_err = 1;
-        return -1;
-    }
-
-    if (ty == NODE_BINOP) {
-        int lv = eval(node_left[n]);
-        if (eval_err) return -1;
-        int rv = eval(node_right[n]);
-        if (eval_err) return -1;
-
-        int lrk = arr_rank(lv);
-        int rrk = arr_rank(rv);
-        int op = node_val[n];
-
-        // Scalar op scalar
-        if (lrk == 0 && rrk == 0) {
-            int result = eval_binop_scalar(op, arr_get(lv, 0), arr_get(rv, 0));
-            if (eval_err) return -1;
-            int r = arr_scalar(result);
-            if (r < 0) { eval_err = 5; return -1; }
-            return r;
-        }
-
-        // Vector op vector: must match length
-        if (lrk == 1 && rrk == 1) {
-            int lsz = arr_size(lv);
-            int rsz = arr_size(rv);
-            if (lsz != rsz) { eval_err = 3; return -1; }
-            int r = arr_vector(lsz);
-            if (r < 0) { eval_err = 5; return -1; }
-            int i = 0;
-            while (i < lsz) {
-                int val = eval_binop_scalar(op, arr_get(lv, i), arr_get(rv, i));
-                if (eval_err) return -1;
-                arr_set(r, i, val);
-                i++;
-            }
-            return r;
-        }
-
-        // Scalar op vector
-        if (lrk == 0 && rrk == 1) {
-            int la = arr_get(lv, 0);
-            int rsz = arr_size(rv);
-            int r = arr_vector(rsz);
-            if (r < 0) { eval_err = 5; return -1; }
-            int i = 0;
-            while (i < rsz) {
-                int val = eval_binop_scalar(op, la, arr_get(rv, i));
-                if (eval_err) return -1;
-                arr_set(r, i, val);
-                i++;
-            }
-            return r;
-        }
-
-        // Vector op scalar
-        if (lrk == 1 && rrk == 0) {
-            int ra = arr_get(rv, 0);
-            int lsz = arr_size(lv);
-            int r = arr_vector(lsz);
-            if (r < 0) { eval_err = 5; return -1; }
-            int i = 0;
-            while (i < lsz) {
-                int val = eval_binop_scalar(op, arr_get(lv, i), ra);
-                if (eval_err) return -1;
-                arr_set(r, i, val);
-                i++;
-            }
-            return r;
-        }
-
-        // Matrix op matrix: must match shape
-        if (lrk == 2 && rrk == 2) {
-            if (arr_dim0(lv) != arr_dim0(rv) || arr_dim1(lv) != arr_dim1(rv)) {
-                eval_err = 3; return -1;
-            }
-            int d0 = arr_dim0(lv);
-            int d1 = arr_dim1(lv);
-            int r = arr_new(2, d0, d1);
-            if (r < 0) { eval_err = 5; return -1; }
-            int sz = d0 * d1;
-            int i = 0;
-            while (i < sz) {
-                int val = eval_binop_scalar(op, arr_get(lv, i), arr_get(rv, i));
-                if (eval_err) return -1;
-                arr_set(r, i, val);
-                i++;
-            }
-            return r;
-        }
-
-        // Scalar op matrix
-        if (lrk == 0 && rrk == 2) {
-            int la = arr_get(lv, 0);
-            int d0 = arr_dim0(rv);
-            int d1 = arr_dim1(rv);
-            int r = arr_new(2, d0, d1);
-            if (r < 0) { eval_err = 5; return -1; }
-            int sz = d0 * d1;
-            int i = 0;
-            while (i < sz) {
-                int val = eval_binop_scalar(op, la, arr_get(rv, i));
-                if (eval_err) return -1;
-                arr_set(r, i, val);
-                i++;
-            }
-            return r;
-        }
-
-        // Matrix op scalar
-        if (lrk == 2 && rrk == 0) {
-            int ra = arr_get(rv, 0);
-            int d0 = arr_dim0(lv);
-            int d1 = arr_dim1(lv);
-            int r = arr_new(2, d0, d1);
-            if (r < 0) { eval_err = 5; return -1; }
-            int sz = d0 * d1;
-            int i = 0;
-            while (i < sz) {
-                int val = eval_binop_scalar(op, arr_get(lv, i), ra);
-                if (eval_err) return -1;
-                arr_set(r, i, val);
-                i++;
-            }
-            return r;
-        }
-
-        // Unsupported rank combination
-        eval_err = 4;
-        return -1;
-    }
+    if (ty == NODE_BINOP) return eval_binop_node(n);
 
     eval_err = 1;
     return -1;
