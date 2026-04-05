@@ -2135,19 +2135,38 @@ int eval(int n) {
             eval_err = 1;
             return -1;
         }
-        // Regular vector bracket indexing: V[N]
+        // Regular bracket indexing: V[N] (scalar) or V[indices] (vector)
         if (!sym_set_flag[sym_idx]) { eval_err = 2; return -1; }
         int arr = sym_val[sym_idx];
         int v = eval(node_right[n]);
         if (eval_err) return -1;
-        if (arr_rank(v) != 0) { eval_err = 4; return -1; }
-        int idx = arr_get(v, 0) - io_origin;
         int sz = arr_size(arr);
-        if (idx < 0 || idx >= sz) { eval_err = 3; return -1; }  // INDEX ERROR
-        int val = arr_get(arr, idx);
-        int r = arr_scalar(val);
-        if (r < 0) { eval_err = 5; return -1; }
-        return r;
+        if (arr_rank(v) == 0) {
+            // Scalar index: return scalar
+            int idx = arr_get(v, 0) - io_origin;
+            if (idx < 0 || idx >= sz) { eval_err = 3; return -1; }
+            int val = arr_get(arr, idx);
+            int r = arr_scalar(val);
+            if (r < 0) { eval_err = 5; return -1; }
+            return r;
+        }
+        if (arr_rank(v) == 1) {
+            // Vector index: return vector of selected elements
+            int vsz = arr_size(v);
+            int r = arr_vector(vsz);
+            if (r < 0) { eval_err = 5; return -1; }
+            if (arr_type(arr) == ARR_CHAR) arr_set_type(r, ARR_CHAR);
+            int i = 0;
+            while (i < vsz) {
+                int idx = arr_get(v, i) - io_origin;
+                if (idx < 0 || idx >= sz) { eval_err = 3; return -1; }
+                arr_set(r, i, arr_get(arr, idx));
+                i++;
+            }
+            return r;
+        }
+        eval_err = 4;
+        return -1;
     }
 
     if (ty == NODE_SVO_WRITE) {
