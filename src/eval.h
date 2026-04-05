@@ -1188,13 +1188,43 @@ int eval_dyad(int n) {
         // Dyadic cat: catenate two arrays
         int lrk = arr_rank(lv);
         int rrk = arr_rank(rv);
+        int lt = arr_type(lv);
+        int rt = arr_type(rv);
+
+        // Boxed concatenation: if either side is boxed, result is boxed
+        if (lt == ARR_BOXED || rt == ARR_BOXED) {
+            // Non-boxed side gets auto-enclosed (treated as single element)
+            int lsz;
+            int rsz;
+            if (lt == ARR_BOXED) { lsz = arr_size(lv); } else { lsz = 1; }
+            if (rt == ARR_BOXED) { rsz = arr_size(rv); } else { rsz = 1; }
+            int total = lsz + rsz;
+            int r = arr_vector(total);
+            if (r < 0) { eval_err = 5; return -1; }
+            arr_set_type(r, ARR_BOXED);
+            int i = 0;
+            if (lt == ARR_BOXED) {
+                while (i < lsz) { arr_set(r, i, arr_get(lv, i)); i++; }
+            } else {
+                arr_set(r, 0, lv);
+                i = 1;
+            }
+            int j = 0;
+            if (rt == ARR_BOXED) {
+                while (j < rsz) { arr_set(r, i + j, arr_get(rv, j)); j++; }
+            } else {
+                arr_set(r, i, rv);
+            }
+            return r;
+        }
+
+        // Non-boxed concatenation
         int lsz = arr_size(lv);
         int rsz = arr_size(rv);
         int total = lsz + rsz;
         int r = arr_vector(total);
         if (r < 0) { eval_err = 5; return -1; }
-        // Preserve char type if both operands are char
-        if (arr_type(lv) == ARR_CHAR && arr_type(rv) == ARR_CHAR) {
+        if (lt == ARR_CHAR && rt == ARR_CHAR) {
             arr_set_type(r, ARR_CHAR);
         }
         int i = 0;

@@ -1,0 +1,9 @@
+comment boxed cat: concatenate nested arrays
+comment enclose+cat builds nested arrays programmatically
+quad assign (enclose 'hello') cat enclose 'world'
+comment boxed cat boxed: merge two nested vectors
+quad assign ('a' 'b') cat 'c' 'd'
+comment auto-enclose: non-boxed + boxed
+quad assign (enclose 1 2 3) cat enclose 4 5 6
+comment string cat still works
+quad assign 'hello' cat ' world'
