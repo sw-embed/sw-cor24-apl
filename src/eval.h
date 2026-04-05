@@ -2141,7 +2141,7 @@ int eval(int n) {
         int v = eval(node_right[n]);
         if (eval_err) return -1;
         if (arr_rank(v) != 0) { eval_err = 4; return -1; }
-        int idx = arr_get(v, 0);
+        int idx = arr_get(v, 0) - io_origin;
         int sz = arr_size(arr);
         if (idx < 0 || idx >= sz) { eval_err = 3; return -1; }  // INDEX ERROR
         int val = arr_get(arr, idx);
@@ -2178,7 +2178,7 @@ int eval(int n) {
         int idxv = eval(node_left[n]);
         if (eval_err) return -1;
         if (arr_rank(idxv) != 0) { eval_err = 4; return -1; }
-        int idx = arr_get(idxv, 0);
+        int idx = arr_get(idxv, 0) - io_origin;
         int v = eval(node_right[n]);
         if (eval_err) return -1;
         if (arr_rank(v) != 0) { eval_err = 4; return -1; }

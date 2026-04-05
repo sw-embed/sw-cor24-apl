@@ -3,3 +3,7 @@ comment No WS FULL even with huge arguments
 rho iota 999999
 5 take iota 999999
 5 take 5 drop iota 999999
+comment Bracket indexing on lazy iota
+V assign iota 999999
+quad assign V[1]
+quad assign V[999999]
