@@ -1112,17 +1112,8 @@ int eval(int n) {
             int i = 1;
             while (i < sz) {
                 int b = arr_get(v, i);
-                if (scan_op >= 0) {
-                    acc = eval_binop_scalar(scan_op, acc, b);
-                    if (eval_err) return -1;
-                } else {
-                    // Workaround tc24r#20: decode negative RES_* id
-                    int rid = 0 - scan_op - 1;
-                    if (rid == RES_CEIL) { if (b > acc) acc = b; }
-                    else if (rid == RES_FLOOR) { if (b < acc) acc = b; }
-                    else if (rid == RES_AND) { acc = acc & b; }
-                    else { acc = acc | b; }
-                }
+                acc = eval_binop_scalar(scan_op, acc, b);
+                if (eval_err) return -1;
                 arr_set(r, i, acc);
                 i++;
             }

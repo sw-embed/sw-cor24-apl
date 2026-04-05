@@ -331,9 +331,12 @@ int parse_node(int mode) {
         if (parse_err) return 0;
         left = ast_scan(op, operand);
     } else if (ty == TOK_RES && (tok_val[parse_pos] == RES_CEIL || tok_val[parse_pos] == RES_FLOOR || tok_val[parse_pos] == RES_AND || tok_val[parse_pos] == RES_OR) && tok_type[parse_pos + 1] == TOK_BSLASH) {
-        // Scan with ceil\ floor\ and\ or\
-        // Workaround for tc24r#20: store negative RES_* id, decode in eval
-        int op = 0 - tok_val[parse_pos] - 1;
+        // Scan with ceil, floor, and, or (backslash-op)
+        int rv = tok_val[parse_pos];
+        int op = TOK_OR_OP;
+        if (rv == RES_CEIL) op = TOK_CEIL;
+        if (rv == RES_FLOOR) op = TOK_FLOOR;
+        if (rv == RES_AND) op = TOK_AND_OP;
         parse_pos = parse_pos + 2;
         int operand = parse_node(0);
         if (parse_err) return 0;
