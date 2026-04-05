@@ -97,6 +97,7 @@ embedded interpreter with no display hardware beyond a serial terminal.
 | `gradeup` | `⍋` | U+234B | Sort indices ascending |
 | `gradedown` | `⍒` | U+2352 | Sort indices descending |
 | `transpose` | `⍉` | U+2349 | Swap matrix axes |
+| `enclose` | `⊂` | U+2282 | Wrap in box |
 | `encode` | `⊤` | U+22A4 | Represent in radix |
 | `decode` | `⊥` | U+22A5 | Evaluate from radix |
 | `signum` | `×` | U+00D7 | Sign (-1/0/1) |

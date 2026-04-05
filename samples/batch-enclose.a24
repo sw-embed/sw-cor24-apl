@@ -1,0 +1,10 @@
+comment enclose: wrap value in a box (APL monadic enclose)
+comment enclose a vector
+quad assign enclose 1 2 3
+comment enclose a string
+quad assign enclose 'hello'
+comment round-trip: 1 pick undoes enclose
+quad assign 1 pick enclose 1 2 3
+quad assign 1 pick enclose 'world'
+comment rho of enclosed is 1
+quad assign rho enclose 1 2 3

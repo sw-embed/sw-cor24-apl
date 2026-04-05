@@ -943,6 +943,16 @@ int eval(int n) {
             return r;
         }
 
+        if (res_id == RES_ENCLOSE) {
+            // enclose A: wrap value in a scalar box
+            // Creates a 1-element boxed vector containing A
+            int r = arr_vector(1);
+            if (r < 0) { eval_err = 5; return -1; }
+            arr_set_type(r, ARR_BOXED);
+            arr_set(r, 0, v);
+            return r;
+        }
+
         if (res_id == RES_TRANSPOSE) {
             // transpose M: swap rows and columns
             int rk = arr_rank(v);

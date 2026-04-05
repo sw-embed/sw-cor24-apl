@@ -61,6 +61,7 @@
 #define RES_TRANSPOSE 26
 #define RES_ENCODE   27
 #define RES_DECODE   28
+#define RES_ENCLOSE  29
 #define RES_GRADEUP  24
 #define RES_GRADEDN  25
 #define RES_FACTORIAL 20
@@ -189,6 +190,9 @@ int lookup_reserved(char *src, int pos, int *end) {
 
     len = str_match(src, pos, "transpose");
     if (len == 9 && !is_alnum(src[pos + 9])) { *end = pos + 9; return RES_TRANSPOSE; }
+
+    len = str_match(src, pos, "enclose");
+    if (len == 7 && !is_alnum(src[pos + 7])) { *end = pos + 7; return RES_ENCLOSE; }
 
     len = str_match(src, pos, "encode");
     if (len == 6 && !is_alnum(src[pos + 6])) { *end = pos + 6; return RES_ENCODE; }
