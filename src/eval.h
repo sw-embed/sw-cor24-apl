@@ -14,17 +14,13 @@ int branch_target;
 // Shadow register for LED D2 (0xFF0000 is write-only for LEDs)
 // Stores the user-visible value (1=on, 0=off), not the raw active-low bit
 
-// Integer residue (APL |): B mod A, result has same sign as A.
-// Avoids negative division (COR24 software div handles only positive).
+// Integer residue (APL |): B mod A, result always 0 <= r < |A|.
+// Uses floor division: r = B - A * floor(B/A)
 int int_residue(int a, int b) {
-    int aa = a;
-    int bb = b;
-    if (aa < 0) aa = 0 - aa;
-    if (bb < 0) bb = 0 - bb;
-    int rem = bb - aa * (bb / aa);  // positive / positive is safe
-    // APL residue: result is always 0 <= result < |A|
-    if (b < 0 && rem > 0) rem = aa - rem;
-    return rem;
+    int q = b / a;
+    // C truncates toward zero; APL needs floor division
+    if ((b < 0) != (a < 0) && a * q != b) q = q - 1;
+    return b - a * q;
 }
 
 // Integer factorial (n!). Returns 0 for negative input.
@@ -1120,7 +1116,7 @@ int eval(int n) {
                     acc = eval_binop_scalar(scan_op, acc, b);
                     if (eval_err) return -1;
                 } else {
-                    // Encoded RES_* id: decode as -(op+1)
+                    // Workaround tc24r#20: decode negative RES_* id
                     int rid = 0 - scan_op - 1;
                     if (rid == RES_CEIL) { if (b > acc) acc = b; }
                     else if (rid == RES_FLOOR) { if (b < acc) acc = b; }
