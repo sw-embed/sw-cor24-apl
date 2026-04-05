@@ -64,6 +64,7 @@
 #define RES_ENCODE   27
 #define RES_DECODE   28
 #define RES_ENCLOSE  29
+#define RES_POWER    30
 #define RES_GRADEUP  24
 #define RES_GRADEDN  25
 #define RES_FACTORIAL 20
@@ -204,6 +205,9 @@ int lookup_reserved(char *src, int pos, int *end) {
 
     len = str_match(src, pos, "without");
     if (len == 7 && !is_alnum(src[pos + 7])) { *end = pos + 7; return RES_WITHOUT; }
+
+    len = str_match(src, pos, "power");
+    if (len == 5 && !is_alnum(src[pos + 5])) { *end = pos + 5; return RES_POWER; }
 
     len = str_match(src, pos, "gradeup");
     if (len == 7 && !is_alnum(src[pos + 7])) { *end = pos + 7; return RES_GRADEUP; }

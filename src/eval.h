@@ -48,6 +48,15 @@ int int_binomial(int k, int n) {
     return r;
 }
 
+// Integer power: base^exp for non-negative exp. Negative exp returns 0.
+int int_power(int base, int exp) {
+    if (exp < 0) return 0;
+    if (exp == 0) return 1;
+    int r = 1;
+    while (exp > 0) { r = r * base; exp--; }
+    return r;
+}
+
 // Index origin (□IO): 0 or 1, affects iota generation
 // Default 1 = standard APL (iota N → 1 2 ... N)
 int io_origin = 1;
@@ -1964,6 +1973,47 @@ int eval(int n) {
                 i++;
             }
             return r;
+        }
+
+        if (res_id == RES_POWER) {
+            // A power B: integer exponentiation, element-wise
+            int lrk = arr_rank(lv);
+            int rrk = arr_rank(rv);
+            if (lrk == 0 && rrk == 0) {
+                int r = arr_scalar(int_power(arr_get(lv, 0), arr_get(rv, 0)));
+                if (r < 0) { eval_err = 5; return -1; }
+                return r;
+            }
+            if (lrk == 0 && rrk == 1) {
+                int base = arr_get(lv, 0);
+                int rsz = arr_size(rv);
+                int r = arr_vector(rsz);
+                if (r < 0) { eval_err = 5; return -1; }
+                int i = 0;
+                while (i < rsz) { arr_set(r, i, int_power(base, arr_get(rv, i))); i++; }
+                return r;
+            }
+            if (lrk == 1 && rrk == 0) {
+                int exp = arr_get(rv, 0);
+                int lsz = arr_size(lv);
+                int r = arr_vector(lsz);
+                if (r < 0) { eval_err = 5; return -1; }
+                int i = 0;
+                while (i < lsz) { arr_set(r, i, int_power(arr_get(lv, i), exp)); i++; }
+                return r;
+            }
+            if (lrk == 1 && rrk == 1) {
+                int lsz = arr_size(lv);
+                int rsz = arr_size(rv);
+                if (lsz != rsz) { eval_err = 3; return -1; }
+                int r = arr_vector(lsz);
+                if (r < 0) { eval_err = 5; return -1; }
+                int i = 0;
+                while (i < lsz) { arr_set(r, i, int_power(arr_get(lv, i), arr_get(rv, i))); i++; }
+                return r;
+            }
+            eval_err = 4;
+            return -1;
         }
 
         if (res_id == RES_ENCODE) {

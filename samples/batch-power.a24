@@ -1,0 +1,8 @@
+comment power: integer exponentiation
+quad assign 2 power 10
+quad assign 3 power 0
+quad assign 5 power 3
+comment scalar extension
+quad assign 2 power 0 1 2 3 4 5 6 7 8
+comment vector power vector
+quad assign 1 2 3 4 5 power 5 4 3 2 1
