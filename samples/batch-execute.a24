@@ -1,0 +1,9 @@
+comment execute: evaluate string as APL code
+quad assign execute '1 + 2'
+quad assign execute 'iota 5'
+quad assign execute '2 3 rho iota 6'
+comment with variables in scope
+A assign 10
+quad assign execute 'A + 5'
+comment execute with rho
+quad assign rho execute 'iota 10'

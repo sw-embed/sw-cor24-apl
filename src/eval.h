@@ -719,6 +719,30 @@ int eval_monad(int n) {
         return r;
     }
 
+    if (res_id == RES_EXECUTE) {
+        // execute 'expr': evaluate character vector as APL code
+        if (arr_type(v) != ARR_CHAR) { eval_err = 1; return -1; }
+        int sz = arr_size(v);
+        if (sz >= 120) { eval_err = 1; return -1; }  // line buffer limit
+        // Copy char vector to C string buffer
+        char buf[120];
+        int i = 0;
+        while (i < sz) { buf[i] = arr_get(v, i); i++; }
+        buf[sz] = 0;
+        // Tokenize, parse, eval
+        int ntok = tokenize(buf);
+        if (ntok < 0) { eval_err = 1; return -1; }
+        if (tok_type[0] == TOK_EOL) {
+            // Empty expression: return 0
+            int r = arr_scalar(0);
+            if (r < 0) { eval_err = 5; return -1; }
+            return r;
+        }
+        int root = parse(buf);
+        if (root < 0) { eval_err = 1; return -1; }
+        return eval(root);
+    }
+
     if (res_id == RES_TRANSPOSE) {
         // transpose M: swap rows and columns
         int rk = arr_rank(v);
