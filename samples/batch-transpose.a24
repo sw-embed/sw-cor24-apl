@@ -1,0 +1,8 @@
+comment transpose: swap rows and columns of matrix
+quad assign 2 3 rho iota 6
+quad assign transpose 2 3 rho iota 6
+comment 3x2 becomes 2x3
+quad assign rho transpose 2 3 rho iota 6
+comment scalar and vector: no-op
+quad assign transpose 42
+quad assign transpose 1 2 3

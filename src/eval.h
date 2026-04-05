@@ -943,6 +943,30 @@ int eval(int n) {
             return r;
         }
 
+        if (res_id == RES_TRANSPOSE) {
+            // transpose M: swap rows and columns
+            int rk = arr_rank(v);
+            if (rk <= 1) return v;  // scalar/vector: no-op
+            if (rk == 2) {
+                int rows = arr_dim0(v);
+                int cols = arr_dim1(v);
+                int r = arr_new(2, cols, rows);
+                if (r < 0) { eval_err = 5; return -1; }
+                int row = 0;
+                while (row < rows) {
+                    int col = 0;
+                    while (col < cols) {
+                        arr_set(r, col * rows + row, arr_get(v, row * cols + col));
+                        col++;
+                    }
+                    row++;
+                }
+                return r;
+            }
+            eval_err = 4;
+            return -1;
+        }
+
         if (res_id == RES_GRADEUP || res_id == RES_GRADEDN) {
             // gradeup/gradedown: return indices that sort ascending/descending
             if (arr_rank(v) != 1) { eval_err = 4; return -1; }
@@ -1175,8 +1199,8 @@ int eval(int n) {
             int src_sz = arr_size(rv);
             if (src_sz == 0) { eval_err = 3; return -1; }
 
-            // Preserve type (char arrays stay char)
-            arr_set_type(r, arr_type(rv));
+            // Preserve char type (but not iota — result is materialized)
+            if (arr_type(rv) == ARR_CHAR) arr_set_type(r, ARR_CHAR);
 
             int i = 0;
             while (i < total) {
