@@ -111,6 +111,7 @@ embedded interpreter with no display hardware beyond a serial terminal.
 | `ceil\` | `⌈\` | — | Max-scan |
 | `floor\` | `⌊\` | — | Min-scan |
 | `outer.f` | `∘.f` | — | Outer product |
+| `f.g` | `f.g` | — | Inner product (+.* = matrix multiply) |
 
 ### Quad (System) Variables and Functions
 

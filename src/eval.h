@@ -1158,6 +1158,97 @@ int eval(int n) {
         return -1;
     }
 
+    if (ty == NODE_INNER) {
+        int lv = eval(node_left[n]);
+        if (eval_err) return -1;
+        int rv = eval(node_right[n]);
+        if (eval_err) return -1;
+        int f_op = node_val[n] & 255;
+        int g_op = (node_val[n] / 256) & 255;
+        int lrk = arr_rank(lv);
+        int rrk = arr_rank(rv);
+
+        // Vector . Vector: f/ (A g B)
+        if (lrk <= 1 && rrk <= 1) {
+            int lsz = arr_size(lv);
+            int rsz = arr_size(rv);
+            if (lsz != rsz) { eval_err = 3; return -1; }
+            // Apply g element-wise, then reduce with f
+            int acc = eval_binop_scalar(g_op, arr_get(lv, lsz - 1), arr_get(rv, lsz - 1));
+            if (eval_err) return -1;
+            int i = lsz - 2;
+            while (i >= 0) {
+                int gi = eval_binop_scalar(g_op, arr_get(lv, i), arr_get(rv, i));
+                if (eval_err) return -1;
+                acc = eval_binop_scalar(f_op, gi, acc);
+                if (eval_err) return -1;
+                i--;
+            }
+            int r = arr_scalar(acc);
+            if (r < 0) { eval_err = 5; return -1; }
+            return r;
+        }
+
+        // Matrix . Vector: each row inner-product with vector
+        if (lrk == 2 && rrk <= 1) {
+            int rows = arr_dim0(lv);
+            int cols = arr_dim1(lv);
+            int rsz = arr_size(rv);
+            if (cols != rsz) { eval_err = 3; return -1; }
+            int r = arr_vector(rows);
+            if (r < 0) { eval_err = 5; return -1; }
+            int row = 0;
+            while (row < rows) {
+                int acc = eval_binop_scalar(g_op, arr_get(lv, row * cols + cols - 1), arr_get(rv, cols - 1));
+                if (eval_err) return -1;
+                int k = cols - 2;
+                while (k >= 0) {
+                    int gi = eval_binop_scalar(g_op, arr_get(lv, row * cols + k), arr_get(rv, k));
+                    if (eval_err) return -1;
+                    acc = eval_binop_scalar(f_op, gi, acc);
+                    if (eval_err) return -1;
+                    k--;
+                }
+                arr_set(r, row, acc);
+                row++;
+            }
+            return r;
+        }
+
+        // Matrix . Matrix: standard matrix multiply generalization
+        if (lrk == 2 && rrk == 2) {
+            int lrows = arr_dim0(lv);
+            int inner = arr_dim1(lv);
+            int rcols = arr_dim1(rv);
+            if (inner != arr_dim0(rv)) { eval_err = 3; return -1; }
+            int r = arr_new(2, lrows, rcols);
+            if (r < 0) { eval_err = 5; return -1; }
+            int row = 0;
+            while (row < lrows) {
+                int col = 0;
+                while (col < rcols) {
+                    int acc = eval_binop_scalar(g_op, arr_get(lv, row * inner + inner - 1), arr_get(rv, (inner - 1) * rcols + col));
+                    if (eval_err) return -1;
+                    int k = inner - 2;
+                    while (k >= 0) {
+                        int gi = eval_binop_scalar(g_op, arr_get(lv, row * inner + k), arr_get(rv, k * rcols + col));
+                        if (eval_err) return -1;
+                        acc = eval_binop_scalar(f_op, gi, acc);
+                        if (eval_err) return -1;
+                        k--;
+                    }
+                    arr_set(r, row * rcols + col, acc);
+                    col++;
+                }
+                row++;
+            }
+            return r;
+        }
+
+        eval_err = 4;
+        return -1;
+    }
+
     if (ty == NODE_OUTER) {
         int lv = eval(node_left[n]);
         if (eval_err) return -1;

@@ -29,6 +29,7 @@
 #define NODE_QIO_ASSIGN 23  // quad-origin assign expr (right = expr — sets index origin)
 #define NODE_SCAN  24   // scan operator (val = op tok type, right = operand)
 #define NODE_OUTER 25   // outer product (val = op tok type, left/right = args)
+#define NODE_INNER 26   // inner product (val = f_op | (g_op<<8), left/right = args)
 
 #define AST_MAX 64
 
@@ -361,6 +362,37 @@ int parse_node(int mode) {
     }
 
     // -- If mode 0 (expr) and next is binop or dyadic reserved, parse right --
+
+    // Inner product: left f.g right (e.g. +.*)
+    // Inner product: left f.g right (e.g. +.*)
+    // Also handles reserved word f-ops: or.= and.= ceil.+ etc.
+    if (mode == 0 && tok_type[parse_pos + 1] == TOK_DOT) {
+        int f_op = -1;
+        if (is_binop(tok_type[parse_pos])) {
+            f_op = tok_type[parse_pos];
+        } else if (tok_type[parse_pos] == TOK_RES) {
+            int rv = tok_val[parse_pos];
+            if (rv == RES_CEIL) f_op = TOK_CEIL;
+            if (rv == RES_FLOOR) f_op = TOK_FLOOR;
+            if (rv == RES_AND) f_op = TOK_AND_OP;
+            if (rv == RES_OR) f_op = TOK_OR_OP;
+        }
+        int g_op = -1;
+        if (f_op >= 0 && is_binop(tok_type[parse_pos + 2])) {
+            g_op = tok_type[parse_pos + 2];
+        }
+        if (f_op >= 0 && g_op >= 0) {
+            parse_pos = parse_pos + 3;
+            int right = parse_node(0);
+            if (parse_err) return 0;
+            int nd = ast_new();
+            node_type[nd] = NODE_INNER;
+            node_val[nd] = f_op + (g_op * 256);
+            node_left[nd] = left;
+            node_right[nd] = right;
+            return nd;
+        }
+    }
 
     if (mode == 0 && is_binop(tok_type[parse_pos])) {
         int op = tok_type[parse_pos];
