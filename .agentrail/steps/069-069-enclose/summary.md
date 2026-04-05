@@ -1,0 +1,1 @@
+Implemented enclose (monadic, wraps value in 1-element boxed vector). Complements pick for round-trip. Tokenizer checks enclose before encode (longest match). Added batch and GNU APL test files, updated encoding.md.

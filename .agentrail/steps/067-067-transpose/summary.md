@@ -1,0 +1,1 @@
+Implemented transpose (monadic, swaps matrix rows/cols). Also fixed rho-on-lazy-iota bug: arr_set_type was copying ARR_IOTA to result, causing arr_get to compute lazy values instead of reading stored data. All 28 samples pass.

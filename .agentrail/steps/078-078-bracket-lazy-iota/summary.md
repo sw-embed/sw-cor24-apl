@@ -1,0 +1,1 @@
+Fixed bracket indexing to respect quad-origin. Both V[N] read and V[N] write now subtract io_origin. V[1] accesses first element in 1-origin. Bracket index on lazy iota works without WS FULL (V assign iota 999999; V[999999] returns 999999).

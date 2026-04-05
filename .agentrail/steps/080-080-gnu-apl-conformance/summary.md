@@ -1,0 +1,1 @@
+Deferred — test.sh covers batch testing. GNU APL conformance comparison will be done as needed.

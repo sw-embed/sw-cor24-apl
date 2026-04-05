@@ -1,0 +1,1 @@
+Split eval() into 5 per-node-type functions + small dispatcher. Frame reduced from 261 to 141 words (46%). Recursion depth doubled from 3 to 6 (FACT 6 works, was FACT 3). All 34 samples pass. Updated docs/missing.md.

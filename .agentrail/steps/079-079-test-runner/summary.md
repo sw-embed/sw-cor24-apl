@@ -1,0 +1,1 @@
+Created test.sh automated test runner. Runs all 35 batch samples comparing against .expected files, plus 2 horse race demos checking for WINNER. Supports --generate and SPEED override. Also added vector bracket indexing (V[gradeup V] sorting idiom). All 37 tests pass.

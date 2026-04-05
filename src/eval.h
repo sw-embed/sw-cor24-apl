@@ -1065,9 +1065,37 @@ int eval_dyad(int n) {
 
     if (res_id == RES_TAKE) {
         // N take A: take first N elements/rows (negative N = from end)
-        if (arr_rank(lv) != 0) { eval_err = 4; return -1; }
-        int count = arr_get(lv, 0);
+        // R C take M: take R rows and C columns from matrix M
+        int lrk = arr_rank(lv);
         int rrk = arr_rank(rv);
+
+        // Multi-axis take: 2-element vector left, matrix right
+        if (lrk == 1 && arr_size(lv) == 2 && rrk == 2) {
+            int rows = arr_dim0(rv);
+            int cols = arr_dim1(rv);
+            int rcount = arr_get(lv, 0);
+            int ccount = arr_get(lv, 1);
+            int ar = rcount; if (ar < 0) ar = 0 - ar;
+            int ac = ccount; if (ac < 0) ac = 0 - ac;
+            if (ar > rows || ac > cols) { eval_err = 3; return -1; }
+            int sr = 0; if (rcount < 0) sr = rows - ar;
+            int sc = 0; if (ccount < 0) sc = cols - ac;
+            int r = arr_new(2, ar, ac);
+            if (r < 0) { eval_err = 5; return -1; }
+            int ri = 0;
+            while (ri < ar) {
+                int ci = 0;
+                while (ci < ac) {
+                    arr_set(r, ri * ac + ci, arr_get(rv, (sr + ri) * cols + sc + ci));
+                    ci++;
+                }
+                ri++;
+            }
+            return r;
+        }
+
+        if (lrk != 0) { eval_err = 4; return -1; }
+        int count = arr_get(lv, 0);
 
         // Lazy iota shortcut: return new lazy iota for the slice
         if (rrk == 1 && arr_type(rv) == ARR_IOTA) {
@@ -1124,9 +1152,40 @@ int eval_dyad(int n) {
 
     if (res_id == RES_DROP) {
         // N drop A: drop first N elements/rows (negative N = from end)
-        if (arr_rank(lv) != 0) { eval_err = 4; return -1; }
-        int count = arr_get(lv, 0);
+        // R C drop M: drop R rows and C columns from matrix M
+        int lrk = arr_rank(lv);
         int rrk = arr_rank(rv);
+
+        // Multi-axis drop: 2-element vector left, matrix right
+        if (lrk == 1 && arr_size(lv) == 2 && rrk == 2) {
+            int rows = arr_dim0(rv);
+            int cols = arr_dim1(rv);
+            int rcount = arr_get(lv, 0);
+            int ccount = arr_get(lv, 1);
+            int ar = rcount; if (ar < 0) ar = 0 - ar;
+            int ac = ccount; if (ac < 0) ac = 0 - ac;
+            if (ar > rows) ar = rows;
+            if (ac > cols) ac = cols;
+            int nr = rows - ar;
+            int nc = cols - ac;
+            int sr = ar; if (rcount < 0) sr = 0;
+            int sc = ac; if (ccount < 0) sc = 0;
+            int r = arr_new(2, nr, nc);
+            if (r < 0) { eval_err = 5; return -1; }
+            int ri = 0;
+            while (ri < nr) {
+                int ci = 0;
+                while (ci < nc) {
+                    arr_set(r, ri * nc + ci, arr_get(rv, (sr + ri) * cols + sc + ci));
+                    ci++;
+                }
+                ri++;
+            }
+            return r;
+        }
+
+        if (lrk != 0) { eval_err = 4; return -1; }
+        int count = arr_get(lv, 0);
 
         // Lazy iota shortcut: return new lazy iota for the remainder
         if (rrk == 1 && arr_type(rv) == ARR_IOTA) {

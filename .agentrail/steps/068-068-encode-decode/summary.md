@@ -1,0 +1,1 @@
+Implemented encode (represent in mixed radix) and decode (evaluate from mixed radix). Encode works right-to-left extracting digits, decode uses Horner's method. Both pure integer. Added batch and GNU APL test files, updated encoding.md.

@@ -1,0 +1,1 @@
+Implemented inner product (A f.g B). Supports vector-vector (dot product), matrix-vector, matrix-matrix. F-op can be binop or reserved word (or.=, and.+, etc). Encodes both ops in node_val. Added batch and GNU APL test files, updated encoding.md.

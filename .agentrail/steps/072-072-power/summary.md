@@ -1,0 +1,1 @@
+Implemented power (integer exponentiation A power B). Element-wise with scalar extension. Added int_power helper. Batch and GNU APL tests, encoding.md updated.

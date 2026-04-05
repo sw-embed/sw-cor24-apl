@@ -1,0 +1,1 @@
+Implemented outer product (A outer.f B). New syntax with TOK_OUTER/TOK_DOT tokens. Supports all scalar binops and reserved word ops. Produces matrix with shape (rho A),(rho B). Added batch and GNU APL test files, updated encoding.md.

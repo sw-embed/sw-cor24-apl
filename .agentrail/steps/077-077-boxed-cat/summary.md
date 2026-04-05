@@ -1,0 +1,1 @@
+Fixed dyadic cat for boxed arrays. Boxed+boxed concatenates elements. Non-boxed+boxed auto-encloses. Enables programmatic nested array construction via enclose+cat. String/numeric cat unchanged.

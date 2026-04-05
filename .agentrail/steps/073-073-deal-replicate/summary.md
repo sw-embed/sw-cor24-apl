@@ -1,0 +1,1 @@
+Implemented deal (N roll M, Fisher-Yates shuffle for unique random selection) and replicate (generalized compress with integer counts). Compress now handles both boolean masks and integer replication counts. Saga roadmap 057-073 complete.

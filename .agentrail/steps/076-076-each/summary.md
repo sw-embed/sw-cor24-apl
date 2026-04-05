@@ -1,0 +1,1 @@
+Implemented each operator (f each V, applies monadic function per nested element). Added TOK_EACH, NODE_EACH. Refactored eval_monad into eval_monad_val helper for pre-evaluated values. Fixed rev not preserving ARR_CHAR type. Added batch and GNU APL test files, updated encoding.md.

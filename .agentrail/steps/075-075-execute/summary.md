@@ -1,0 +1,1 @@
+Implemented execute (monadic, evaluates character vector as APL code). Tokenizes, parses, evals the string. Variables in current scope are accessible. Added batch and GNU APL test files, updated encoding.md.

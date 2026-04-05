@@ -1,0 +1,1 @@
+Implemented dyadic rotate (N rev V). Rotates left by N, negative N rotates right. Works on integer and character vectors. Added to dyadic dispatch for RES_REV. Monadic reverse unchanged.
