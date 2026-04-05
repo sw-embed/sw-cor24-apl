@@ -1690,7 +1690,8 @@ int eval(int n) {
             // Simple vector: return scalar
             int r = arr_scalar(arr_get(rv, idx));
             if (r < 0) { eval_err = 5; return -1; }
-            arr_set_type(r, arr_type(rv));
+            // Preserve char type (but not iota — value is materialized)
+            if (arr_type(rv) == ARR_CHAR) arr_set_type(r, ARR_CHAR);
             return r;
         }
 
