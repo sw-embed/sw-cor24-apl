@@ -34,6 +34,8 @@
 #define TOK_OR_OP  31   // or — internal only, used in reduce nodes
 #define TOK_QIO    32   // quad-origin — index origin (APL ⎕IO)
 #define TOK_BSLASH 33   // \ (backslash — scan operator)
+#define TOK_OUTER  34   // outer (outer product prefix)
+#define TOK_DOT    35   // . (dot — used in outer product)
 
 // Reserved word IDs
 #define RES_RHO     0
@@ -298,6 +300,17 @@ int tokenize(char *line) {
                 continue;
             }
 
+            // Outer product prefix
+            len = str_match(line, i, "outer");
+            if (len == 5 && !is_alnum(line[i + 5])) {
+                tok_type[t] = TOK_OUTER;
+                tok_pos[t] = i;
+                tok_val[t] = 0;
+                t++;
+                i = i + 5;
+                continue;
+            }
+
             // Comment: "comment" skips to end of line (APL ⍝)
             len = str_match(line, i, "comment");
             if (len == 7 && !is_alnum(line[i + 7])) {
@@ -359,6 +372,7 @@ int tokenize(char *line) {
         if (line[i] == 42) { tok_type[t] = TOK_STAR;   tok_pos[t] = i; tok_val[t] = 0; t++; i++; continue; }
         if (line[i] == 47) { tok_type[t] = TOK_SLASH;  tok_pos[t] = i; tok_val[t] = 0; t++; i++; continue; }
         if (line[i] == 92) { tok_type[t] = TOK_BSLASH; tok_pos[t] = i; tok_val[t] = 0; t++; i++; continue; }
+        if (line[i] == 46) { tok_type[t] = TOK_DOT;    tok_pos[t] = i; tok_val[t] = 0; t++; i++; continue; }
         if (line[i] == 40) { tok_type[t] = TOK_LPAREN; tok_pos[t] = i; tok_val[t] = 0; t++; i++; continue; }
         if (line[i] == 41) { tok_type[t] = TOK_RPAREN; tok_pos[t] = i; tok_val[t] = 0; t++; i++; continue; }
 

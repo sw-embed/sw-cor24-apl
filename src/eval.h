@@ -1158,6 +1158,36 @@ int eval(int n) {
         return -1;
     }
 
+    if (ty == NODE_OUTER) {
+        int lv = eval(node_left[n]);
+        if (eval_err) return -1;
+        int rv = eval(node_right[n]);
+        if (eval_err) return -1;
+        int op = node_val[n];
+        // Both args must be vectors (or scalars treated as 1-element)
+        int lrk = arr_rank(lv);
+        int rrk = arr_rank(rv);
+        if (lrk > 1 || rrk > 1) { eval_err = 4; return -1; }
+        int lsz = arr_size(lv);
+        int rsz = arr_size(rv);
+        int r = arr_new(2, lsz, rsz);
+        if (r < 0) { eval_err = 5; return -1; }
+        int i = 0;
+        while (i < lsz) {
+            int a = arr_get(lv, i);
+            int j = 0;
+            while (j < rsz) {
+                int b = arr_get(rv, j);
+                int val = eval_binop_scalar(op, a, b);
+                if (eval_err) return -1;
+                arr_set(r, i * rsz + j, val);
+                j++;
+            }
+            i++;
+        }
+        return r;
+    }
+
     if (ty == NODE_DYAD) {
         int lv = eval(node_left[n]);
         if (eval_err) return -1;

@@ -110,6 +110,7 @@ embedded interpreter with no display hardware beyond a serial terminal.
 | `*\` | `×\` | — | Times-scan |
 | `ceil\` | `⌈\` | — | Max-scan |
 | `floor\` | `⌊\` | — | Min-scan |
+| `outer.f` | `∘.f` | — | Outer product |
 
 ### Quad (System) Variables and Functions
 

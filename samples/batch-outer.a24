@@ -1,0 +1,9 @@
+comment outer product: A outer.f B
+comment addition table
+quad assign 1 2 3 outer.+ 10 20
+comment multiplication table
+quad assign 1 2 3 4 outer.* 1 2 3 4
+comment identity-like matrix
+quad assign 1 2 3 outer.= 1 2 3
+comment comparison
+quad assign 1 2 3 outer.<= 1 2 3

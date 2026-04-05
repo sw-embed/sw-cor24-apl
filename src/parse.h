@@ -28,6 +28,7 @@
 #define NODE_QIO   22   // quad-origin read (no children — returns index origin)
 #define NODE_QIO_ASSIGN 23  // quad-origin assign expr (right = expr — sets index origin)
 #define NODE_SCAN  24   // scan operator (val = op tok type, right = operand)
+#define NODE_OUTER 25   // outer product (val = op tok type, left/right = args)
 
 #define AST_MAX 64
 
@@ -367,6 +368,41 @@ int parse_node(int mode) {
         int right = parse_node(0);
         if (parse_err) return 0;
         return ast_binop(op, left, right);
+    }
+
+    // Outer product: left outer.OP right
+    if (mode == 0 && tok_type[parse_pos] == TOK_OUTER && tok_type[parse_pos + 1] == TOK_DOT && is_binop(tok_type[parse_pos + 2])) {
+        int op = tok_type[parse_pos + 2];
+        parse_pos = parse_pos + 3;
+        int right = parse_node(0);
+        if (parse_err) return 0;
+        int n = ast_new();
+        node_type[n] = NODE_OUTER;
+        node_val[n] = op;
+        node_left[n] = left;
+        node_right[n] = right;
+        return n;
+    }
+
+    // Outer product with reserved word ops: outer.ceil, outer.floor, outer.and, outer.or
+    if (mode == 0 && tok_type[parse_pos] == TOK_OUTER && tok_type[parse_pos + 1] == TOK_DOT && tok_type[parse_pos + 2] == TOK_RES) {
+        int rv = tok_val[parse_pos + 2];
+        int op = -1;
+        if (rv == RES_CEIL) op = TOK_CEIL;
+        if (rv == RES_FLOOR) op = TOK_FLOOR;
+        if (rv == RES_AND) op = TOK_AND_OP;
+        if (rv == RES_OR) op = TOK_OR_OP;
+        if (op >= 0) {
+            parse_pos = parse_pos + 3;
+            int right = parse_node(0);
+            if (parse_err) return 0;
+            int n = ast_new();
+            node_type[n] = NODE_OUTER;
+            node_val[n] = op;
+            node_left[n] = left;
+            node_right[n] = right;
+            return n;
+        }
     }
 
     if (mode == 0 && tok_type[parse_pos] == TOK_RES && is_dyadic_res(tok_val[parse_pos])) {
