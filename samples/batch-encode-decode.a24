@@ -1,0 +1,13 @@
+comment encode (represent in radix) and decode (evaluate from radix)
+comment binary: 5 in base 2
+quad assign 2 2 2 encode 5
+comment decode back
+quad assign 2 2 2 decode 1 0 1
+comment time: 3661 seconds = 1h 1m 1s
+quad assign 24 60 60 encode 3661
+quad assign 24 60 60 decode 1 1 1
+comment base 10 digits of 123
+quad assign 10 10 10 encode 123
+quad assign 10 10 10 decode 1 2 3
+comment round-trip
+quad assign 2 2 2 2 decode 2 2 2 2 encode 13

@@ -1835,6 +1835,47 @@ int eval(int n) {
             return r;
         }
 
+        if (res_id == RES_ENCODE) {
+            // A encode B: represent B in mixed radix A
+            // Works right-to-left: last radix is least significant
+            if (arr_rank(lv) != 1) { eval_err = 4; return -1; }
+            if (arr_rank(rv) != 0) { eval_err = 4; return -1; }
+            int lsz = arr_size(lv);
+            int val = arr_get(rv, 0);
+            int r = arr_vector(lsz);
+            if (r < 0) { eval_err = 5; return -1; }
+            int i = lsz - 1;
+            while (i >= 0) {
+                int radix = arr_get(lv, i);
+                if (radix == 0) {
+                    arr_set(r, i, val);
+                    val = 0;
+                } else {
+                    arr_set(r, i, int_residue(radix, val));
+                    val = val / radix;
+                }
+                i--;
+            }
+            return r;
+        }
+
+        if (res_id == RES_DECODE) {
+            // A decode B: evaluate B in mixed radix A (Horner's method)
+            if (arr_rank(lv) != 1 || arr_rank(rv) != 1) { eval_err = 4; return -1; }
+            int lsz = arr_size(lv);
+            int rsz = arr_size(rv);
+            if (lsz != rsz) { eval_err = 3; return -1; }
+            int acc = 0;
+            int i = 0;
+            while (i < lsz) {
+                acc = acc * arr_get(lv, i) + arr_get(rv, i);
+                i++;
+            }
+            int r = arr_scalar(acc);
+            if (r < 0) { eval_err = 5; return -1; }
+            return r;
+        }
+
         if (res_id == RES_WITHOUT) {
             // A without B: elements of A not in B (APL dyadic ~)
             if (arr_rank(lv) > 1 || arr_rank(rv) > 1) { eval_err = 4; return -1; }
