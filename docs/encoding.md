@@ -113,6 +113,7 @@ embedded interpreter with no display hardware beyond a serial terminal.
 | `*\` | `×\` | — | Times-scan |
 | `ceil\` | `⌈\` | — | Max-scan |
 | `floor\` | `⌊\` | — | Min-scan |
+| `f each` | `f¨` | U+00A8 | Apply f to each element |
 | `outer.f` | `∘.f` | — | Outer product |
 | `f.g` | `f.g` | — | Inner product (+.* = matrix multiply) |
 

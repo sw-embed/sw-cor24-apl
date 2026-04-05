@@ -212,6 +212,9 @@ int eval_binop_node(int n);
 int eval_inner_node(int n);
 int eval_outer_node(int n);
 
+// Apply monadic function to a pre-evaluated value (for 'each' operator)
+int eval_monad_val(int res_id, int v);
+
 // ---- User function call execution ----
 // Separated from eval() to reduce stack frame size for recursion.
 
@@ -439,10 +442,15 @@ int eval_binop_scalar(int op, int a, int b) {
 
 // ---- Extracted node-type handlers (reduce eval() stack frame) ----
 
+int eval_monad_val(int res_id, int v);
+
 int eval_monad(int n) {
     int v = eval(node_right[n]);
     if (eval_err) return -1;
-    int res_id = node_val[n];
+    return eval_monad_val(node_val[n], v);
+}
+
+int eval_monad_val(int res_id, int v) {
 
     if (res_id == RES_IOTA) {
         // iota N: lazy vector io_origin .. io_origin+N-1
@@ -493,6 +501,7 @@ int eval_monad(int n) {
             int sz = arr_size(v);
             int r = arr_vector(sz);
             if (r < 0) { eval_err = 5; return -1; }
+            if (arr_type(v) == ARR_CHAR) arr_set_type(r, ARR_CHAR);
             int i = 0;
             while (i < sz) {
                 arr_set(r, i, arr_get(v, sz - 1 - i));
@@ -2292,6 +2301,35 @@ int eval(int n) {
 
         eval_err = 4;
         return -1;
+    }
+
+    if (ty == NODE_EACH) {
+        // f each V: apply monadic function f to each element of boxed V
+        int v = eval(node_right[n]);
+        if (eval_err) return -1;
+        int fn_id = node_val[n];
+        if (arr_type(v) != ARR_BOXED) {
+            // Non-boxed: just apply the function directly (like rho each 5 -> rho 5)
+            int monad_n = ast_new();
+            node_type[monad_n] = NODE_MONAD;
+            node_val[monad_n] = fn_id;
+            node_right[monad_n] = -1;
+            // Can't easily re-eval with the value — treat as single application
+            return eval_monad_val(fn_id, v);
+        }
+        int sz = arr_size(v);
+        int r = arr_vector(sz);
+        if (r < 0) { eval_err = 5; return -1; }
+        arr_set_type(r, ARR_BOXED);
+        int i = 0;
+        while (i < sz) {
+            int elem = arr_get(v, i);
+            int result = eval_monad_val(fn_id, elem);
+            if (eval_err) return -1;
+            arr_set(r, i, result);
+            i++;
+        }
+        return r;
     }
 
     if (ty == NODE_INNER) return eval_inner_node(n);

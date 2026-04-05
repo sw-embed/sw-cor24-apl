@@ -35,7 +35,8 @@
 #define TOK_QIO    32   // quad-origin — index origin (APL ⎕IO)
 #define TOK_BSLASH 33   // \ (backslash — scan operator)
 #define TOK_OUTER  34   // outer (outer product prefix)
-#define TOK_DOT    35   // . (dot — used in outer product)
+#define TOK_DOT    35   // . (dot — used in outer/inner product)
+#define TOK_EACH   36   // each (apply function per element)
 
 // Reserved word IDs
 #define RES_RHO     0
@@ -316,6 +317,17 @@ int tokenize(char *line) {
                 tok_val[t] = 0;
                 t++;
                 i = i + 5;
+                continue;
+            }
+
+            // Each operator modifier
+            len = str_match(line, i, "each");
+            if (len == 4 && !is_alnum(line[i + 4])) {
+                tok_type[t] = TOK_EACH;
+                tok_pos[t] = i;
+                tok_val[t] = 0;
+                t++;
+                i = i + 4;
                 continue;
             }
 

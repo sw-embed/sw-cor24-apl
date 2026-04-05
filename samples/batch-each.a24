@@ -1,0 +1,7 @@
+comment each: apply function to each element of nested array
+comment rho each: length of each string
+quad assign rho each 'hello' 'world' 'hi'
+comment rev each: reverse each string
+quad assign rev each 'abc' 'def' 'ghi'
+comment cup each: unique per element
+quad assign cup each 'aabbc' 'xxyy' 'hello'

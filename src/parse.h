@@ -30,6 +30,7 @@
 #define NODE_SCAN  24   // scan operator (val = op tok type, right = operand)
 #define NODE_OUTER 25   // outer product (val = op tok type, left/right = args)
 #define NODE_INNER 26   // inner product (val = f_op | (g_op<<8), left/right = args)
+#define NODE_EACH  27   // each operator (val = RES_xxx function, right = operand)
 
 #define AST_MAX 64
 
@@ -343,6 +344,17 @@ int parse_node(int mode) {
         int operand = parse_node(0);
         if (parse_err) return 0;
         left = ast_scan(op, operand);
+    } else if (ty == TOK_RES && tok_type[parse_pos + 1] == TOK_EACH) {
+        // Each operator: f each V (apply f to each element)
+        int res_id = tok_val[parse_pos];
+        parse_pos = parse_pos + 2;
+        int operand = parse_node(0);
+        if (parse_err) return 0;
+        int nd = ast_new();
+        node_type[nd] = NODE_EACH;
+        node_val[nd] = res_id;
+        node_right[nd] = operand;
+        left = nd;
     } else if (ty == TOK_RES) {
         // Monadic primitive function (e.g. iota expr)
         int res_id = tok_val[parse_pos];
