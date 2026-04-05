@@ -1571,6 +1571,27 @@ int eval(int n) {
             return r;
         }
 
+        if (res_id == RES_REV) {
+            // N rev V: rotate vector V left by N positions
+            if (arr_rank(lv) != 0) { eval_err = 4; return -1; }
+            if (arr_rank(rv) != 1) { eval_err = 4; return -1; }
+            int n = arr_get(lv, 0);
+            int sz = arr_size(rv);
+            if (sz == 0) return rv;
+            // Normalize: handle negative and large N
+            int rot = ((n % sz) + sz) % sz;
+            int r = arr_vector(sz);
+            if (r < 0) { eval_err = 5; return -1; }
+            if (arr_type(rv) == ARR_CHAR) arr_set_type(r, ARR_CHAR);
+            int i = 0;
+            while (i < sz) {
+                int src = (i + rot) % sz;
+                arr_set(r, i, arr_get(rv, src));
+                i++;
+            }
+            return r;
+        }
+
         if (res_id == RES_IOTA) {
             // Dyadic iota (index-of): A iota B -> index of B in A
             // Not found returns (rho A) + io_origin (past end)

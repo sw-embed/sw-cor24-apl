@@ -74,7 +74,7 @@ embedded interpreter with no display hardware beyond a serial terminal.
 | `iota` | `⍳` | U+2373 | Index generator |
 | `take` | `↑` | U+2191 | Take first/last N |
 | `drop` | `↓` | U+2193 | Drop first/last N |
-| `rev` | `⌽` | U+233D | Reverse |
+| `rev` | `⌽` | U+233D | Reverse / rotate (dyadic) |
 | `cat` | `,` | U+002C | Catenate / ravel |
 | `ceil` | `⌈` | U+2308 | Maximum |
 | `floor` | `⌊` | U+230A | Minimum |

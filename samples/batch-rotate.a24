@@ -1,0 +1,9 @@
+comment dyadic rev (rotate): N rev V rotates left by N
+quad assign 2 rev 1 2 3 4 5
+quad assign _1 rev 1 2 3 4 5
+quad assign 0 rev 1 2 3 4 5
+quad assign 5 rev 1 2 3 4 5
+comment character rotate
+quad assign 2 rev 'abcde'
+comment monadic rev (reverse) still works
+quad assign rev 1 2 3 4 5
