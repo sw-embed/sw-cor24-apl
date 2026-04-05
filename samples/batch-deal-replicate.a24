@@ -1,0 +1,8 @@
+comment deal: N roll M = N unique random from 1..M
+quad-seed assign 42
+quad assign 3 roll 10
+comment replicate: generalized compress with integer counts
+quad assign 2 3 1 compress 10 20 30
+quad assign 0 1 0 1 compress 10 20 30 40
+comment character replicate
+quad assign 1 2 3 compress 'abc'

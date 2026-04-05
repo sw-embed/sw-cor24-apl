@@ -82,7 +82,7 @@ embedded interpreter with no display hardware beyond a serial terminal.
 | `or` | `∨` | U+2228 | Logical/bitwise OR |
 | `not` | `~` | U+007E | Logical/bitwise NOT |
 | `pick` | `⊃` | U+2283 | Pick from nested |
-| `compress` | `/` | U+002F | Boolean compress |
+| `compress` | `/` | U+002F | Compress / replicate |
 | `del` | `∇` | U+2207 | Function definition |
 | `roll` | `?` | U+003F | Random number |
 | `fmt` | `⍕` | U+2355 | Format (number to string) |
@@ -101,6 +101,7 @@ embedded interpreter with no display hardware beyond a serial terminal.
 | `encode` | `⊤` | U+22A4 | Represent in radix |
 | `decode` | `⊥` | U+22A5 | Evaluate from radix |
 | `power` | `*` | U+002A | Integer exponentiation (dyadic) |
+| `roll` (dyadic) | `?` | U+003F | Deal — N unique random from 1..M |
 | `signum` | `×` | U+00D7 | Sign (-1/0/1) |
 | `factorial` | `!` | U+0021 | n! |
 | `binomial` | `!` | U+0021 | C(n,k) combinations (dyadic) |

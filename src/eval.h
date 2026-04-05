@@ -1629,37 +1629,37 @@ int eval(int n) {
         }
 
         if (res_id == RES_COMPRESS) {
-            // Boolean compress: MASK compress VECTOR
-            // Selects elements of VECTOR where MASK is 1
+            // Compress/replicate: COUNTS compress VECTOR
+            // Boolean (0/1): select elements. Integer: replicate N times.
             int lrk = arr_rank(lv);
             int rrk = arr_rank(rv);
-
-            // Left must be a vector (or scalar treated as 1-element)
-            // Right must be a vector (or scalar treated as 1-element)
             if (lrk > 1 || rrk > 1) { eval_err = 4; return -1; }
 
             int lsz = arr_size(lv);
             int rsz = arr_size(rv);
             if (lsz != rsz) { eval_err = 3; return -1; }
 
-            // Count number of 1s in mask
-            int count = 0;
+            // Count total output size
+            int total = 0;
             int i = 0;
             while (i < lsz) {
-                if (arr_get(lv, i)) count++;
+                int c = arr_get(lv, i);
+                if (c < 0) { eval_err = 1; return -1; }
+                total = total + c;
                 i++;
             }
 
-            int r = arr_vector(count);
+            int r = arr_vector(total);
             if (r < 0) { eval_err = 5; return -1; }
+            if (arr_type(rv) == ARR_CHAR) arr_set_type(r, ARR_CHAR);
 
             int ri = 0;
             i = 0;
             while (i < lsz) {
-                if (arr_get(lv, i)) {
-                    arr_set(r, ri, arr_get(rv, i));
-                    ri++;
-                }
+                int c = arr_get(lv, i);
+                int val = arr_get(rv, i);
+                int j = 0;
+                while (j < c) { arr_set(r, ri, val); ri++; j++; }
                 i++;
             }
             return r;
@@ -1970,6 +1970,36 @@ int eval(int n) {
                     if (arr_get(rv, j) == val) { arr_set(r, ri, val); ri++; j = rsz; }
                     j++;
                 }
+                i++;
+            }
+            return r;
+        }
+
+        if (res_id == RES_ROLL) {
+            // N deal M: N random integers from 1..M without replacement
+            if (arr_rank(lv) != 0 || arr_rank(rv) != 0) { eval_err = 4; return -1; }
+            int n = arr_get(lv, 0);
+            int m = arr_get(rv, 0);
+            if (n < 0 || m < 0 || n > m) { eval_err = 1; return -1; }
+            int r = arr_vector(n);
+            if (r < 0) { eval_err = 5; return -1; }
+            // Fisher-Yates shuffle on a pool of 1..M, take first N
+            // Use a temporary array on heap for the pool
+            int pool = arr_vector(m);
+            if (pool < 0) { eval_err = 5; return -1; }
+            int i = 0;
+            while (i < m) { arr_set(pool, i, i + io_origin); i++; }
+            i = 0;
+            while (i < n) {
+                // Random index from i..m-1
+                int rnd = lcg_next();
+                if (rnd < 0) rnd = 0 - rnd;
+                int j = i + rnd % (m - i);
+                // Swap pool[i] and pool[j]
+                int tmp = arr_get(pool, i);
+                arr_set(pool, i, arr_get(pool, j));
+                arr_set(pool, j, tmp);
+                arr_set(r, i, arr_get(pool, i));
                 i++;
             }
             return r;
