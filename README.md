@@ -63,7 +63,7 @@ differentiated error handling with 6 error types: SYNTAX ERROR,
 DOMAIN ERROR (div by zero), VALUE ERROR (undefined variable),
 LENGTH ERROR (vector/matrix size mismatch), RANK ERROR (unsupported
 rank combinations), and WS FULL (heap exhaustion). All errors recover
-cleanly — the REPL continues after each error. Phase 5.3 validates
+cleanly -- the REPL continues after each error. Phase 5.3 validates
 edge cases: empty vectors (`iota 0`, operations on empty arrays),
 single-element arrays, deeply nested parentheses, WS FULL recovery,
 and reduce identity elements (`+/ iota 0` = 0, `*/ iota 0` = 1).
@@ -74,7 +74,7 @@ Phase 6.2 adds `qsw` read-only quad variable for switch S2
 (`qsw` returns 1 when pressed, 0 when released).
 Phase 6.3 verifies quad variables in expression contexts:
 cross-variable (`qled <- qsw`), toggle (`qled <- 1 - qled`),
-and arithmetic with quad vars. Phase 6.4 adds `qsvo` (□SVO)
+and arithmetic with quad vars. Phase 6.4 adds `qsvo` (quad-SVO)
 shared variable offer for coupling APL variables to auxiliary
 processors (`MMIO qsvo 242` couples to MMIO region, returns
 coupling degree 2; unknown APs return 0). Phase 6.5 adds
