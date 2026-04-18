@@ -1,0 +1,1 @@
+Extended take and drop primitives to accept 2-element vector left arg for matrices, enabling multi-axis slicing (e.g. 2 3 take M, _1 _1 drop M). Scalar left arg path preserved; negative counts slice from the trailing end. All 38 batch tests pass.

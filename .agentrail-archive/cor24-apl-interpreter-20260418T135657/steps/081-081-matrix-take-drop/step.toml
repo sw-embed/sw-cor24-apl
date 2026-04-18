@@ -1,9 +1,11 @@
 number = 81
 slug = "081-matrix-take-drop"
-status = "in-progress"
+status = "completed"
 description = """
 Implement multi-axis take and drop on matrices:
 - 2 3 take M: take first 2 ro..."""
 role = "production"
 context_files = []
 created_at = "2026-04-05T08:52:05"
+completed_at = "2026-04-18T13:56:47"
+commits = ["ee2a24265a4342cc2aae37d8a942b97b6dd255f7"]
