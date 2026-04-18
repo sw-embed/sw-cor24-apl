@@ -33,73 +33,79 @@ Requires `tc24r` (C compiler) and `cor24-run` (emulator) on PATH.
 
 ## Status
 
-Phase 6 in progress. Phase 1 (scalar REPL) includes tokenizer, parser
-(right-to-left recursive descent), tree-walking evaluator, and symbol
-table. Phase 2 adds vector support: vector literals (stranding),
-element-wise operations with scalar extension, conformability checks
-(LENGTH ERROR), and right-justified vector output with consistent
-column widths. Phase 3 adds core APL primitives: monadic `iota N`
-(generates vector 0..N-1), monadic `rho` (shape-of: returns array
-dimensions), and dyadic `rho` (reshape with cyclic fill, supports
-vector and matrix results). Parser extended with `NODE_DYAD` AST type
-for dyadic primitive functions (rho, take, drop, cat). Bump-allocated
-heap (4096 words) with per-iteration reclamation for temporaries.
-Phase 3.3 adds reduce operators (`+/`, `-/`, `*/`) with right-to-left
-reduction over vectors (e.g., `-/ 1 2 3` = `1-(2-3)` = 2). Scalar
-passthrough for reduce on scalars. Phase 3.4 adds dyadic `take` and
-`drop` with negative-N support (`_2 take iota 5` -> `3 4`,
-`2 drop iota 5` -> `2 3 4`). Phase 3.5 adds monadic `rev` (reverse vector), monadic `cat` (ravel/flatten
-to 1D), and dyadic `cat` (catenate arrays). Phase 4.1 adds matrix creation and display: `2 3 rho iota 6` creates
-a 2x3 matrix displayed one row per line with right-justified columns.
-Monadic `rho` on matrices returns 2-element shape vector. Monadic `cat`
-(ravel) flattens matrices to 1D vectors. Phase 4.3 adds element-wise
-operations on matrices (matrix+matrix, scalar+matrix, matrix*scalar),
-matrix negate, and conformability checks for mismatched matrix shapes.
-Phase 4.4 adds `take` and `drop` on matrices operating on rows
-(`1 take M` = first row, `_1 drop M` = all but last row). Phase 5.1
-adds system commands: `)CLEAR` (reset workspace), `)VARS` (list
-defined variables), `)OFF` (exit interpreter). Phase 5.2 adds
-differentiated error handling with 6 error types: SYNTAX ERROR,
-DOMAIN ERROR (div by zero), VALUE ERROR (undefined variable),
-LENGTH ERROR (vector/matrix size mismatch), RANK ERROR (unsupported
-rank combinations), and WS FULL (heap exhaustion). All errors recover
-cleanly -- the REPL continues after each error. Phase 5.3 validates
-edge cases: empty vectors (`iota 0`, operations on empty arrays),
-single-element arrays, deeply nested parentheses, WS FULL recovery,
-and reduce identity elements (`+/ iota 0` = 0, `*/ iota 0` = 1).
-Quad output (`[] <- expr`) provides explicit I/O following IBM 5100
-conventions. Phase 6.1 adds `qled` quad system variable for LED D2
-hardware I/O (`qled <- 1` turns LED on, `qled` reads state).
-Phase 6.2 adds `qsw` read-only quad variable for switch S2
-(`qsw` returns 1 when pressed, 0 when released).
-Phase 6.3 verifies quad variables in expression contexts:
-cross-variable (`qled <- qsw`), toggle (`qled <- 1 - qled`),
-and arithmetic with quad vars. Phase 6.4 adds `qsvo` (quad-SVO)
-shared variable offer for coupling APL variables to auxiliary
-processors (`MMIO qsvo 242` couples to MMIO region, returns
-coupling degree 2; unknown APs return 0). Phase 6.5 adds
-bracket-indexed read/write on shared variables (`MMIO[257]`
-reads UART status, `MMIO[0] <- 1` writes LED register).
-Phase 6.6 validates graceful degradation: coupling degree
-checks enable portable code (0=unsupported, 2=coupled),
-uncoupled variables fail cleanly with VALUE ERROR.
-Phase 7.1 adds bracket indexing on vectors (`A[1]` reads,
-`A[1] <- 99` writes, 0-origin). Unified syntax: same
-bracket notation works for both SVO hardware variables and
-regular vector elements.
-Phase 7.2 adds bitwise operations: `and` (AND), `or` (OR),
-`not` (NOT) as reserved words, element-wise on vectors with
-scalar extension. Needed for UART status bit testing.
-Phase 8.1 adds branch and labels: `goto LABEL` (unconditional),
-`goto (expr)/LABEL` (conditional, branches if nonzero),
-`goto 0` (exit). Labels defined with `LABEL:` prefix, stored
-as variables holding line numbers. Program buffer enables
-backward branching for loops.
-Supports +, -, *, / (software divide), parentheses,
-monadic negate (scalar and vector), integer literals with APL
-underscore-negative convention, and variable assignment/reference
-via `<-`. Implementation tracked via agentrail saga
-(`cor24-apl-interpreter`).
+The `cor24-apl-interpreter` agentrail saga is complete (81 steps,
+archived under `.agentrail-archive/`). The interpreter runs on the
+COR24 emulator in both interactive (UART REPL) and batch (APL image)
+modes. Supported features by area:
+
+### Core language
+
+- Right-to-left recursive descent parser; tree-walking evaluator
+  split into per-node-type functions to keep frames shallow.
+- Bump-allocated heap (4096 words) with per-iteration reclamation
+  for temporaries.
+- Integer literals with APL underscore-negative convention, `<-`
+  assignment, symbol table, software divide.
+- Error types: SYNTAX, DOMAIN, VALUE, LENGTH, RANK, WS FULL. REPL
+  recovers cleanly on error.
+
+### Data types
+
+- Integer scalars and vectors (literal stranding).
+- Character vectors / string literals.
+- Rank-2 matrices with right-justified column display.
+- Nested / boxed arrays.
+- Lazy `iota` arrays for large ranges.
+
+### Primitives
+
+- Shape: `iota`, monadic/dyadic `rho`, `rev`, ravel and dyadic
+  `cat`, `enclose`, monadic transpose.
+- Selection: `take` / `drop` (scalar and multi-axis matrix forms,
+  negative counts), bracket indexing (`V[i]`, vector index),
+  `pick`, compress, replicate, `without`, `member`, dyadic-`iota`
+  index-of, grade up / grade down, dyadic `rotate`.
+- Arithmetic: `+ - * /`, integer exponent, abs/residue (`|`),
+  signum, factorial / binomial (`!`), ceil/floor (dyadic max/min).
+- Comparison and logic: `= != < <= > >=`, bitwise `and or not`.
+- Higher-order: reduce (`f/`, including `or/` and `and/`),
+  scan (`f\`), each (`f-each`), outer product (`.f`),
+  inner product (`f.g`).
+- Numeric conversion: encode / decode, `deal`, `roll` (PRNG),
+  `fmt` (integer-to-string), `execute`.
+- Set operations: `cup` (union / unique), `cap` (intersection).
+
+### Control flow and functions
+
+- `goto LABEL`, `goto (expr)/LABEL`, `goto 0`; `LABEL:` prefix
+  labels stored as variables holding line numbers.
+- Multi-line program buffer; `[N] expr` editing.
+- User-defined monadic, dyadic, and niladic functions via
+  `del R <- FN X ... del`; local variables via `;` syntax.
+- `#` line comments to end of line.
+
+### System interface
+
+- Quad variables: `qio` (index origin), `qled`, `qsw`, `qrl`
+  (PRNG seed), `qdl` (millisecond delay), `qout` (explicit print).
+- `qsvo` shared-variable offer (AP 242 pattern) couples APL
+  variables to hardware regions; indexed read/write on coupled
+  variables; coupling-degree checks enable graceful degradation.
+- System commands: `)CLEAR`, `)VARS`, `)OFF`.
+
+### Batch mode
+
+- APL image format (newline-separated, null-terminated),
+  loaded via `cor24-run --load-binary program.apl@0x080000`
+  with a `--patch` pointer.
+- Batch / interactive mode auto-detected. UART stays free for
+  the APL program via `qsvo`.
+- Reference demo: UART echo implemented as a pure APL program.
+
+### Tooling
+
+- Automated batch test runner with expected-output comparison.
+- GNU APL conformance comparison harness.
 
 ## Example (target syntax)
 
@@ -114,6 +120,12 @@ via `<-`. Implementation tracked via agentrail saga
 66
 ```
 
+## Links
+
+- Blog: [Software Wrighter Lab](https://software-wrighter-lab.github.io/)
+- Discord: [Join the community](https://discord.com/invite/Ctzk5uHggZ)
+- YouTube: [Software Wrighter](https://www.youtube.com/@SoftwareWrighter)
+
 ## License
 
-See [LICENSE](LICENSE).
+Copyright (c) 2026 Michael A. Wright. MIT-licensed; see [LICENSE](LICENSE).
